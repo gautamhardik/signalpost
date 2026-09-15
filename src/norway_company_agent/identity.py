@@ -181,6 +181,10 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     exact_homepage_name = bool(core and any(set(core).issubset(tokens) for tokens in homepage_token_sets))
     substantive_homepage = len(str(value.get("main_text_excerpt") or "").strip()) >= 100
     is_business_sports_club = bool(re.search(r"(?:^|\s)B\.?\s*I\.?\s*L\.?(?:\s|$)", str(profile.get("name") or ""), re.I))
+    # Conflicting 9-digit Norwegian OrgNr detection
+    found_org_numbers = set(re.findall(r"\b[89]\d{8}\b", homepage_candidate_text))
+    has_conflicting_org = bool(org_digits and any(o != org_digits for o in found_org_numbers))
+
     if any(marker in normalized_raw for marker in parked_markers):
         score = 0.1
         reasons.append("captured page is a parked, for-sale, or generic hosting placeholder")
@@ -190,6 +194,9 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif org_digits and org_digits in compact_homepage_candidate:
         score = 1.0
         reasons.append("exact organisation number appears in homepage identity evidence")
+    elif has_conflicting_org and not (org_digits and org_digits in compact_homepage_candidate):
+        score = 0.2
+        reasons.append("captured page contains conflicting organisation number belonging to a different entity")
     elif len(core) >= 2 and exact_homepage_name:
         score = 0.95
         reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
