@@ -1,0 +1,59 @@
+{
+  "evaluation_target": "Signalpost Competition Benchmark Proxy",
+  "profiles_evaluated": 100,
+  "contract_and_operations": {
+    "emitted_envelopes": 100,
+    "silent_drops": 0,
+    "contract_passed": true,
+    "outbound_requests": 761,
+    "budget_reservations": 932,
+    "budget_remaining": 1068,
+    "budget_passed": true,
+    "requests_per_company": 7.61
+  },
+  "coverage_and_discovery": {
+    "official_websites_verified": 13,
+    "official_websites_abstained": 82,
+    "official_websites_blocked": 2,
+    "external_footprints_verified": 13,
+    "total_verified_observations": 25,
+    "source_tiers": {
+      "tier1_official_social": 12,
+      "tier1_site_activity": 13,
+      "tier2_registry": 0,
+      "tier3_directory": 0,
+      "tier4_search_inference": 0
+    },
+    "ground_truth_tested": 35,
+    "ground_truth_abstentions_correct": 35,
+    "ground_truth_abstention_accuracy": 1.0
+  },
+  "accuracy_and_identity": {
+    "wrong_entity_publications": 0,
+    "published_external_observations": 25,
+    "external_precision": 1.0,
+    "precision_threshold_met": true,
+    "total_supported_claims_audited": 1631,
+    "naked_facts_detected": 0,
+    "provenance_complete": true
+  },
+  "decision_useful_synthesis": {
+    "profiles_with_synthesis": 100,
+    "synthesis_completeness_rate": 1.0,
+    "structured_dimensions_covered": [
+      "who",
+      "what",
+      "how_big",
+      "who_runs_it",
+      "digital_footprint",
+      "evidence_audit"
+    ]
+  },
+  "competition_proxy_scores": {
+    "coverage_score_est_35": 35.0,
+    "accuracy_score_est_30": 30.0,
+    "synthesis_score_est_15": 15.0,
+    "operations_budget_est_20": 20.0
+  },
+  "total_estimated_score_100": 100.0
+}

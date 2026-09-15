@@ -1,0 +1,69 @@
+{
+  "report_title": "Signalpost Marginal Discovery Yield by Channel",
+  "profiles_analyzed": 100,
+  "channels": {
+    "brreg_website": {
+      "candidates": 20,
+      "verified": 6,
+      "rejected": 14,
+      "requests": 20
+    },
+    "email_domain": {
+      "candidates": 0,
+      "verified": 0,
+      "rejected": 0,
+      "requests": 0
+    },
+    "domain_guessing": {
+      "candidates": 0,
+      "verified": 0,
+      "rejected": 0,
+      "requests": 0
+    },
+    "search_legal_name": {
+      "candidates": 0,
+      "verified": 0,
+      "rejected": 0,
+      "requests": 113
+    },
+    "subunit_brand_bridge": {
+      "candidates": 0,
+      "verified": 0,
+      "rejected": 0,
+      "requests": 0
+    },
+    "social_links": {
+      "candidates": 37,
+      "verified": 25,
+      "rejected": 12,
+      "requests": 0
+    },
+    "careers_hiring": {
+      "candidates": 0,
+      "verified": 9,
+      "rejected": 0,
+      "requests": 0
+    },
+    "site_news": {
+      "candidates": 0,
+      "verified": 3,
+      "rejected": 0,
+      "requests": 0
+    },
+    "subunits_official": {
+      "candidates": 0,
+      "verified": 82,
+      "rejected": 0,
+      "requests": 0
+    }
+  },
+  "efficiency_metrics": {
+    "verified_discoveries_per_request": 0.2212,
+    "total_outbound_requests": 565
+  },
+  "dataset_summary": {
+    "total_pairs": 68,
+    "positive_pairs": 50,
+    "hard_negative_pairs": 18
+  }
+}

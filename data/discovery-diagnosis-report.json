@@ -1,0 +1,218 @@
+{
+  "total_investigated": 35,
+  "diagnoses_breakdown": {
+    "NO_WEBSITE": 35
+  },
+  "companies": [
+    {
+      "organisation_number": "813175142",
+      "name": "RN BYGGMONTASJE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 11, Industry: Snekkerarbeid"
+    },
+    {
+      "organisation_number": "811998702",
+      "name": "SPIRIT FRISØR AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Frisering og barbering"
+    },
+    {
+      "organisation_number": "812892282",
+      "name": "SI-JA AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 30, Industry: Treningssentervirksomhet"
+    },
+    {
+      "organisation_number": "810733772",
+      "name": "BORGE EIENDOM AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Utleie av egen eller leid fast eiendom"
+    },
+    {
+      "organisation_number": "811613932",
+      "name": "AXELAR AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Bedriftsrådgivning og annen administrativ rådgivning"
+    },
+    {
+      "organisation_number": "813203472",
+      "name": "TORJUSEN BRANNSERVICE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Teknisk prøving og analyse"
+    },
+    {
+      "organisation_number": "813571102",
+      "name": "LILLE LONE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 8, Industry: Detaljhandel med medisinske og ortopediske artikler"
+    },
+    {
+      "organisation_number": "813672642",
+      "name": "KONSEPTGRUPPEN AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 18, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "813884062",
+      "name": "TRETTENKRO AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "812348442",
+      "name": "HØYSKOLEN FOR DANSEKUNST AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Undervisning ved andre høgskoler"
+    },
+    {
+      "organisation_number": "813459922",
+      "name": "ARENDAL CATERING AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 23, Industry: Catering for arrangementer"
+    },
+    {
+      "organisation_number": "812160532",
+      "name": "BWOOD AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Produksjon av andre trevarer og varer av kork, strå og flettematerialer"
+    },
+    {
+      "organisation_number": "813486342",
+      "name": "AS KOBERG",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 15, Industry: Produksjon av maskiner og utstyr til generell bruk ikke nevnt annet sted"
+    },
+    {
+      "organisation_number": "812604112",
+      "name": "KALSTAD MASKIN AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 6, Industry: Tjenester tilknyttet skogbruk"
+    },
+    {
+      "organisation_number": "812038842",
+      "name": "MARIN RØR AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 17, Industry: Produksjon av metallkonstruksjoner og deler"
+    },
+    {
+      "organisation_number": "812181882",
+      "name": "SKOGSKRAFT AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 39, Industry: Tjenester tilknyttet skogbruk"
+    },
+    {
+      "organisation_number": "811610402",
+      "name": "KATTNAKKEN AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 19, Industry: Industri-, produkt- og motedesignvirksomhet"
+    },
+    {
+      "organisation_number": "811615412",
+      "name": "SILVER BYGG & MONTASJE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 17, Industry: Oppføring av bygninger"
+    },
+    {
+      "organisation_number": "814267172",
+      "name": "CHARLIE STORM MESSEL AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Engroshandel med maskinverktøy"
+    },
+    {
+      "organisation_number": "813054752",
+      "name": "OSLO GATE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 12, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "813011662",
+      "name": "OSLO MERCHANT PARTNERS CAPITAL AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Verdipapirmegling"
+    },
+    {
+      "organisation_number": "813769182",
+      "name": "NES SYKEPLEIERPRODUKTER AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Detaljhandel med medisinske og ortopediske artikler"
+    },
+    {
+      "organisation_number": "813297442",
+      "name": "TRØNDERHOPP AKTIVITET AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Utleie av egen eller leid fast eiendom"
+    },
+    {
+      "organisation_number": "813587912",
+      "name": "FUSA LYD & LYS AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Andre tjenester tilknyttet kunstnerisk virksomhet og underholdningsvirksomhet"
+    },
+    {
+      "organisation_number": "813699192",
+      "name": "CAFECOMPAGNIET AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 63, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "812198262",
+      "name": "BYGDAS PERLE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 14, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "813600552",
+      "name": "VA-RA REGNSKAPSSERVICE AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Regnskapsføring og bokføring"
+    },
+    {
+      "organisation_number": "813399822",
+      "name": "BUPA EIENDOM AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Utleie av egen eller leid fast eiendom"
+    },
+    {
+      "organisation_number": "812187082",
+      "name": "TELLUS LOGISTICS AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 16, Industry: Andre støttetjenester for transport"
+    },
+    {
+      "organisation_number": "812182412",
+      "name": "BEAUTY OF FAME AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 9, Industry: Detaljhandel med kosmetikk og toalettartikler"
+    },
+    {
+      "organisation_number": "812598902",
+      "name": "HARLEM EIENDOM AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Utleie av egen eller leid fast eiendom"
+    },
+    {
+      "organisation_number": "811759422",
+      "name": "KALINKA NAILS AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 8, Industry: Skjønnhetspleie"
+    },
+    {
+      "organisation_number": "811625612",
+      "name": "TONES CAFÉDRIFT AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 7, Industry: Drift av restauranter"
+    },
+    {
+      "organisation_number": "812726862",
+      "name": "HOKKSUND MØBELFORRETNING AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 5, Industry: Detaljhandel med møbler, gjelder også madrasser"
+    },
+    {
+      "organisation_number": "813146452",
+      "name": "MOORING DRAMMEN AS",
+      "diagnosis": "NO_WEBSITE",
+      "notes": "Employees: 15, Industry: Andre tjenester tilknyttet sjøtransport"
+    }
+  ]
+}

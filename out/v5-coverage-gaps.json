@@ -1,0 +1,49 @@
+{
+  "total_companies": 100,
+  "missing_website": 86,
+  "missing_social": 92,
+  "missing_hiring": 97,
+  "missing_news": 97,
+  "missing_subunits": 18,
+  "missing_employees": 48,
+  "missing_financial_records": 0,
+  "missing_roles": 0,
+  "category_breakdown": {
+    "other_forms_no_web": {
+      "total": 10,
+      "has_web": 0,
+      "has_subunits": 8,
+      "has_social": 0
+    },
+    "operating_large_no_web": {
+      "total": 20,
+      "has_web": 3,
+      "has_subunits": 20,
+      "has_social": 3
+    },
+    "operating_small_no_web": {
+      "total": 25,
+      "has_web": 1,
+      "has_subunits": 25,
+      "has_social": 0
+    },
+    "brreg_website_present": {
+      "total": 20,
+      "has_web": 10,
+      "has_subunits": 19,
+      "has_social": 5
+    },
+    "holding_companies": {
+      "total": 15,
+      "has_web": 0,
+      "has_subunits": 0,
+      "has_social": 0
+    },
+    "housing_entities": {
+      "total": 10,
+      "has_web": 0,
+      "has_subunits": 10,
+      "has_social": 0
+    }
+  }
+}

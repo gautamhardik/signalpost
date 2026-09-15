@@ -1,0 +1,65 @@
+{
+  "run_id": "benchmark-100-v2",
+  "started_at": "2026-09-14T11:33:24.853755Z",
+  "completed_at": "2026-09-14T11:40:28.321374Z",
+  "expected_count": 100,
+  "emitted_envelopes": 100,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 100,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "registry_live",
+    "financials",
+    "roles",
+    "group",
+    "locations",
+    "website",
+    "external_footprint"
+  ],
+  "registry": {
+    "registry_snapshot_sha256": "5604d3b41f38056d34e6bf82be54e017d990da34cbda5ee9112e6ecd020ec981",
+    "registry_rows_scanned": 15003,
+    "requested": 100,
+    "selected": 100
+  },
+  "operations": {
+    "outbound_requests": 761,
+    "requests": 761,
+    "bytes": 19372931,
+    "p50_ms": 875,
+    "p95_ms": 2280
+  },
+  "budget": {
+    "total_budget": 2000,
+    "budget_reservations": 932,
+    "budget_remaining": 1068,
+    "cache_hits": 0,
+    "category_consumed": {
+      "registry": 500,
+      "website": 261,
+      "external_footprint": 0,
+      "search": 171,
+      "reserve": 0
+    },
+    "category_budgets": {
+      "registry": 500,
+      "website": 600,
+      "external_footprint": 400,
+      "search": 400,
+      "reserve": 100
+    },
+    "accounting_note": "outbound_requests represents actual physical HTTP requests sent to external servers; budget_reservations tracks units allocated against the 2,000 ceiling across modules and searches."
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}

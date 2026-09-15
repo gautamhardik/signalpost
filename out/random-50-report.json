@@ -1,0 +1,65 @@
+{
+  "run_id": "random-50-v3-validation",
+  "started_at": "2026-09-14T14:45:04.691605Z",
+  "completed_at": "2026-09-14T14:46:44.254177Z",
+  "expected_count": 50,
+  "emitted_envelopes": 50,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 50,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "roles",
+    "locations",
+    "financials",
+    "website",
+    "external_footprint"
+  ],
+  "registry": {
+    "identity_store": "sqlite_index",
+    "db_path": "data\\company_universe_411k.db",
+    "registry_snapshot_sha256": "5604d3b41f38056d34e6bf82be54e017d990da34cbda5ee9112e6ecd020ec981",
+    "registry_rows_scanned": 50,
+    "requested": 50,
+    "selected": 50
+  },
+  "operations": {
+    "outbound_requests": 238,
+    "requests": 238,
+    "bytes": 9651947,
+    "p50_ms": 828,
+    "p95_ms": 2453
+  },
+  "budget": {
+    "total_budget": 2000,
+    "budget_reservations": 283,
+    "budget_remaining": 1717,
+    "cache_hits": 0,
+    "category_consumed": {
+      "registry": 150,
+      "website": 88,
+      "external_footprint": 0,
+      "search": 45,
+      "reserve": 0
+    },
+    "category_budgets": {
+      "registry": 500,
+      "website": 600,
+      "external_footprint": 400,
+      "search": 400,
+      "reserve": 100
+    },
+    "accounting_note": "outbound_requests represents actual physical HTTP requests sent to external servers; budget_reservations tracks units allocated against the 2,000 ceiling across modules and searches."
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}

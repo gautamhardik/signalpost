@@ -1,0 +1,31 @@
+{
+  "corpus_validation": "PASSED",
+  "counts": {
+    "manifest_records": 1100,
+    "profile_records": 1100,
+    "envelope_records": 1100,
+    "minimum_required": 1000,
+    "count_sufficient": true,
+    "counts_exact_match": true,
+    "order_identical": true
+  },
+  "envelope_compliance": {
+    "passed": true,
+    "silent_drops": 0,
+    "all_terminal": true,
+    "invalid_states": []
+  },
+  "evidence_integrity": {
+    "missing_registry_evidence": 0,
+    "missing_retrieval_timestamps": 0,
+    "missing_source_urls": 0,
+    "wrong_company_publications": 0,
+    "perfect_provenance": true
+  },
+  "operations": {
+    "run_id": "batch-1100-v5",
+    "outbound_requests": 6845,
+    "p50_ms": 843,
+    "p95_ms": 1905
+  }
+}

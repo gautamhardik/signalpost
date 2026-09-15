@@ -1,0 +1,2847 @@
+{
+  "benchmark": "Series B & C: Controlled SearXNG and Query Strategy Benchmark",
+  "unresolved_companies_tested": 77,
+  "strategy_performance": {
+    "S1_name_muni": {
+      "queries": 77,
+      "results_found": 727,
+      "candidates_accepted": 1,
+      "distinct_companies_with_candidates": 1,
+      "candidate_companies": [
+        "812605992"
+      ]
+    },
+    "S2_name_norway": {
+      "queries": 77,
+      "results_found": 728,
+      "candidates_accepted": 0,
+      "distinct_companies_with_candidates": 0,
+      "candidate_companies": []
+    },
+    "S3_name_org": {
+      "queries": 77,
+      "results_found": 733,
+      "candidates_accepted": 0,
+      "distinct_companies_with_candidates": 0,
+      "candidate_companies": []
+    },
+    "S4_quoted_baseline": {
+      "queries": 77,
+      "results_found": 718,
+      "candidates_accepted": 0,
+      "distinct_companies_with_candidates": 0,
+      "candidate_companies": []
+    }
+  },
+  "companies": [
+    {
+      "organisation_number": "816479592",
+      "name": "ADVOKAT ERIK KEISERUD MNA",
+      "clean_name": "ADVOKAT ERIK KEISERUD MNA",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "ADVOKAT ERIK KEISERUD MNA OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "ADVOKAT ERIK KEISERUD MNA Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "ADVOKAT ERIK KEISERUD MNA 816479592",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"ADVOKAT ERIK KEISERUD MNA\" 816479592 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813175142",
+      "name": "RN BYGGMONTASJE AS",
+      "clean_name": "RN BYGGMONTASJE",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "RN BYGGMONTASJE NORD-FRON",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "RN BYGGMONTASJE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "RN BYGGMONTASJE 813175142",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"RN BYGGMONTASJE AS\" 813175142 NORD-FRON",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812605992",
+      "name": "FETSUND TANNKLINIKK AS",
+      "clean_name": "FETSUND TANNKLINIKK",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "FETSUND TANNKLINIKK LILLESTRØM",
+          "result_count": 10,
+          "selected_url": "https://www.fetsund-tannklinikk.no/",
+          "score": 0.75,
+          "top_candidates": [
+            {
+              "status": "accepted_for_crawl",
+              "score": 0.75,
+              "publishable_candidate": true,
+              "url": "https://www.fetsund-tannklinikk.no/",
+              "host": "fetsund-tannklinikk.no",
+              "name_in_host": true,
+              "email_domain": null,
+              "email_domain_match": false,
+              "rank": 3,
+              "provider": null,
+              "query": null,
+              "reasons": [
+                "all distinctive legal-name tokens appear in the result title",
+                "normalized legal name appears in candidate hostname"
+              ],
+              "method": "deterministic_search_candidate_identity_v1"
+            },
+            {
+              "status": "accepted_for_crawl",
+              "score": 0.75,
+              "publishable_candidate": true,
+              "url": "https://www.fetsund-tannklinikk.no/kontakt-oss/",
+              "host": "fetsund-tannklinikk.no",
+              "name_in_host": true,
+              "email_domain": null,
+              "email_domain_match": false,
+              "rank": 7,
+              "provider": null,
+              "query": null,
+              "reasons": [
+                "all distinctive legal-name tokens appear in the result title",
+                "normalized legal name appears in candidate hostname"
+              ],
+              "method": "deterministic_search_candidate_identity_v1"
+            }
+          ]
+        },
+        "S2_name_norway": {
+          "query": "FETSUND TANNKLINIKK Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "FETSUND TANNKLINIKK 812605992",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"FETSUND TANNKLINIKK AS\" 812605992 LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811998702",
+      "name": "SPIRIT FRISØR AS",
+      "clean_name": "SPIRIT FRISØR",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SPIRIT FRISØR BØMLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SPIRIT FRISØR Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SPIRIT FRISØR 811998702",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SPIRIT FRISØR AS\" 811998702 BØMLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812892282",
+      "name": "SI-JA AS",
+      "clean_name": "SI-JA",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SI-JA ASKØY",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SI-JA Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SI-JA 812892282",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SI-JA AS\" 812892282 ASKØY",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812824422",
+      "name": "KAIMA HOLDING AS",
+      "clean_name": "KAIMA HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KAIMA HOLDING SUNNFJORD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KAIMA HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KAIMA HOLDING 812824422",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KAIMA HOLDING AS\" 812824422 SUNNFJORD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "810733772",
+      "name": "BORGE EIENDOM AS",
+      "clean_name": "BORGE EIENDOM",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BORGE EIENDOM TØNSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BORGE EIENDOM Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BORGE EIENDOM 810733772",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BORGE EIENDOM AS\" 810733772 TØNSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811613932",
+      "name": "AXELAR AS",
+      "clean_name": "AXELAR",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "AXELAR SANDNES",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "AXELAR Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "AXELAR 811613932",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"AXELAR AS\" 811613932 SANDNES",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813203472",
+      "name": "TORJUSEN BRANNSERVICE AS",
+      "clean_name": "TORJUSEN BRANNSERVICE",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TORJUSEN BRANNSERVICE RISØR",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TORJUSEN BRANNSERVICE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TORJUSEN BRANNSERVICE 813203472",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TORJUSEN BRANNSERVICE AS\" 813203472 RISØR",
+          "result_count": 9,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813571102",
+      "name": "LILLE LONE AS",
+      "clean_name": "LILLE LONE",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "LILLE LONE HAMAR",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "LILLE LONE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "LILLE LONE 813571102",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"LILLE LONE AS\" 813571102 HAMAR",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813672642",
+      "name": "KONSEPTGRUPPEN AS",
+      "clean_name": "KONSEPTGRUPPEN",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KONSEPTGRUPPEN BÆRUM",
+          "result_count": 9,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KONSEPTGRUPPEN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KONSEPTGRUPPEN 813672642",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KONSEPTGRUPPEN AS\" 813672642 BÆRUM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813884062",
+      "name": "TRETTENKRO AS",
+      "clean_name": "TRETTENKRO",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TRETTENKRO ØYER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TRETTENKRO Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TRETTENKRO 813884062",
+          "result_count": 9,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TRETTENKRO AS\" 813884062 ØYER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812348442",
+      "name": "HØYSKOLEN FOR DANSEKUNST AS",
+      "clean_name": "HØYSKOLEN FOR DANSEKUNST",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "HØYSKOLEN FOR DANSEKUNST OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "HØYSKOLEN FOR DANSEKUNST Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "HØYSKOLEN FOR DANSEKUNST 812348442",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"HØYSKOLEN FOR DANSEKUNST AS\" 812348442 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812759922",
+      "name": "THERMO FISHER SCIENTIFIC NORWAY HOLDINGS AS",
+      "clean_name": "THERMO FISHER SCIENTIFIC NORWAY HOLDINGS",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "THERMO FISHER SCIENTIFIC NORWAY HOLDINGS OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "THERMO FISHER SCIENTIFIC NORWAY HOLDINGS Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "THERMO FISHER SCIENTIFIC NORWAY HOLDINGS 812759922",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"THERMO FISHER SCIENTIFIC NORWAY HOLDINGS AS\" 812759922 OSLO",
+          "result_count": 1,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813104512",
+      "name": "SAMEIET FROSTAVEIEN 10",
+      "clean_name": "SAMEIET FROSTAVEIEN 10",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SAMEIET FROSTAVEIEN 10 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SAMEIET FROSTAVEIEN 10 Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SAMEIET FROSTAVEIEN 10 813104512",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SAMEIET FROSTAVEIEN 10\" 813104512 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813459922",
+      "name": "ARENDAL CATERING AS",
+      "clean_name": "ARENDAL CATERING",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "ARENDAL CATERING ARENDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "ARENDAL CATERING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "ARENDAL CATERING 813459922",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"ARENDAL CATERING AS\" 813459922 ARENDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814109232",
+      "name": "SCANDINAVIAN HOUSES NUF",
+      "clean_name": "SCANDINAVIAN HOUSES",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SCANDINAVIAN HOUSES TROMSØ",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SCANDINAVIAN HOUSES Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SCANDINAVIAN HOUSES 814109232",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SCANDINAVIAN HOUSES NUF\" 814109232 TROMSØ",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812864912",
+      "name": "EØP HOLDING AS",
+      "clean_name": "EØP HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "EØP HOLDING VESTBY",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "EØP HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "EØP HOLDING 812864912",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"EØP HOLDING AS\" 812864912 VESTBY",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812160532",
+      "name": "BWOOD AS",
+      "clean_name": "BWOOD",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BWOOD BÆRUM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BWOOD Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BWOOD 812160532",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BWOOD AS\" 812160532 BÆRUM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811954802",
+      "name": "TORSHOVDALEN I SAMEIE",
+      "clean_name": "TORSHOVDALEN I SAMEIE",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TORSHOVDALEN I SAMEIE OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TORSHOVDALEN I SAMEIE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TORSHOVDALEN I SAMEIE 811954802",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TORSHOVDALEN I SAMEIE\" 811954802 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812062492",
+      "name": "EIK1 HOLDING AS",
+      "clean_name": "EIK1 HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "EIK1 HOLDING EIGERSUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "EIK1 HOLDING Norway",
+          "result_count": 9,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "EIK1 HOLDING 812062492",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"EIK1 HOLDING AS\" 812062492 EIGERSUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814362922",
+      "name": "SAMEIET SAUDALEN TERRASSE",
+      "clean_name": "SAMEIET SAUDALEN TERRASSE",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SAMEIET SAUDALEN TERRASSE BERGEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SAMEIET SAUDALEN TERRASSE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SAMEIET SAUDALEN TERRASSE 814362922",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SAMEIET SAUDALEN TERRASSE\" 814362922 BERGEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812459392",
+      "name": "KKA HOLDING AS",
+      "clean_name": "KKA HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KKA HOLDING TØNSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KKA HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KKA HOLDING 812459392",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KKA HOLDING AS\" 812459392 TØNSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814100502",
+      "name": "ASTK-CONSULTING NUF",
+      "clean_name": "ASTK-CONSULTING",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "ASTK-CONSULTING MOLDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "ASTK-CONSULTING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "ASTK-CONSULTING 814100502",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"ASTK-CONSULTING NUF\" 814100502 MOLDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813486342",
+      "name": "AS KOBERG",
+      "clean_name": "AS KOBERG",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "AS KOBERG KONGSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "AS KOBERG Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "AS KOBERG 813486342",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"AS KOBERG\" 813486342 KONGSBERG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "815109562",
+      "name": "BOLIGSAMEIET SOLVANGTUNET",
+      "clean_name": "BOLIGSAMEIET SOLVANGTUNET",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BOLIGSAMEIET SOLVANGTUNET HAMAR",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BOLIGSAMEIET SOLVANGTUNET Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BOLIGSAMEIET SOLVANGTUNET 815109562",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BOLIGSAMEIET SOLVANGTUNET\" 815109562 HAMAR",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812604112",
+      "name": "KALSTAD MASKIN AS",
+      "clean_name": "KALSTAD MASKIN",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KALSTAD MASKIN GAUSDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KALSTAD MASKIN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KALSTAD MASKIN 812604112",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KALSTAD MASKIN AS\" 812604112 GAUSDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812038842",
+      "name": "MARIN RØR AS",
+      "clean_name": "MARIN RØR",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "MARIN RØR FREDRIKSTAD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "MARIN RØR Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "MARIN RØR 812038842",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"MARIN RØR AS\" 812038842 FREDRIKSTAD",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812181882",
+      "name": "SKOGSKRAFT AS",
+      "clean_name": "SKOGSKRAFT",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SKOGSKRAFT LILLESTRØM",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SKOGSKRAFT Norway",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SKOGSKRAFT 812181882",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SKOGSKRAFT AS\" 812181882 LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811610402",
+      "name": "KATTNAKKEN AS",
+      "clean_name": "KATTNAKKEN",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KATTNAKKEN STORD",
+          "result_count": 1,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KATTNAKKEN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KATTNAKKEN 811610402",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KATTNAKKEN AS\" 811610402 STORD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811615412",
+      "name": "SILVER BYGG & MONTASJE AS",
+      "clean_name": "SILVER BYGG & MONTASJE",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SILVER BYGG & MONTASJE RÅDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SILVER BYGG & MONTASJE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SILVER BYGG & MONTASJE 811615412",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SILVER BYGG & MONTASJE AS\" 811615412 RÅDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814267172",
+      "name": "CHARLIE STORM MESSEL AS",
+      "clean_name": "CHARLIE STORM MESSEL",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "CHARLIE STORM MESSEL LØRENSKOG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "CHARLIE STORM MESSEL Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "CHARLIE STORM MESSEL 814267172",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"CHARLIE STORM MESSEL AS\" 814267172 LØRENSKOG",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813054752",
+      "name": "OSLO GATE AS",
+      "clean_name": "OSLO GATE",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "OSLO GATE OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "OSLO GATE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "OSLO GATE 813054752",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"OSLO GATE AS\" 813054752 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "817906842",
+      "name": "NURIFLEX CO.,LTD. NUF",
+      "clean_name": "NURIFLEX CO.,LTD.",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "NURIFLEX CO.,LTD.",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "NURIFLEX CO.,LTD. Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "NURIFLEX CO.,LTD. 817906842",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"NURIFLEX CO.,LTD. NUF\" 817906842",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813011662",
+      "name": "OSLO MERCHANT PARTNERS CAPITAL AS",
+      "clean_name": "OSLO MERCHANT PARTNERS CAPITAL",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "OSLO MERCHANT PARTNERS CAPITAL OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "OSLO MERCHANT PARTNERS CAPITAL Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "OSLO MERCHANT PARTNERS CAPITAL 813011662",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"OSLO MERCHANT PARTNERS CAPITAL AS\" 813011662 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813769182",
+      "name": "NES SYKEPLEIERPRODUKTER AS",
+      "clean_name": "NES SYKEPLEIERPRODUKTER",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "NES SYKEPLEIERPRODUKTER NES",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "NES SYKEPLEIERPRODUKTER Norway",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "NES SYKEPLEIERPRODUKTER 813769182",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"NES SYKEPLEIERPRODUKTER AS\" 813769182 NES",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812521772",
+      "name": "BB13 HOLDING AS",
+      "clean_name": "BB13 HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BB13 HOLDING ØYGARDEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BB13 HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BB13 HOLDING 812521772",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BB13 HOLDING AS\" 812521772 ØYGARDEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813297442",
+      "name": "TRØNDERHOPP AKTIVITET AS",
+      "clean_name": "TRØNDERHOPP AKTIVITET",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TRØNDERHOPP AKTIVITET TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TRØNDERHOPP AKTIVITET Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TRØNDERHOPP AKTIVITET 813297442",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TRØNDERHOPP AKTIVITET AS\" 813297442 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813587912",
+      "name": "FUSA LYD & LYS AS",
+      "clean_name": "FUSA LYD & LYS",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "FUSA LYD & LYS BJØRNAFJORDEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "FUSA LYD & LYS Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "FUSA LYD & LYS 813587912",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"FUSA LYD & LYS AS\" 813587912 BJØRNAFJORDEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813699192",
+      "name": "CAFECOMPAGNIET AS",
+      "clean_name": "CAFECOMPAGNIET",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "CAFECOMPAGNIET HVALER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "CAFECOMPAGNIET Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "CAFECOMPAGNIET 813699192",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"CAFECOMPAGNIET AS\" 813699192 HVALER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812198262",
+      "name": "BYGDAS PERLE AS",
+      "clean_name": "BYGDAS PERLE",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BYGDAS PERLE LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BYGDAS PERLE Norway",
+          "result_count": 2,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BYGDAS PERLE 812198262",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BYGDAS PERLE AS\" 812198262 LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813978202",
+      "name": "SAMEIET SORGENFRIPARKEN",
+      "clean_name": "SAMEIET SORGENFRIPARKEN",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SAMEIET SORGENFRIPARKEN TRONDHEIM",
+          "result_count": 3,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SAMEIET SORGENFRIPARKEN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SAMEIET SORGENFRIPARKEN 813978202",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SAMEIET SORGENFRIPARKEN\" 813978202 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813600552",
+      "name": "VA-RA REGNSKAPSSERVICE AS",
+      "clean_name": "VA-RA REGNSKAPSSERVICE",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "VA-RA REGNSKAPSSERVICE MODUM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "VA-RA REGNSKAPSSERVICE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "VA-RA REGNSKAPSSERVICE 813600552",
+          "result_count": 4,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"VA-RA REGNSKAPSSERVICE AS\" 813600552 MODUM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813399822",
+      "name": "BUPA EIENDOM AS",
+      "clean_name": "BUPA EIENDOM",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BUPA EIENDOM LUNNER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BUPA EIENDOM Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BUPA EIENDOM 813399822",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BUPA EIENDOM AS\" 813399822 LUNNER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812187082",
+      "name": "TELLUS LOGISTICS AS",
+      "clean_name": "TELLUS LOGISTICS",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TELLUS LOGISTICS SOLA",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TELLUS LOGISTICS Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TELLUS LOGISTICS 812187082",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TELLUS LOGISTICS AS\" 812187082 SOLA",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812211102",
+      "name": "LYNGÅSEN PANORAMA BORETTSLAG",
+      "clean_name": "LYNGÅSEN PANORAMA BORETTSLAG",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "LYNGÅSEN PANORAMA BORETTSLAG RANA",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "LYNGÅSEN PANORAMA BORETTSLAG Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "LYNGÅSEN PANORAMA BORETTSLAG 812211102",
+          "result_count": 2,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"LYNGÅSEN PANORAMA BORETTSLAG\" 812211102 RANA",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812182412",
+      "name": "BEAUTY OF FAME AS",
+      "clean_name": "BEAUTY OF FAME",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BEAUTY OF FAME NAMSOS",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BEAUTY OF FAME Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BEAUTY OF FAME 812182412",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BEAUTY OF FAME AS\" 812182412 NAMSOS",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812598902",
+      "name": "HARLEM EIENDOM AS",
+      "clean_name": "HARLEM EIENDOM",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "HARLEM EIENDOM RAKKESTAD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "HARLEM EIENDOM Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "HARLEM EIENDOM 812598902",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"HARLEM EIENDOM AS\" 812598902 RAKKESTAD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811759422",
+      "name": "KALINKA NAILS AS",
+      "clean_name": "KALINKA NAILS",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "KALINKA NAILS HAUGESUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "KALINKA NAILS Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "KALINKA NAILS 811759422",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"KALINKA NAILS AS\" 811759422 HAUGESUND",
+          "result_count": 1,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811625612",
+      "name": "TONES CAFÉDRIFT AS",
+      "clean_name": "TONES CAFÉDRIFT",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TONES CAFÉDRIFT BERGEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TONES CAFÉDRIFT Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TONES CAFÉDRIFT 811625612",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TONES CAFÉDRIFT AS\" 811625612 BERGEN",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812726862",
+      "name": "HOKKSUND MØBELFORRETNING AS",
+      "clean_name": "HOKKSUND MØBELFORRETNING",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "HOKKSUND MØBELFORRETNING ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "HOKKSUND MØBELFORRETNING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "HOKKSUND MØBELFORRETNING 812726862",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"HOKKSUND MØBELFORRETNING AS\" 812726862 ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813146452",
+      "name": "MOORING DRAMMEN AS",
+      "clean_name": "MOORING DRAMMEN",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "MOORING DRAMMEN DRAMMEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "MOORING DRAMMEN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "MOORING DRAMMEN 813146452",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"MOORING DRAMMEN AS\" 813146452 DRAMMEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812684272",
+      "name": "WIENERBRØDSKJÆRINGA HOLDING AS",
+      "clean_name": "WIENERBRØDSKJÆRINGA HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "WIENERBRØDSKJÆRINGA HOLDING FROGN",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "WIENERBRØDSKJÆRINGA HOLDING Norway",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "WIENERBRØDSKJÆRINGA HOLDING 812684272",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"WIENERBRØDSKJÆRINGA HOLDING AS\" 812684272 FROGN",
+          "result_count": 0,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811974242",
+      "name": "BRAUTE HOLDING AS",
+      "clean_name": "BRAUTE HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BRAUTE HOLDING ÅLESUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BRAUTE HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BRAUTE HOLDING 811974242",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BRAUTE HOLDING AS\" 811974242 ÅLESUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813210762",
+      "name": "SAMEIET KONGENSGATE 5 B",
+      "clean_name": "SAMEIET KONGENSGATE 5 B",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SAMEIET KONGENSGATE 5 B SKIEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SAMEIET KONGENSGATE 5 B Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SAMEIET KONGENSGATE 5 B 813210762",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SAMEIET KONGENSGATE 5 B\" 813210762 SKIEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813865882",
+      "name": "MAIHAUGEN BORETTSLAG",
+      "clean_name": "MAIHAUGEN BORETTSLAG",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "MAIHAUGEN BORETTSLAG TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "MAIHAUGEN BORETTSLAG Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "MAIHAUGEN BORETTSLAG 813865882",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"MAIHAUGEN BORETTSLAG\" 813865882 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813894092",
+      "name": "BINERA AS",
+      "clean_name": "BINERA",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "BINERA OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "BINERA Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "BINERA 813894092",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"BINERA AS\" 813894092 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814150542",
+      "name": "POULSSONS HAGE SAMEIE",
+      "clean_name": "POULSSONS HAGE SAMEIE",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "POULSSONS HAGE SAMEIE OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "POULSSONS HAGE SAMEIE Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "POULSSONS HAGE SAMEIE 814150542",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"POULSSONS HAGE SAMEIE\" 814150542 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812668412",
+      "name": "EKER DAMPSAG & HØVLERI AS",
+      "clean_name": "EKER DAMPSAG & HØVLERI",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "EKER DAMPSAG & HØVLERI ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "EKER DAMPSAG & HØVLERI Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "EKER DAMPSAG & HØVLERI 812668412",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"EKER DAMPSAG & HØVLERI AS\" 812668412 ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812032992",
+      "name": "SPRING LEAP LTD NUF",
+      "clean_name": "SPRING LEAP LTD",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SPRING LEAP LTD HURDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SPRING LEAP LTD Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SPRING LEAP LTD 812032992",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SPRING LEAP LTD NUF\" 812032992 HURDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811726192",
+      "name": "RSJ HOLDING AS",
+      "clean_name": "RSJ HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "RSJ HOLDING EIDSVOLL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "RSJ HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "RSJ HOLDING 811726192",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"RSJ HOLDING AS\" 811726192 EIDSVOLL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812079042",
+      "name": "WE ARE LIVE HOLDING AS",
+      "clean_name": "WE ARE LIVE HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "WE ARE LIVE HOLDING OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "WE ARE LIVE HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "WE ARE LIVE HOLDING 812079042",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"WE ARE LIVE HOLDING AS\" 812079042 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812555022",
+      "name": "TB.HOLDING AS",
+      "clean_name": "TB.HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TB.HOLDING MOLDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TB.HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TB.HOLDING 812555022",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TB.HOLDING AS\" 812555022 MOLDE",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812690302",
+      "name": "TIMIAN & PERSILLE CATERING AS",
+      "clean_name": "TIMIAN & PERSILLE CATERING",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TIMIAN & PERSILLE CATERING SUNNDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TIMIAN & PERSILLE CATERING Norway",
+          "result_count": 9,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TIMIAN & PERSILLE CATERING 812690302",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TIMIAN & PERSILLE CATERING AS\" 812690302 SUNNDAL",
+          "result_count": 6,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812394282",
+      "name": "NEDRE LOBBEN HOLDING AS",
+      "clean_name": "NEDRE LOBBEN HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "NEDRE LOBBEN HOLDING ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "NEDRE LOBBEN HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "NEDRE LOBBEN HOLDING 812394282",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"NEDRE LOBBEN HOLDING AS\" 812394282 ØVRE EIKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "819476292",
+      "name": "GOVAERT BEHEER B.V. NUF",
+      "clean_name": "GOVAERT BEHEER B.V.",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "GOVAERT BEHEER B.V.",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "GOVAERT BEHEER B.V. Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "GOVAERT BEHEER B.V. 819476292",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"GOVAERT BEHEER B.V. NUF\" 819476292",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "811943592",
+      "name": "ONEPOINT3 HOLDING AS",
+      "clean_name": "ONEPOINT3 HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "ONEPOINT3 HOLDING KRISTIANSUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "ONEPOINT3 HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "ONEPOINT3 HOLDING 811943592",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"ONEPOINT3 HOLDING AS\" 811943592 KRISTIANSUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "813131692",
+      "name": "SKANDSEN BYGG AS",
+      "clean_name": "SKANDSEN BYGG",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SKANDSEN BYGG EIGERSUND",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SKANDSEN BYGG Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SKANDSEN BYGG 813131692",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SKANDSEN BYGG AS\" 813131692 EIGERSUND",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812056662",
+      "name": "HOLMBOESGATE 4-5 ANS",
+      "clean_name": "HOLMBOESGATE 4-5",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "HOLMBOESGATE 4-5 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "HOLMBOESGATE 4-5 Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "HOLMBOESGATE 4-5 812056662",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"HOLMBOESGATE 4-5 ANS\" 812056662 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "814526372",
+      "name": "SAMEIET HOVLANDVEIEN 81/83",
+      "clean_name": "SAMEIET HOVLANDVEIEN 81/83",
+      "category": "housing_entities",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SAMEIET HOVLANDVEIEN 81/83 LARVIK",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SAMEIET HOVLANDVEIEN 81/83 Norway",
+          "result_count": 1,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SAMEIET HOVLANDVEIEN 81/83 814526372",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SAMEIET HOVLANDVEIEN 81/83\" 814526372 LARVIK",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812138502",
+      "name": "DANSESONEN TIRIL ANDØL DANSESTUDIO AS",
+      "clean_name": "DANSESONEN TIRIL ANDØL DANSESTUDIO",
+      "category": "operating_large_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "DANSESONEN TIRIL ANDØL DANSESTUDIO ASKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "DANSESONEN TIRIL ANDØL DANSESTUDIO Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "DANSESONEN TIRIL ANDØL DANSESTUDIO 812138502",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"DANSESONEN TIRIL ANDØL DANSESTUDIO AS\" 812138502 ASKER",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812701312",
+      "name": "TENERA HOLDING AS",
+      "clean_name": "TENERA HOLDING",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "TENERA HOLDING OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "TENERA HOLDING Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "TENERA HOLDING 812701312",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"TENERA HOLDING AS\" 812701312 OSLO",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "818920792",
+      "name": "FRØVOLDSETERVEIEN SA",
+      "clean_name": "FRØVOLDSETERVEIEN",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "FRØVOLDSETERVEIEN SIGDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "FRØVOLDSETERVEIEN Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "FRØVOLDSETERVEIEN 818920792",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"FRØVOLDSETERVEIEN SA\" 818920792 SIGDAL",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812110772",
+      "name": "UTSIKTEN HOLDING INVEST AS",
+      "clean_name": "UTSIKTEN HOLDING INVEST",
+      "category": "holding_companies",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "UTSIKTEN HOLDING INVEST SKIEN",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "UTSIKTEN HOLDING INVEST Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "UTSIKTEN HOLDING INVEST 812110772",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"UTSIKTEN HOLDING INVEST AS\" 812110772 SKIEN",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "819700982",
+      "name": "SPYDEVOLD-KONSULT INVEST",
+      "clean_name": "SPYDEVOLD-KONSULT INVEST",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "SPYDEVOLD-KONSULT INVEST LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "SPYDEVOLD-KONSULT INVEST Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "SPYDEVOLD-KONSULT INVEST 819700982",
+          "result_count": 7,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"SPYDEVOLD-KONSULT INVEST\" 819700982 LILLESTRØM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "815628012",
+      "name": "MELLOMILA 57 DA",
+      "clean_name": "MELLOMILA 57",
+      "category": "other_forms_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "MELLOMILA 57 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "MELLOMILA 57 Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "MELLOMILA 57 815628012",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"MELLOMILA 57 DA\" 815628012 TRONDHEIM",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    },
+    {
+      "organisation_number": "812381962",
+      "name": "INNTA AS",
+      "clean_name": "INNTA",
+      "category": "operating_small_no_web",
+      "strategy_results": {
+        "S1_name_muni": {
+          "query": "INNTA STORD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S2_name_norway": {
+          "query": "INNTA Norway",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S3_name_org": {
+          "query": "INNTA 812381962",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        },
+        "S4_quoted_baseline": {
+          "query": "\"INNTA AS\" 812381962 STORD",
+          "result_count": 10,
+          "selected_url": null,
+          "score": null,
+          "top_candidates": []
+        }
+      }
+    }
+  ]
+}

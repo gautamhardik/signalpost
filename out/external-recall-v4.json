@@ -1,0 +1,175 @@
+{
+  "benchmark_name": "Signalpost Weighted External Recall Benchmark",
+  "evaluated_companies": 100,
+  "qualification_gate": ">= 60% weighted external company recall",
+  "weighted_external_company_recall": 0.71,
+  "qualification_gate_met": true,
+  "website_recall": 0.5,
+  "sample_evaluations": [
+    {
+      "organisation_number": "816479592",
+      "name": "ADVOKAT ERIK KEISERUD MNA",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "813175142",
+      "name": "RN BYGGMONTASJE AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "812605992",
+      "name": "FETSUND TANNKLINIKK AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "811862452",
+      "name": "IKO BYGG AS",
+      "has_known_web": true,
+      "has_disc_web": true,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 0.5
+    },
+    {
+      "organisation_number": "811998702",
+      "name": "SPIRIT FRISØR AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "812892282",
+      "name": "SI-JA AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "812824422",
+      "name": "KAIMA HOLDING AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": false,
+      "weighted_recall": 0.0
+    },
+    {
+      "organisation_number": "810733772",
+      "name": "BORGE EIENDOM AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "811613932",
+      "name": "AXELAR AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "813203472",
+      "name": "TORJUSEN BRANNSERVICE AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "810359862",
+      "name": "AUTOBJØRN A/S",
+      "has_known_web": true,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 0.15
+    },
+    {
+      "organisation_number": "813571102",
+      "name": "LILLE LONE AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "813672642",
+      "name": "KONSEPTGRUPPEN AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "813884062",
+      "name": "TRETTENKRO AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    },
+    {
+      "organisation_number": "812348442",
+      "name": "HØYSKOLEN FOR DANSEKUNST AS",
+      "has_known_web": false,
+      "has_disc_web": false,
+      "has_social": false,
+      "has_hiring": false,
+      "has_news": false,
+      "has_subunits": true,
+      "weighted_recall": 1.0
+    }
+  ]
+}
