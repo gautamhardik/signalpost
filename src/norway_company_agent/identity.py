@@ -206,7 +206,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     reasons = []
     parked_markers = (
         "domain is for sale", "domain for sale", "hugedomains", "parked at", "miss hosting",
-        "her flytter snart en ny gjest", "has been informing visitors",
+        "her flytter snart en ny gjest", "has been informing visitors", "is parked", "domain is parked",
         "find the best information and most relevant links on all topics related to",
     )
     normalized_raw = unicodedata.normalize("NFKD", candidate_text).encode("ascii", "ignore").decode().casefold()
