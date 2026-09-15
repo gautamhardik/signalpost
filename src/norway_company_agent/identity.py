@@ -11,6 +11,11 @@ LEGAL_AND_GENERIC = {
     "nuf", "ab", "b", "v", "limited", "ltd", "inc", "plc", "the", "og", "and",
 }
 
+GENERIC_BRAND_TOKENS = {
+    "hold", "holding", "drift", "eiendom", "investering", "group", "invest",
+    "management", "consulting", "norge", "nordic", "service", "partner",
+}
+
 
 def _tokens(value: Any) -> list[str]:
     text = str(value or "").translate(str.maketrans({"ø": "o", "Ø": "O", "å": "a", "Å": "A", "æ": "ae", "Æ": "AE"}))
@@ -115,6 +120,34 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         )
     )
 
+    registry_website = str(
+        registry_value.get("hjemmeside")
+        or profile.get("website")
+        or ""
+    ).strip().casefold()
+    registry_host = registry_website.split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold().removeprefix("www.")
+    registry_domain_match = bool(
+        registry_host
+        and candidate_host
+        and (
+            candidate_host == registry_host
+            or candidate_host.endswith("." + registry_host)
+        )
+    )
+
+    title_text = str(value.get("title") or rendered.get("title") or "")
+    title_tokens = set(_tokens(title_text))
+    cand_domain_root = candidate_host.split(".")[0]
+    brand_tokens = {
+        t for t in set(core) & title_tokens
+        if len(t) >= 4 and t not in GENERIC_BRAND_TOKENS
+    }
+    brand_title_corroboration = (
+        registry_domain_match
+        and bool(brand_tokens)
+        and any(t == cand_domain_root or t in cand_domain_root for t in brand_tokens)
+    )
+
     identity_text = f"{candidate_text} {homepage_candidate_text}"
     compact_identity = _compact_identity_text(identity_text)
 
@@ -180,6 +213,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     homepage_token_sets = [set(_tokens(part)) for part in homepage_identity_parts if part]
     exact_homepage_name = bool(core and any(set(core).issubset(tokens) for tokens in homepage_token_sets))
     substantive_homepage = len(str(value.get("main_text_excerpt") or "").strip()) >= 100
+    substantive_site = substantive_homepage or any(len(str(p.get("main_text_excerpt") or "").strip()) >= 100 for p in value.get("pages", []))
     is_business_sports_club = bool(re.search(r"(?:^|\s)B\.?\s*I\.?\s*L\.?(?:\s|$)", str(profile.get("name") or ""), re.I))
     # Conflicting 9-digit Norwegian OrgNr detection
     found_org_numbers = set(re.findall(r"\b[89]\d{8}\b", homepage_candidate_text))
@@ -216,6 +250,15 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         score = 0.95
         reasons.append(
             "most legal-name tokens appear and candidate hostname matches the registry email domain"
+        )
+    elif (
+        registry_domain_match
+        and brand_title_corroboration
+        and substantive_site
+    ):
+        score = 0.90
+        reasons.append(
+            "candidate domain is registered to company in official registry and homepage title corroborates primary brand token"
         )
     elif ratio >= 0.75 and len(overlap) >= 2:
         score = 0.85

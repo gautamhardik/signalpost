@@ -262,6 +262,67 @@ def run_adversarial_suite() -> dict[str, Any]:
             "expected_exact": True,
             "reason": "Exact OrgNr + complete legal name + municipality match",
         },
+        # --- Category 6: Category E Brand-Title Boundary Cases ---
+        {
+            "id": "COLLISION-03",
+            "category": "Brand Boundary",
+            "name": "Category E brand corroboration with unrelated domain",
+            "profile": {
+                "name": "JØRGEN OTTEREN AS",
+                "organisation_number": "983437672",
+                "municipality": "SANDNES",
+                "evidence": {
+                    "website": {
+                        "status": "available",
+                        "source_url": "https://someothercompany.no",
+                        "value": {
+                            "title": "Otteren Gullsmed",
+                            "identity_text_excerpt": "Otteren Gullsmed and jewelry store in Rogaland.",
+                            "main_text_excerpt": "Welcome to our watch and jewelry boutique in Western Norway.",
+                        },
+                    },
+                    "registry": {
+                        "value": {
+                            "hjemmeside": "https://www.otteren.no",
+                            "forretningsadresse.kommune": "SANDNES",
+                        }
+                    },
+                },
+            },
+            "expected_publishable": False,
+            "expected_exact": False,
+            "reason": "Candidate domain does not match registry-declared domain; Category E must not boost",
+        },
+        {
+            "id": "COLLISION-04",
+            "category": "Brand Boundary",
+            "name": "Category E brand candidate with conflicting OrgNr in page",
+            "profile": {
+                "name": "JØRGEN OTTEREN AS",
+                "organisation_number": "983437672",
+                "municipality": "SANDNES",
+                "evidence": {
+                    "website": {
+                        "status": "available",
+                        "source_url": "https://www.otteren.no",
+                        "value": {
+                            "title": "Otteren Gullsmed",
+                            "identity_text_excerpt": "Otteren Gullsmed Sandnes. Org nr: 999888777",
+                            "main_text_excerpt": "Otteren Gullsmed Sandnes. Contact organisation 999888777 for inquiries.",
+                        },
+                    },
+                    "registry": {
+                        "value": {
+                            "hjemmeside": "https://www.otteren.no",
+                            "forretningsadresse.kommune": "SANDNES",
+                        }
+                    },
+                },
+            },
+            "expected_publishable": False,
+            "expected_exact": False,
+            "reason": "Conflicting OrgNr dominates: must be rejected with score 0.2 even if domain and title match",
+        },
     ]
 
     results = []

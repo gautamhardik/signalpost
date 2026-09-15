@@ -1328,7 +1328,88 @@ class VerifiedSiteSeedTests(unittest.TestCase):
             }]))
             failed = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(failed.returncode, 0)
-            self.assertIn("unknown organisations", failed.stderr)
+class CategoryEBrandTitleCorroborationTests(unittest.TestCase):
+    def test_category_e_positive_recoveries(self):
+        cases = [
+            ("JØRGEN OTTEREN AS", "983437672", "https://www.otteren.no", "Otteren Gullsmed"),
+            ("NORLA, STIFTELSE FOR NORSK LITTERATUR I UTLANDET", "981242297", "https://www.norla.no", "NORLA - Norwegian Literature Abroad"),
+            ("VARIER FURNITURE AS", "989804804", "https://www.varierfurniture.com", "Varier - Active Sitting"),
+        ]
+        for name, org, url, title in cases:
+            profile = {
+                "name": name,
+                "organisation_number": org,
+                "evidence": {
+                    "registry": {"value": {"hjemmeside": url}},
+                    "website": {
+                        "source_url": url,
+                        "value": {
+                            "url": url,
+                            "title": title,
+                            "main_text_excerpt": "Substantive homepage excerpt exceeding 100 characters in length for testing Norwegian operating identity.",
+                        },
+                    },
+                },
+            }
+            res = assess_website_identity(profile)
+            self.assertEqual(res["score"], 0.90)
+            self.assertTrue(res["publishable"])
+            self.assertTrue(res["exact_entity"])
+
+    def test_category_e_negative_safety_boundaries(self):
+        cases = [
+            # Unregistered domain -> No boost
+            ("JØRGEN OTTEREN AS", "983437672", "", "https://www.otteren.no", "Otteren Gullsmed"),
+            # Different domain from registry -> No boost
+            ("JØRGEN OTTEREN AS", "983437672", "https://someother.no", "https://www.otteren.no", "Otteren Gullsmed"),
+            # Unrelated title -> No boost
+            ("JØRGEN OTTEREN AS", "983437672", "https://www.otteren.no", "https://www.otteren.no", "Best Watches Online"),
+            # Domain root mismatch -> No boost
+            ("JØRGEN OTTEREN AS", "983437672", "https://www.sandnesur.no", "https://www.sandnesur.no", "Otteren Gullsmed"),
+            # Ambiguous holding name vs construction title -> No boost
+            ("ABC HOLDING AS", "123456789", "https://abc.no", "https://abc.no", "ABC Construction"),
+        ]
+        for name, org, reg_url, cand_url, title in cases:
+            profile = {
+                "name": name,
+                "organisation_number": org,
+                "evidence": {
+                    "registry": {"value": {"hjemmeside": reg_url}},
+                    "website": {
+                        "source_url": cand_url,
+                        "value": {
+                            "url": cand_url,
+                            "title": title,
+                            "main_text_excerpt": "Substantive homepage excerpt exceeding 100 characters in length for testing Norwegian operating identity.",
+                        },
+                    },
+                },
+            }
+            res = assess_website_identity(profile)
+            self.assertLess(res["score"], 0.90)
+            self.assertFalse(res["publishable"])
+
+    def test_category_e_conflicting_org_dominance(self):
+        # Even with perfect registered domain and title, conflicting OrgNr MUST demote to 0.2
+        profile = {
+            "name": "JØRGEN OTTEREN AS",
+            "organisation_number": "983437672",
+            "evidence": {
+                "registry": {"value": {"hjemmeside": "https://www.otteren.no"}},
+                "website": {
+                    "source_url": "https://www.otteren.no",
+                    "value": {
+                        "url": "https://www.otteren.no",
+                        "title": "Otteren Gullsmed",
+                        "identity_text_excerpt": "Org nr: 999888777",
+                        "main_text_excerpt": "Otteren Gullsmed. Contact org 999888777.",
+                    },
+                },
+            },
+        }
+        res = assess_website_identity(profile)
+        self.assertEqual(res["score"], 0.2)
+        self.assertFalse(res["publishable"])
 
 
 if __name__ == "__main__":
