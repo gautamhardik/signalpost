@@ -77,6 +77,55 @@ def diff_datasets(previous: list[dict[str, Any]], current: list[dict[str, Any]])
     ]
 
 
+from .history import (
+    ChangeEvent,
+    EvidenceRef,
+    SnapshotRecord,
+    SnapshotStore,
+    create_snapshot_record,
+    diff_snapshots,
+    summarize_history,
+)
+
+
+def refresh_company_snapshot(
+    current_profile: dict[str, Any],
+    store: SnapshotStore,
+    *,
+    jobs: list[dict[str, Any]] | None = None,
+    activities: list[dict[str, Any]] | None = None,
+    sources: list[dict[str, Any]] | None = None,
+    captured_at: str | None = None,
+) -> tuple[SnapshotRecord, list[ChangeEvent]]:
+    """Refresh a company's persistent state:
+    1. Loads the latest historical snapshot if available.
+    2. Builds the new immutable SnapshotRecord.
+    3. Computes deterministic ChangeEvents.
+    4. Appends the new snapshot to the append-only store (replay-safe).
+    Returns (current_snapshot, change_events).
+    """
+    orgnr = current_profile.get("organisation_number")
+    if not orgnr:
+        raise ValueError("Refreshing company requires an organisation_number")
+
+    previous_snapshot = store.get_latest_snapshot(orgnr)
+    current_snapshot = create_snapshot_record(
+        current_profile,
+        captured_at=captured_at,
+        jobs=jobs,
+        activities=activities,
+        sources=sources,
+    )
+
+    if previous_snapshot is not None:
+        changes = diff_snapshots(previous_snapshot, current_snapshot)
+    else:
+        changes = []
+
+    store.save_snapshot(current_snapshot)
+    return current_snapshot, changes
+
+
 def summarize_profile_changes(diffs: list[dict[str, Any]]) -> dict[str, Any]:
     """Produce a concise, human-readable and structured change summary for temporal intelligence."""
     by_org: dict[str, list[dict[str, Any]]] = {}
