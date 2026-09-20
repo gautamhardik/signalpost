@@ -15,7 +15,13 @@ from norway_company_agent.evidence import utc_now  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 from norway_company_agent.official import fetch_official_modules  # noqa: E402
 from norway_company_agent.website import fetch_website  # noqa: E402
-from norway_company_agent.discovery import choose_search_candidate, build_flexible_company_search_queries  # noqa: E402
+from norway_company_agent.discovery import (
+    assess_candidate_funnel,
+    build_flexible_company_search_queries,
+    choose_search_candidate,
+    generate_company_candidate_sources,
+    normalize_candidate_url,
+)
 import urllib.parse
 import urllib.request
 
@@ -68,26 +74,30 @@ def main() -> None:
             website_record, website_metrics = fetch_website(website_url)
             gated = apply_website_identity_gate(profile, website_record)
             
-            # If no website or not publishable/available, attempt Layer 1: Deterministic Email Domain
+            # If no website or not publishable/available, execute structured candidate discovery funnel
             if gated["website"].get("status") not in ("available", "blocked") or not (gated["assessment"] or {}).get("publishable"):
-                reg_val = profile.get("evidence", {}).get("registry", {}).get("value") or {}
-                raw_email = str(reg_val.get("epostadresse") or reg_val.get("epost") or "").strip().casefold()
-                if raw_email and "@" in raw_email:
-                    email_domain = raw_email.rsplit("@", 1)[-1].removeprefix("www.")
-                    generic = {"gmail.com", "googlemail.com", "hotmail.com", "hotmail.no", "outlook.com", "live.com", "live.no", "yahoo.com", "yahoo.no", "icloud.com", "online.no", "telenor.no"}
-                    if email_domain not in generic and "." in email_domain and len(email_domain) >= 4:
-                        for cand_url in [f"https://{email_domain}/", f"https://www.{email_domain}/"]:
-                            c_rec, c_met = fetch_website(cand_url)
-                            website_metrics["requests"] += c_met.get("requests", 0)
-                            website_metrics["bytes"] += c_met.get("bytes", 0)
-                            website_metrics["latencies_ms"].extend(c_met.get("latencies_ms", []))
-                            c_gated = apply_website_identity_gate(profile, c_rec)
-                            if c_rec.get("status") == "available" and (c_gated["assessment"] or {}).get("publishable"):
-                                gated = c_gated
-                                break
-                            elif c_rec.get("status") in ("blocked_robots", "blocked_policy") and "disallow" in str(c_rec.get("note") or "").lower():
-                                gated = c_gated
-                                break
+                candidate_sources = generate_company_candidate_sources(profile)
+                unfetched_cands = [c for c in candidate_sources if normalize_candidate_url(c.url) != normalize_candidate_url(website_url)]
+                
+                def batch_fetch(url: str) -> tuple[dict, dict]:
+                    rec, met = fetch_website(url)
+                    website_metrics["requests"] += met.get("requests", 0)
+                    website_metrics["bytes"] += met.get("bytes", 0)
+                    website_metrics["latencies_ms"].extend(met.get("latencies_ms", []))
+                    return rec, met
+
+                funnel_result = assess_candidate_funnel(
+                    profile,
+                    unfetched_cands,
+                    fetch_fn=batch_fetch,
+                    identity_gate_fn=apply_website_identity_gate,
+                    max_fetches=3,
+                )
+                profile["discovery_funnel"] = funnel_result.get("funnel_metrics")
+                if funnel_result.get("verified_sources"):
+                    top_verified = funnel_result["verified_sources"][0]
+                    v_rec, _ = fetch_website(top_verified["url"])
+                    gated = apply_website_identity_gate(profile, v_rec)
 
             # If still not found or not publishable, attempt Layer 2: Controlled Search Discovery
             if not (gated.get("assessment") or {}).get("publishable"):
@@ -170,6 +180,33 @@ def main() -> None:
     latencies = sorted(operations.pop("latencies_ms"))
     operations["p50_ms"] = latencies[len(latencies) // 2] if latencies else None
     operations["p95_ms"] = latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else None
+    # Aggregate discovery funnel statistics across profiles
+    agg_funnel = {
+        "generated": 0,
+        "fetched": 0,
+        "plausible": 0,
+        "verified": 0,
+        "rejected": 0,
+        "rejection_reasons": {},
+        "requests": 0,
+        "bytes": 0,
+    }
+    for p in ordered_profiles:
+        df = p.get("discovery_funnel")
+        if df:
+            agg_funnel["generated"] += df.get("generated", 0)
+            agg_funnel["fetched"] += df.get("fetched", 0)
+            agg_funnel["plausible"] += df.get("plausible", 0)
+            agg_funnel["verified"] += df.get("verified", 0)
+            agg_funnel["rejected"] += df.get("rejected", 0)
+            agg_funnel["requests"] += df.get("requests", 0)
+            agg_funnel["bytes"] += df.get("bytes", 0)
+            for reason, count in (df.get("rejection_reasons") or {}).items():
+                agg_funnel["rejection_reasons"][reason] = agg_funnel["rejection_reasons"].get(reason, 0) + count
+
+    verified_yield = round(agg_funnel["verified"] / agg_funnel["fetched"], 3) if agg_funnel["fetched"] > 0 else 0.0
+    candidate_efficiency = round(agg_funnel["verified"] / agg_funnel["requests"], 3) if agg_funnel["requests"] > 0 else 0.0
+
     report = {
         "run_id": args.run_id,
         "started_at": started_at,
@@ -180,7 +217,16 @@ def main() -> None:
         "profiles_fetched_this_run": len(pending_profiles),
         "modules": requested_modules,
         "registry": registry_metadata,
-        "operations": operations,
+        "discovery_funnel": {
+            **agg_funnel,
+            "verified_yield": verified_yield,
+            "candidate_efficiency": candidate_efficiency,
+        },
+        "operations": {
+            **operations,
+            "p50_ms": latencies[len(latencies) // 2] if latencies else 0,
+            "p95_ms": latencies[int(len(latencies) * 0.95)] if latencies else 0,
+        },
         "validation": validation,
     }
     Path(args.report).parent.mkdir(parents=True, exist_ok=True)
