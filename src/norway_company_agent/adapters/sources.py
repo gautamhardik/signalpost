@@ -199,6 +199,13 @@ class SiteNewsAdapter(BaseSourceAdapter):
         if not org or not is_publishable:
             return observations
 
+        # 1. First-class discrete dated activities via activity.py
+        from ..activity import extract_activity_observations
+        discrete_activities = extract_activity_observations(profile)
+        if discrete_activities:
+            return discrete_activities
+
+        # 2. General news page presence fallback
         pages = val.get("pages") or []
         news_pages = []
         news_terms = ("nyheter", "aktuelt", "presse", "news", "artikler", "blog", "blogg", "pressemeldinger")
@@ -244,6 +251,7 @@ class SiteNewsAdapter(BaseSourceAdapter):
                 }
                 observations.append(obs)
         return observations
+
 
 
 class SubunitsAdapter(BaseSourceAdapter):
