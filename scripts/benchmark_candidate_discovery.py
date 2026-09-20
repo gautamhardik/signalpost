@@ -134,9 +134,11 @@ def main() -> None:
     gt_funnel = {
         "companies_audited": len(gt_companies),
         "candidates_generated": 0,
+        "not_fetched": 0,
         "candidates_fetched": 0,
         "plausible_candidates": 0,
         "verified_candidates": 0,
+        "rejected_after_fetch": 0,
         "rejected_candidates": 0,
         "rejection_reasons": {r.value: 0 for r in CandidateRejectionReason},
         "requests": 0,
@@ -162,9 +164,11 @@ def main() -> None:
 
             res = item["funnel_result"]
             f_met = res["funnel_metrics"]
+            gt_funnel["not_fetched"] += f_met.get("not_fetched", 0)
             gt_funnel["candidates_fetched"] += f_met["fetched"]
             gt_funnel["plausible_candidates"] += f_met["plausible"]
             gt_funnel["verified_candidates"] += f_met["verified"]
+            gt_funnel["rejected_after_fetch"] += f_met.get("rejected_after_fetch", 0)
             gt_funnel["rejected_candidates"] += f_met["rejected"]
             gt_funnel["requests"] += f_met["requests"]
             gt_funnel["bytes"] += f_met["bytes"]
@@ -218,10 +222,13 @@ def main() -> None:
     print("=" * 70, flush=True)
     print(f"Companies Researched:            {gt_funnel['companies_audited']}", flush=True)
     print(f"Candidates Generated:            {gt_funnel['candidates_generated']}", flush=True)
-    print(f"Candidates Fetched:              {gt_funnel['candidates_fetched']}", flush=True)
-    print(f"Plausible Candidates (Score>=0.5):{gt_funnel['plausible_candidates']}", flush=True)
-    print(f"Identity Verified Sources:       {gt_funnel['verified_candidates']}", flush=True)
-    print(f"Rejected Candidates:             {gt_funnel['rejected_candidates']}", flush=True)
+    print(f"  |-- Not Fetched:               {gt_funnel['not_fetched']} (pre-filter / capped / early terminated)", flush=True)
+    print(f"  `-- Candidates Fetched:        {gt_funnel['candidates_fetched']}", flush=True)
+    print(f"        |-- Plausible (Score>=0.5): {gt_funnel['plausible_candidates']}", flush=True)
+    print(f"        |-- Verified Sources:       {gt_funnel['verified_candidates']}", flush=True)
+    print(f"        `-- Rejected After Fetch:   {gt_funnel['rejected_after_fetch']}", flush=True)
+    print(f"Total Non-Verified (Rejected):   {gt_funnel['rejected_candidates']} (Not Fetched + Rejected After Fetch)", flush=True)
+    print(f"Funnel Math Invariant Verified:  {gt_funnel['candidates_generated'] == gt_funnel['not_fetched'] + gt_funnel['candidates_fetched'] and gt_funnel['candidates_fetched'] == gt_funnel['verified_candidates'] + gt_funnel['rejected_after_fetch'] and gt_funnel['rejected_candidates'] == gt_funnel['not_fetched'] + gt_funnel['rejected_after_fetch']}", flush=True)
     print(f"Verified Yield (Verified/Fetch): {gt_funnel['verified_yield']*100:.1f}%", flush=True)
     print(f"Candidate Efficiency (Ver/Req):  {gt_funnel['candidate_efficiency']:.3f}", flush=True)
     print(f"Total Requests:                  {gt_funnel['requests']} (Target <= 1500)", flush=True)

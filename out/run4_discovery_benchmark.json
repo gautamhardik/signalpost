@@ -1,0 +1,71 @@
+{
+  "run_id": "run-4-candidate-discovery",
+  "benchmark_title": "Run 4: External Candidate Discovery Funnel Audit",
+  "primary_ground_truth_100": {
+    "funnel": {
+      "companies_audited": 100,
+      "candidates_generated": 387,
+      "not_fetched": 278,
+      "candidates_fetched": 109,
+      "plausible_candidates": 43,
+      "verified_candidates": 40,
+      "rejected_after_fetch": 69,
+      "rejected_candidates": 347,
+      "rejection_reasons": {
+        "wrong_orgnr": 0,
+        "wrong_domain": 0,
+        "parent_entity": 0,
+        "subsidiary_entity": 0,
+        "parked_domain": 0,
+        "generic_aggregator": 0,
+        "unrelated_company": 3,
+        "no_identity_evidence": 15,
+        "blocked": 37,
+        "dead_domain": 14,
+        "invalid_url": 0,
+        "unfetched_capped": 110,
+        "unfetched_early_terminated": 168,
+        "prefilter_blocked": 0
+      },
+      "requests": 416,
+      "bytes": 28064673,
+      "wrong_company_publications": 0,
+      "verified_yield": 0.367,
+      "candidate_efficiency": 0.096
+    },
+    "cohort_breakdown": {
+      "operating_large_with_web": {
+        "total": 25,
+        "verified": 16,
+        "expected_available": 25
+      },
+      "operating_small_with_web": {
+        "total": 25,
+        "verified": 16,
+        "expected_available": 25
+      },
+      "operating_no_reg_web": {
+        "total": 25,
+        "verified": 8,
+        "expected_available": 0
+      },
+      "holding_no_web_abstain": {
+        "total": 25,
+        "verified": 0,
+        "expected_available": 0
+      }
+    }
+  },
+  "operations": {
+    "total_requests": 416,
+    "total_bytes": 28064673,
+    "elapsed_seconds": 46.2,
+    "cost_usd": 0.0
+  },
+  "invariants": {
+    "wrong_company_publications": 0,
+    "zero_wrong_company_gate": true,
+    "zero_api_cost_gate": true,
+    "budget_safe_gate": true
+  }
+}

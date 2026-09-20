@@ -45,6 +45,9 @@ class CandidateRejectionReason(str, enum.Enum):
     BLOCKED = "blocked"
     DEAD_DOMAIN = "dead_domain"
     INVALID_URL = "invalid_url"
+    UNFETCHED_CAPPED = "unfetched_capped"
+    UNFETCHED_EARLY_TERMINATED = "unfetched_early_terminated"
+    PREFILTER_BLOCKED = "prefilter_blocked"
 
 
 @dataclass
@@ -335,10 +338,12 @@ def assess_candidate_funnel(
     """
     funnel_metrics = {
         "generated": len(candidates),
+        "not_fetched": 0,
         "fetched": 0,
         "plausible": 0,
         "verified": 0,
-        "rejected": 0,
+        "rejected_after_fetch": 0,
+        "rejected": 0,  # total non-verified candidates = not_fetched + rejected_after_fetch
         "rejection_reasons": {r.value: 0 for r in CandidateRejectionReason},
         "requests": 0,
         "bytes": 0,
@@ -346,23 +351,36 @@ def assess_candidate_funnel(
 
     verified_sources: list[CandidateSource] = []
     fetches_made = 0
+    verified_found = False
 
     for cand in candidates:
+        # If an authoritative verified official website has already been confirmed,
+        # terminate subsequent candidate fetches early to conserve request budget
+        if verified_found:
+            cand.verification_status = "rejected"
+            cand.rejection_reason = CandidateRejectionReason.UNFETCHED_EARLY_TERMINATED.value
+            funnel_metrics["not_fetched"] += 1
+            funnel_metrics["rejected"] += 1
+            funnel_metrics["rejection_reasons"][CandidateRejectionReason.UNFETCHED_EARLY_TERMINATED.value] += 1
+            continue
+
         # Pre-filter checks
         parsed = urllib.parse.urlparse(cand.url)
         host = (parsed.hostname or "").casefold().removeprefix("www.")
         if any(host == b or host.endswith("." + b) for b in BLOCKED_DISCOVERY_HOSTS):
             cand.verification_status = "rejected"
             cand.rejection_reason = CandidateRejectionReason.GENERIC_AGGREGATOR.value
+            funnel_metrics["not_fetched"] += 1
             funnel_metrics["rejected"] += 1
             funnel_metrics["rejection_reasons"][CandidateRejectionReason.GENERIC_AGGREGATOR.value] += 1
             continue
 
         if fetches_made >= max_fetches:
             cand.verification_status = "rejected"
-            cand.rejection_reason = CandidateRejectionReason.NO_IDENTITY_EVIDENCE.value
+            cand.rejection_reason = CandidateRejectionReason.UNFETCHED_CAPPED.value
+            funnel_metrics["not_fetched"] += 1
             funnel_metrics["rejected"] += 1
-            funnel_metrics["rejection_reasons"][CandidateRejectionReason.NO_IDENTITY_EVIDENCE.value] += 1
+            funnel_metrics["rejection_reasons"][CandidateRejectionReason.UNFETCHED_CAPPED.value] += 1
             continue
 
         # Fetch candidate
@@ -375,17 +393,15 @@ def assess_candidate_funnel(
         status = web_record.get("status")
         if status in ("source_error", "not_found"):
             cand.verification_status = "rejected"
-            note = str(web_record.get("note") or "").lower()
-            if "gaierror" in note or "unknown" in note or "resolve" in note or "timed out" in note:
-                cand.rejection_reason = CandidateRejectionReason.DEAD_DOMAIN.value
-            else:
-                cand.rejection_reason = CandidateRejectionReason.DEAD_DOMAIN.value
+            cand.rejection_reason = CandidateRejectionReason.DEAD_DOMAIN.value
+            funnel_metrics["rejected_after_fetch"] += 1
             funnel_metrics["rejected"] += 1
-            funnel_metrics["rejection_reasons"][cand.rejection_reason] += 1
+            funnel_metrics["rejection_reasons"][CandidateRejectionReason.DEAD_DOMAIN.value] += 1
             continue
         elif status in ("blocked", "blocked_robots", "blocked_policy"):
             cand.verification_status = "rejected"
             cand.rejection_reason = CandidateRejectionReason.BLOCKED.value
+            funnel_metrics["rejected_after_fetch"] += 1
             funnel_metrics["rejected"] += 1
             funnel_metrics["rejection_reasons"][CandidateRejectionReason.BLOCKED.value] += 1
             continue
@@ -412,10 +428,10 @@ def assess_candidate_funnel(
             cand.verification_status = "verified"
             funnel_metrics["verified"] += 1
             verified_sources.append(cand)
-            # Once verified official website found, no need to fetch further website candidates
-            break
+            verified_found = True
         else:
             cand.verification_status = "rejected"
+            funnel_metrics["rejected_after_fetch"] += 1
             funnel_metrics["rejected"] += 1
             # Determine specific rejection category
             if assessment.get("is_parked"):
