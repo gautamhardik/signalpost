@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from norway_company_agent.batch import profile_complete_for_modules, profiles_from_bulk, read_organisation_inputs, terminal_envelope, validate_envelopes  # noqa: E402
-from norway_company_agent.evidence import utc_now  # noqa: E402
+from norway_company_agent.evidence import evidence, utc_now  # noqa: E402
+from norway_company_agent.external_footprint import aggregate_footprint, extract_profile_footprint_observations  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 from norway_company_agent.official import fetch_official_modules  # noqa: E402
 from norway_company_agent.website import fetch_website  # noqa: E402
@@ -133,6 +134,20 @@ def main() -> None:
                         pass
 
             profile["evidence"]["website"] = gated["website"]
+
+        # Extract verified external footprint observations (jobs, activity, social, subunits)
+        observations = extract_profile_footprint_observations(profile)
+        footprint_summary = aggregate_footprint(observations)
+        footprint_summary["observations"] = observations
+        top_url = (profile.get("evidence", {}).get("website", {}).get("value") or {}).get("final_url") or profile.get("website") or ""
+        profile["evidence"]["external_footprint"] = evidence(
+            "external_footprint",
+            "available" if observations else "not_available",
+            "external_footprint",
+            top_url or f"urn:external-footprint:{profile['organisation_number']}",
+            value=footprint_summary,
+            as_of=utc_now(),
+        )
 
         metric = {
             "requests": len(metrics) + website_metrics["requests"],

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import gzip
 import hashlib
+import json
 import random
 import heapq
 import urllib.parse
@@ -142,14 +143,48 @@ def deterministic_financial_filer_sample(
 
 
 def iter_bulk(path: str | Path) -> Iterable[dict[str, Any]]:
-    with gzip.open(path, "rt", encoding="utf-8-sig", newline="") as handle:
+    p = Path(path)
+    open_fn = gzip.open if p.suffix == ".gz" or str(p).endswith(".gz") else open
+    with open_fn(path, "rt", encoding="utf-8-sig", newline="") as handle:
         sample = handle.read(8192)
         handle.seek(0)
-        dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
-        for row in csv.DictReader(handle, dialect=dialect):
-            record = normalize_row(row)
-            if len(record["organisation_number"]) == 9:
-                yield record
+        stripped = sample.strip()
+        if stripped.startswith("{"):
+            # JSON Lines format
+            for line in handle:
+                line_str = line.strip()
+                if not line_str:
+                    continue
+                try:
+                    obj = json.loads(line_str)
+                except Exception:
+                    continue
+                if "organisasjonsnummer" in obj or "navn" in obj:
+                    record = normalize_row(obj)
+                else:
+                    record = {
+                        "organisation_number": str(obj.get("organisation_number") or ""),
+                        "name": str(obj.get("name") or ""),
+                        "legal_form": str(obj.get("legal_form") or ""),
+                        "employees": obj.get("employees"),
+                        "bankrupt": bool(obj.get("bankrupt")),
+                        "liquidating": bool(obj.get("liquidating")),
+                        "municipality": str(obj.get("municipality") or ""),
+                        "municipality_number": str(obj.get("municipality_number") or ""),
+                        "industry_code": str(obj.get("industry_code") or ""),
+                        "industry_label": str(obj.get("industry_label") or ""),
+                        "website": str(obj.get("website") or ""),
+                        "latest_submitted_accounts": str(obj.get("latest_submitted_accounts") or ""),
+                        "raw": obj.get("raw") or obj,
+                    }
+                if len(record["organisation_number"]) == 9:
+                    yield record
+        else:
+            dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
+            for row in csv.DictReader(handle, dialect=dialect):
+                record = normalize_row(row)
+                if len(record["organisation_number"]) == 9:
+                    yield record
 
 
 def deterministic_sample(path: str | Path, count: int, seed: int = 20260822) -> tuple[list[dict[str, Any]], dict[str, Any]]:
