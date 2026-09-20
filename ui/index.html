@@ -559,9 +559,39 @@
       document.getElementById('changesCountBadge').innerText = comp.changes ? comp.changes.length : 0;
       document.getElementById('sourcesCountBadge').innerText = comp.sources ? comp.sources.length : 0;
 
-      // Tab 1: Overview
+      // Tab 1: Overview (Decision-Oriented Synthesis)
       const summaryBox = document.getElementById('summaryBox');
-      if (comp.deterministic_summary && comp.deterministic_summary.length > 0) {
+      if (comp.structured_summary) {
+        const s = comp.structured_summary;
+        summaryBox.innerHTML = `
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-blue); margin-bottom:0.5rem; letter-spacing:0.05em;">Operational Profile</div>
+              <ul style="list-style:none; padding:0; font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+                ${s.operational_profile.map(item => `<li>&bull; ${item}</li>`).join('')}
+              </ul>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-cyan); margin-bottom:0.5rem; letter-spacing:0.05em;">Current Signals</div>
+              <ul style="list-style:none; padding:0; font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+                ${s.current_signals.map(item => `<li>&bull; ${item}</li>`).join('')}
+              </ul>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-amber); margin-bottom:0.5rem; letter-spacing:0.05em;">Recent Changes</div>
+              <ul style="list-style:none; padding:0; font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+                ${s.recent_changes.map(item => `<li>&bull; ${item}</li>`).join('')}
+              </ul>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-green); margin-bottom:0.5rem; letter-spacing:0.05em;">Evidence Provenance</div>
+              <ul style="list-style:none; padding:0; font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+                ${s.evidence.map(item => `<li>&bull; ${item}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      } else if (comp.deterministic_summary && comp.deterministic_summary.length > 0) {
         summaryBox.innerHTML = comp.deterministic_summary.map(p => `<p>${p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/`(.*?)`/g, '<code>$1</code>')}</p>`).join('');
       } else {
         summaryBox.innerHTML = `<p>Verified legal entity <strong>${comp.name}</strong> registered in Brønnøysundregistrene under organization number <code>${comp.organisation_number}</code>.</p>`;

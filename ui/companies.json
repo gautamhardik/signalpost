@@ -10,11 +10,28 @@
     "employees": 12,
     "website": "https://www.autobjorn.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**AUTOBJØRN A/S** (Org.nr. `810359862`) is a Norwegian `AS` located in **OSLO** operating within *Reparasjon og vedlikehold av motorvogner* (NACE `95.310`).",
-      "**Corporate Vitality:** 12 registered employees. Official website: https://www.autobjorn.no. Leadership: Daglig leder **Leder 9862** and Styrets leder **Styrets leder 9862**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "12 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Reparasjon og vedlikehold av motorvogner (NACE 95.310)",
+        "Legal Form: AS",
+        "Executive: Leder 9862 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "1 recent dated activity event(s) (AUTOBJØRN A/S styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 10 → 12",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.autobjorn.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -180,11 +197,29 @@
     "employees": 14,
     "website": "https://www.elektropartner-bergen.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**ELEKTRO PARTNER AS** (Org.nr. `871235422`) is a Norwegian `AS` located in **BERGEN** operating within *Elektrisk installasjonsarbeid* (NACE `43.210`).",
-      "**Corporate Vitality:** 14 registered employees. Official website: https://www.elektropartner-bergen.no. Leadership: Daglig leder **Leder 5422** and Styrets leder **Styrets leder 5422**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "14 registered employees",
+        "Based in BERGEN, Norway",
+        "Industry: Elektrisk installasjonsarbeid (NACE 43.210)",
+        "Legal Form: AS",
+        "Executive: Leder 5422 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Servicetekniker, Lærling / Trainee)",
+        "2 recent dated activity event(s) (ELEKTRO PARTNER AS styrker satsingen i BERGEN...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 12 → 14",
+        "+ Added job: Servicetekniker",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.elektropartner-bergen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -407,11 +442,29 @@
     "employees": 14,
     "website": "https://www.zynk.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**ZYNK AS** (Org.nr. `895891622`) is a Norwegian `AS` located in **OSLO** operating within *Pr og kommunikasjonstjenester* (NACE `73.300`).",
-      "**Corporate Vitality:** 14 registered employees. Official website: https://www.zynk.no. Leadership: Daglig leder **Leder 1622** and Styrets leder **Styrets leder 1622**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "14 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Pr og kommunikasjonstjenester (NACE 73.300)",
+        "Legal Form: AS",
+        "Executive: Leder 1622 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (ZYNK AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 12 → 14",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.zynk.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -634,11 +687,29 @@
     "employees": 10,
     "website": "https://www.sonshus.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**SONSHUS AS** (Org.nr. `912700704`) is a Norwegian `AS` located in **VESTBY** operating within *Utvikling og salg av byggeprosjekter* (NACE `68.120`).",
-      "**Corporate Vitality:** 10 registered employees. Official website: https://www.sonshus.no. Leadership: Daglig leder **Leder 0704** and Styrets leder **Styrets leder 0704**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "10 registered employees",
+        "Based in VESTBY, Norway",
+        "Industry: Utvikling og salg av byggeprosjekter (NACE 68.120)",
+        "Legal Form: AS",
+        "Executive: Leder 0704 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (SONSHUS AS styrker satsingen i VESTBY...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 8 → 10",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.sonshus.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -839,11 +910,29 @@
     "employees": 22,
     "website": "https://naturbasen.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**NATURBASEN BARNEHAGE AS** (Org.nr. `914886473`) is a Norwegian `AS` located in **BERGEN** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 22 registered employees. Official website: https://naturbasen.no. Leadership: Daglig leder **Leder 6473** and Styrets leder **Styrets leder 6473**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "22 registered employees",
+        "Based in BERGEN, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: AS",
+        "Executive: Leder 6473 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (NATURBASEN BARNEHAGE AS styrker satsingen i B...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 20 → 22",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://naturbasen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -1066,11 +1155,29 @@
     "employees": 31,
     "website": "https://www.erase.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**ERASE AS** (Org.nr. `917361266`) is a Norwegian `AS` located in **OSLO** operating within *Riving av bygninger og andre byggverk* (NACE `43.110`).",
-      "**Corporate Vitality:** 31 registered employees. Official website: https://www.erase.no. Leadership: Daglig leder **Leder 1266** and Styrets leder **Styrets leder 1266**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "31 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Riving av bygninger og andre byggverk (NACE 43.110)",
+        "Legal Form: AS",
+        "Executive: Leder 1266 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (ERASE AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 29 → 31",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.erase.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -1293,11 +1400,29 @@
     "employees": 13,
     "website": "https://Ingen.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**BØIFOT EIENDOM AS** (Org.nr. `920742130`) is a Norwegian `AS` located in **ASKER** operating within *Drift av hoteller* (NACE `55.100`).",
-      "**Corporate Vitality:** 13 registered employees. Official website: https://Ingen.no. Leadership: Daglig leder **Leder 2130** and Styrets leder **Styrets leder 2130**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "13 registered employees",
+        "Based in ASKER, Norway",
+        "Industry: Drift av hoteller (NACE 55.100)",
+        "Legal Form: AS",
+        "Executive: Leder 2130 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (BØIFOT EIENDOM AS styrker satsingen i ASKER...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 11 → 13",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://Ingen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -1520,11 +1645,29 @@
     "employees": 11,
     "website": "https://nyetroms.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**AS NYE TROMS** (Org.nr. `926183273`) is a Norwegian `AS` located in **MÅLSELV** operating within *Utgivelse av blader og tidsskrifter* (NACE `58.130`).",
-      "**Corporate Vitality:** 11 registered employees. Official website: https://nyetroms.no. Leadership: Daglig leder **Leder 3273** and Styrets leder **Styrets leder 3273**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "11 registered employees",
+        "Based in MÅLSELV, Norway",
+        "Industry: Utgivelse av blader og tidsskrifter (NACE 58.130)",
+        "Legal Form: AS",
+        "Executive: Leder 3273 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (AS NYE TROMS styrker satsingen i MÅLSELV...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 9 → 11",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://nyetroms.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -1725,11 +1868,29 @@
     "employees": 22,
     "website": "https://lonneberget-bhg.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**LØNNEBERGET BARNEHAGE AS** (Org.nr. `932252163`) is a Norwegian `AS` located in **HAUGESUND** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 22 registered employees. Official website: https://lonneberget-bhg.no. Leadership: Daglig leder **Leder 2163** and Styrets leder **Styrets leder 2163**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "22 registered employees",
+        "Based in HAUGESUND, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: AS",
+        "Executive: Leder 2163 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (LØNNEBERGET BARNEHAGE AS styrker satsingen i ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 20 → 22",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://lonneberget-bhg.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -1952,11 +2113,29 @@
     "employees": 54,
     "website": "https://www.columbi.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**COLUMBI MICRO AS** (Org.nr. `938993335`) is a Norwegian `AS` located in **MOSS** operating within *Utgivelse av annen programvare* (NACE `58.290`).",
-      "**Corporate Vitality:** 54 registered employees. Official website: https://www.columbi.no. Leadership: Daglig leder **Leder 3335** and Styrets leder **Styrets leder 3335**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "54 registered employees",
+        "Based in MOSS, Norway",
+        "Industry: Utgivelse av annen programvare (NACE 58.290)",
+        "Legal Form: AS",
+        "Executive: Leder 3335 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (COLUMBI MICRO AS styrker satsingen i MOSS...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 52 → 54",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.columbi.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -2179,11 +2358,29 @@
     "employees": 50,
     "website": "https://www.zerostores.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**ZERO AS** (Org.nr. `950318651`) is a Norwegian `AS` located in **VADSØ** operating within *Detaljhandel med klær* (NACE `47.710`).",
-      "**Corporate Vitality:** 50 registered employees. Official website: https://www.zerostores.no. Leadership: Daglig leder **Leder 8651** and Styrets leder **Styrets leder 8651**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "50 registered employees",
+        "Based in VADSØ, Norway",
+        "Industry: Detaljhandel med klær (NACE 47.710)",
+        "Legal Form: AS",
+        "Executive: Leder 8651 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (ZERO AS styrker satsingen i VADSØ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 48 → 50",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.zerostores.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -2406,11 +2603,29 @@
     "employees": 106,
     "website": "https://www.palfingermarine.com",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**PALFINGER MARINE NORWAY AS** (Org.nr. `960256778`) is a Norwegian `AS` located in **BERGEN** operating within *Produksjon av løfte- og håndteringsutstyr* (NACE `28.220`).",
-      "**Corporate Vitality:** 106 registered employees. Official website: https://www.palfingermarine.com. Leadership: Daglig leder **Leder 6778** and Styrets leder **Styrets leder 6778**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "106 registered employees",
+        "Based in BERGEN, Norway",
+        "Industry: Produksjon av løfte- og håndteringsutstyr (NACE 28.220)",
+        "Legal Form: AS",
+        "Executive: Leder 6778 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (PALFINGER MARINE NORWAY AS styrker satsingen ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 104 → 106",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.palfingermarine.com",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -2633,11 +2848,29 @@
     "employees": 29,
     "website": "https://www.malermestrene.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**MALERMESTRENE INDRE ØSTLAND AS** (Org.nr. `967607568`) is a Norwegian `AS` located in **GJØVIK** operating within *Maler- og glassarbeid* (NACE `43.340`).",
-      "**Corporate Vitality:** 29 registered employees. Official website: https://www.malermestrene.no. Leadership: Daglig leder **Leder 7568** and Styrets leder **Styrets leder 7568**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "29 registered employees",
+        "Based in GJØVIK, Norway",
+        "Industry: Maler- og glassarbeid (NACE 43.340)",
+        "Legal Form: AS",
+        "Executive: Leder 7568 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (MALERMESTRENE INDRE ØSTLAND AS styrker satsin...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 27 → 29",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.malermestrene.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -2860,11 +3093,28 @@
     "employees": 14,
     "website": "https://www.aurland.kommune.no/spiren-gardsbarnehage-privat.167777.nn.html",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**SPIREN GARDSBARNEHAGE SA** (Org.nr. `971489979`) is a Norwegian `SA` located in **AURLAND** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 14 registered employees. Official website: https://www.aurland.kommune.no/spiren-gardsbarnehage-privat.167777.nn.html. Leadership: Daglig leder **Leder 9979** and Styrets leder **Styrets leder 9979**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "14 registered employees",
+        "Based in AURLAND, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: SA",
+        "Executive: Leder 9979 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "1 recent dated activity event(s) (SPIREN GARDSBARNEHAGE SA styrker satsingen i ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 12 → 14",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.aurland.kommune.no/spiren-gardsbarnehage-privat.167777.nn.html",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -3030,11 +3280,29 @@
     "employees": 74,
     "website": "https://www.dominos.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**DP TRONDHEIM AS** (Org.nr. `976336224`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Drift av restauranter* (NACE `56.110`).",
-      "**Corporate Vitality:** 74 registered employees. Official website: https://www.dominos.no. Leadership: Daglig leder **Leder 6224** and Styrets leder **Styrets leder 6224**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "74 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Drift av restauranter (NACE 56.110)",
+        "Legal Form: AS",
+        "Executive: Leder 6224 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (DP TRONDHEIM AS styrker satsingen i TRONDHEIM...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 72 → 74",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.dominos.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -3257,11 +3525,29 @@
     "employees": 24,
     "website": "https://www.ndonline.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**NORBYGATA ENGROS AS** (Org.nr. `979496079`) is a Norwegian `AS` located in **OSLO** operating within *Engroshandel med bredt utvalg av nærings- og nytelsesmidler* (NACE `46.390`).",
-      "**Corporate Vitality:** 24 registered employees. Official website: https://www.ndonline.no. Leadership: Daglig leder **Leder 6079** and Styrets leder **Styrets leder 6079**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "24 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Engroshandel med bredt utvalg av nærings- og nytelsesmidler (NACE 46.390)",
+        "Legal Form: AS",
+        "Executive: Leder 6079 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (NORBYGATA ENGROS AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 22 → 24",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.ndonline.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -3484,11 +3770,29 @@
     "employees": 43,
     "website": "https://www.tromsoterminalen.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**TROMSØTERMINALEN AS** (Org.nr. `981320611`) is a Norwegian `AS` located in **TROMSØ** operating within *Drift av gods- og transportsentraler* (NACE `52.211`).",
-      "**Corporate Vitality:** 43 registered employees. Official website: https://www.tromsoterminalen.no. Leadership: Daglig leder **Leder 0611** and Styrets leder **Styrets leder 0611**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "43 registered employees",
+        "Based in TROMSØ, Norway",
+        "Industry: Drift av gods- og transportsentraler (NACE 52.211)",
+        "Legal Form: AS",
+        "Executive: Leder 0611 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (TROMSØTERMINALEN AS styrker satsingen i TROMS...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 41 → 43",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.tromsoterminalen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -3711,11 +4015,29 @@
     "employees": 23,
     "website": "https://www.otteren.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**JØRGEN OTTEREN AS** (Org.nr. `983437672`) is a Norwegian `AS` located in **SANDNES** operating within *Detaljhandel med ur, klokker og smykker* (NACE `47.770`).",
-      "**Corporate Vitality:** 23 registered employees. Official website: https://www.otteren.no. Leadership: Daglig leder **Leder 7672** and Styrets leder **Styrets leder 7672**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "23 registered employees",
+        "Based in SANDNES, Norway",
+        "Industry: Detaljhandel med ur, klokker og smykker (NACE 47.770)",
+        "Legal Form: AS",
+        "Executive: Leder 7672 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (JØRGEN OTTEREN AS styrker satsingen i SANDNES...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 21 → 23",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.otteren.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -3938,11 +4260,29 @@
     "employees": 126,
     "website": "https://www.safetec.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**SAFETEC NORDIC AS** (Org.nr. `985188068`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Annen teknisk konsulentvirksomhet* (NACE `71.129`).",
-      "**Corporate Vitality:** 126 registered employees. Official website: https://www.safetec.no. Leadership: Daglig leder **Leder 8068** and Styrets leder **Styrets leder 8068**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "126 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Annen teknisk konsulentvirksomhet (NACE 71.129)",
+        "Legal Form: AS",
+        "Executive: Leder 8068 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (SAFETEC NORDIC AS styrker satsingen i TRONDHE...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 124 → 126",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.safetec.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -4165,11 +4505,28 @@
     "employees": 51,
     "website": "https://www.skulestadbarnehage.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**SKULESTAD BARNEHAGE SA** (Org.nr. `987002654`) is a Norwegian `SA` located in **VOSS** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 51 registered employees. Official website: https://www.skulestadbarnehage.no. Leadership: Daglig leder **Leder 2654** and Styrets leder **Styrets leder 2654**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "51 registered employees",
+        "Based in VOSS, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: SA",
+        "Executive: Leder 2654 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "1 recent dated activity event(s) (SKULESTAD BARNEHAGE SA styrker satsingen i VO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 49 → 51",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.skulestadbarnehage.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -4335,11 +4692,29 @@
     "employees": 30,
     "website": "https://www.nordicseason.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**NORDIC SEASON PRODUCTS AS** (Org.nr. `988832448`) is a Norwegian `AS` located in **LILLESTRØM** operating within *Uspesifisert engroshandel* (NACE `46.900`).",
-      "**Corporate Vitality:** 30 registered employees. Official website: https://www.nordicseason.no. Leadership: Daglig leder **Leder 2448** and Styrets leder **Styrets leder 2448**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "30 registered employees",
+        "Based in LILLESTRØM, Norway",
+        "Industry: Uspesifisert engroshandel (NACE 46.900)",
+        "Legal Form: AS",
+        "Executive: Leder 2448 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (NORDIC SEASON PRODUCTS AS styrker satsingen i...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 28 → 30",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.nordicseason.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -4562,11 +4937,28 @@
     "employees": 22,
     "website": "https://www.sagatun.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**STIFTELSEN SAGATUN RECOVERY** (Org.nr. `990790213`) is a Norwegian `STI` located in **HAMAR** operating within *Andre sosialtjenester uten botilbud ellers* (NACE `88.996`).",
-      "**Corporate Vitality:** 22 registered employees. Official website: https://www.sagatun.no. Leadership: Daglig leder **Leder 0213** and Styrets leder **Styrets leder 0213**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "22 registered employees",
+        "Based in HAMAR, Norway",
+        "Industry: Andre sosialtjenester uten botilbud ellers (NACE 88.996)",
+        "Legal Form: STI",
+        "Executive: Leder 0213 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "1 recent dated activity event(s) (STIFTELSEN SAGATUN RECOVERY styrker satsingen...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 20 → 22",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.sagatun.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -4732,11 +5124,29 @@
     "employees": 16,
     "website": "https://www.jordbarpikene.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**JORDBÆRPIKENE STJØRDAL AS** (Org.nr. `992766670`) is a Norwegian `AS` located in **STJØRDAL** operating within *Drift av restauranter* (NACE `56.110`).",
-      "**Corporate Vitality:** 16 registered employees. Official website: https://www.jordbarpikene.no. Leadership: Daglig leder **Leder 6670** and Styrets leder **Styrets leder 6670**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "16 registered employees",
+        "Based in STJØRDAL, Norway",
+        "Industry: Drift av restauranter (NACE 56.110)",
+        "Legal Form: AS",
+        "Executive: Leder 6670 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (JORDBÆRPIKENE STJØRDAL AS styrker satsingen i...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 14 → 16",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.jordbarpikene.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -4959,11 +5369,29 @@
     "employees": 21,
     "website": "https://www.abrabeslag.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**ABRA BESLAG AS** (Org.nr. `995075385`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Engroshandel med jernvarer, rørleggerartikler og oppvarmingsutstyr* (NACE `46.840`).",
-      "**Corporate Vitality:** 21 registered employees. Official website: https://www.abrabeslag.no. Leadership: Daglig leder **Leder 5385** and Styrets leder **Styrets leder 5385**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "21 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Engroshandel med jernvarer, rørleggerartikler og oppvarmingsutstyr (NACE 46.840)",
+        "Legal Form: AS",
+        "Executive: Leder 5385 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (ABRA BESLAG AS styrker satsingen i TRONDHEIM...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 19 → 21",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://www.abrabeslag.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -5186,11 +5614,29 @@
     "employees": 61,
     "website": "https://korsvollmaskin.no",
     "cohort": "operating_large_with_web",
-    "deterministic_summary": [
-      "**KORSVOLL MASKIN AS** (Org.nr. `997166043`) is a Norwegian `AS` located in **DOVRE** operating within *Grunnarbeid* (NACE `43.120`).",
-      "**Corporate Vitality:** 61 registered employees. Official website: https://korsvollmaskin.no. Leadership: Daglig leder **Leder 6043** and Styrets leder **Styrets leder 6043**.",
-      "**Intelligence Footprint:** 2 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "61 registered employees",
+        "Based in DOVRE, Norway",
+        "Industry: Grunnarbeid (NACE 43.120)",
+        "Legal Form: AS",
+        "Executive: Leder 6043 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "2 active job opening(s) (Fagmedarbeider, Lærling / Trainee)",
+        "2 recent dated activity event(s) (KORSVOLL MASKIN AS styrker satsingen i DOVRE...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 59 → 61",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "6 verified source citation(s) attached",
+        "Official website: https://korsvollmaskin.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -5413,11 +5859,28 @@
     "employees": 5,
     "website": "https://www.akatelecom.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**AKA TELECOM AS** (Org.nr. `811563382`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Konsulentvirksomhet tilknyttet informasjonsteknologi og forvaltning og drift av it-systemer* (NACE `62.200`).",
-      "**Corporate Vitality:** 5 registered employees. Official website: https://www.akatelecom.no. Leadership: Daglig leder **Leder 3382** and Styrets leder **Styrets leder 3382**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Konsulentvirksomhet tilknyttet informasjonsteknologi og forvaltning og drift av it-systemer (NACE 62.200)",
+        "Legal Form: AS",
+        "Executive: Leder 3382 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (AKA TELECOM AS styrker satsingen i TRONDHEIM...)"
+      ],
+      "recent_changes": [
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.akatelecom.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -5599,11 +6062,29 @@
     "employees": 9,
     "website": "https://www.badeog.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**BÅDE OG AS** (Org.nr. `859336302`) is a Norwegian `AS` located in **OSLO** operating within *Produksjon og utgivelse av musikk- og lydopptak* (NACE `59.200`).",
-      "**Corporate Vitality:** 9 registered employees. Official website: https://www.badeog.no. Leadership: Daglig leder **Leder 6302** and Styrets leder **Styrets leder 6302**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Produksjon og utgivelse av musikk- og lydopptak (NACE 59.200)",
+        "Legal Form: AS",
+        "Executive: Leder 6302 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (BÅDE OG AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.badeog.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -5804,11 +6285,29 @@
     "employees": 7,
     "website": "https://www.arendalbatskadeservice.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**ARENDAL BÅTSKADE SERVICE AS** (Org.nr. `896358022`) is a Norwegian `AS` located in **ARENDAL** operating within *Reparasjon og vedlikehold av sivile skip og båter* (NACE `33.150`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.arendalbatskadeservice.no. Leadership: Daglig leder **Leder 8022** and Styrets leder **Styrets leder 8022**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in ARENDAL, Norway",
+        "Industry: Reparasjon og vedlikehold av sivile skip og båter (NACE 33.150)",
+        "Legal Form: AS",
+        "Executive: Leder 8022 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (ARENDAL BÅTSKADE SERVICE AS styrker satsingen...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.arendalbatskadeservice.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -6009,11 +6508,29 @@
     "employees": 6,
     "website": "https://www.narvesenrevisjon.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**NARVESEN REVISJON AS** (Org.nr. `912663930`) is a Norwegian `AS` located in **KONGSVINGER** operating within *Revisjon* (NACE `69.201`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.narvesenrevisjon.no. Leadership: Daglig leder **Leder 3930** and Styrets leder **Styrets leder 3930**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in KONGSVINGER, Norway",
+        "Industry: Revisjon (NACE 69.201)",
+        "Legal Form: AS",
+        "Executive: Leder 3930 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (NARVESEN REVISJON AS styrker satsingen i KONG...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.narvesenrevisjon.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -6214,11 +6731,29 @@
     "employees": 6,
     "website": "https://www.wanderingowl.com",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**WANDERING OWL AS** (Org.nr. `914424585`) is a Norwegian `AS` located in **TROMSØ** operating within *Guide- og reiseledervirksomhet* (NACE `79.902`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.wanderingowl.com. Leadership: Daglig leder **Leder 4585** and Styrets leder **Styrets leder 4585**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in TROMSØ, Norway",
+        "Industry: Guide- og reiseledervirksomhet (NACE 79.902)",
+        "Legal Form: AS",
+        "Executive: Leder 4585 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (WANDERING OWL AS styrker satsingen i TROMSØ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.wanderingowl.com",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -6419,11 +6954,28 @@
     "employees": 5,
     "website": "https://www.rakkestad-slangeservice.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**RAKKESTAD SLANGESERVICE AS** (Org.nr. `915980430`) is a Norwegian `AS` located in **RAKKESTAD** operating within *Reparasjon og vedlikehold av maskiner* (NACE `33.120`).",
-      "**Corporate Vitality:** 5 registered employees. Official website: https://www.rakkestad-slangeservice.no. Leadership: Daglig leder **Leder 0430** and Styrets leder **Styrets leder 0430**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in RAKKESTAD, Norway",
+        "Industry: Reparasjon og vedlikehold av maskiner (NACE 33.120)",
+        "Legal Form: AS",
+        "Executive: Leder 0430 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (RAKKESTAD SLANGESERVICE AS styrker satsingen ...)"
+      ],
+      "recent_changes": [
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.rakkestad-slangeservice.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -6605,11 +7157,29 @@
     "employees": 8,
     "website": "https://www.c-food.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**C FOOD NORWAY AS** (Org.nr. `918170316`) is a Norwegian `AS` located in **ÅLESUND** operating within *Frysing og videre bearbeiding av fisk, skalldyr og bløtdyr* (NACE `10.203`).",
-      "**Corporate Vitality:** 8 registered employees. Official website: https://www.c-food.no. Leadership: Daglig leder **Leder 0316** and Styrets leder **Styrets leder 0316**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in ÅLESUND, Norway",
+        "Industry: Frysing og videre bearbeiding av fisk, skalldyr og bløtdyr (NACE 10.203)",
+        "Legal Form: AS",
+        "Executive: Leder 0316 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (C FOOD NORWAY AS styrker satsingen i ÅLESUND...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.c-food.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -6810,11 +7380,29 @@
     "employees": 6,
     "website": "https://www.medioconsulting.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**MEDIO CONSULTING AS** (Org.nr. `920554466`) is a Norwegian `AS` located in **BJØRNAFJORDEN** operating within *Regnskapsføring og bokføring* (NACE `69.202`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.medioconsulting.no. Leadership: Daglig leder **Leder 4466** and Styrets leder **Styrets leder 4466**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in BJØRNAFJORDEN, Norway",
+        "Industry: Regnskapsføring og bokføring (NACE 69.202)",
+        "Legal Form: AS",
+        "Executive: Leder 4466 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (MEDIO CONSULTING AS styrker satsingen i BJØRN...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.medioconsulting.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7015,11 +7603,29 @@
     "employees": 7,
     "website": "https://www.raein.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**RÆIN AS** (Org.nr. `924028084`) is a Norwegian `AS` located in **FJORD** operating within *Guide- og reiseledervirksomhet* (NACE `79.902`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.raein.no. Leadership: Daglig leder **Leder 8084** and Styrets leder **Styrets leder 8084**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in FJORD, Norway",
+        "Industry: Guide- og reiseledervirksomhet (NACE 79.902)",
+        "Legal Form: AS",
+        "Executive: Leder 8084 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (RÆIN AS styrker satsingen i FJORD...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.raein.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7220,11 +7826,29 @@
     "employees": 7,
     "website": "https://www.vikos.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**VIKOS PROSJEKT AS** (Org.nr. `927834650`) is a Norwegian `AS` located in **BÆRUM** operating within *Annen teknisk konsulentvirksomhet* (NACE `71.129`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.vikos.no. Leadership: Daglig leder **Leder 4650** and Styrets leder **Styrets leder 4650**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in BÆRUM, Norway",
+        "Industry: Annen teknisk konsulentvirksomhet (NACE 71.129)",
+        "Legal Form: AS",
+        "Executive: Leder 4650 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (VIKOS PROSJEKT AS styrker satsingen i BÆRUM...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.vikos.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7425,11 +8049,28 @@
     "employees": 8,
     "website": "https://www.norskflid.no/holmestrand",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**HUSFLIDEN HOLMESTRAND SA** (Org.nr. `931932217`) is a Norwegian `SA` located in **HOLMESTRAND** operating within *Detaljhandel med tekstiler og utstyrsvarer* (NACE `47.510`).",
-      "**Corporate Vitality:** 8 registered employees. Official website: https://www.norskflid.no/holmestrand. Leadership: Daglig leder **Leder 2217** and Styrets leder **Styrets leder 2217**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in HOLMESTRAND, Norway",
+        "Industry: Detaljhandel med tekstiler og utstyrsvarer (NACE 47.510)",
+        "Legal Form: SA",
+        "Executive: Leder 2217 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "1 recent dated activity event(s) (HUSFLIDEN HOLMESTRAND SA styrker satsingen i ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "4 verified source citation(s) attached",
+        "Official website: https://www.norskflid.no/holmestrand",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7573,11 +8214,29 @@
     "employees": 6,
     "website": "https://www.narvesen.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**BUTIKKDRIFT ALEM MEBRAHTOM AS** (Org.nr. `935882303`) is a Norwegian `AS` located in **KRISTIANSAND** operating within *Detaljhandel med bredt vareutvalg med hovedvekt på nærings- og nytelsesmidler* (NACE `47.110`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.narvesen.no. Leadership: Daglig leder **Leder 2303** and Styrets leder **Styrets leder 2303**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in KRISTIANSAND, Norway",
+        "Industry: Detaljhandel med bredt vareutvalg med hovedvekt på nærings- og nytelsesmidler (NACE 47.110)",
+        "Legal Form: AS",
+        "Executive: Leder 2303 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (BUTIKKDRIFT ALEM MEBRAHTOM AS styrker satsing...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.narvesen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7778,11 +8437,28 @@
     "employees": 6,
     "website": "https://www.godlia.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**GODLIA BORETTSLAG** (Org.nr. `950146885`) is a Norwegian `BRL` located in **OSLO** operating within *Aktiviteter i borettslag og boligsameier* (NACE `97.001`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.godlia.no. Leadership: Daglig leder **Leder 6885** and Styrets leder **Styrets leder 6885**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Aktiviteter i borettslag og boligsameier (NACE 97.001)",
+        "Legal Form: BRL",
+        "Executive: Leder 6885 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "1 recent dated activity event(s) (GODLIA BORETTSLAG styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "4 verified source citation(s) attached",
+        "Official website: https://www.godlia.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -7926,11 +8602,28 @@
     "employees": 5,
     "website": "https://tellefsen.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**PREBEN TELLEFSEN AS** (Org.nr. `964285284`) is a Norwegian `AS` located in **KRISTIANSAND** operating within *Engroshandel med tekstiler og utstyrsvarer* (NACE `46.410`).",
-      "**Corporate Vitality:** 5 registered employees. Official website: https://tellefsen.no. Leadership: Daglig leder **Leder 5284** and Styrets leder **Styrets leder 5284**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in KRISTIANSAND, Norway",
+        "Industry: Engroshandel med tekstiler og utstyrsvarer (NACE 46.410)",
+        "Legal Form: AS",
+        "Executive: Leder 5284 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (PREBEN TELLEFSEN AS styrker satsingen i KRIST...)"
+      ],
+      "recent_changes": [
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://tellefsen.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -8112,11 +8805,29 @@
     "employees": 9,
     "website": "https://www.solflata.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**STIFTELSEN BARNAS BESTE** (Org.nr. `971489014`) is a Norwegian `STI` located in **TRONDHEIM** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 9 registered employees. Official website: https://www.solflata.no. Leadership: Daglig leder **Leder 9014** and Styrets leder **Styrets leder 9014**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: STI",
+        "Executive: Leder 9014 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (STIFTELSEN BARNAS BESTE styrker satsingen i T...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.solflata.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -8317,11 +9028,29 @@
     "employees": 7,
     "website": "https://www.skiltspesialisten.no/",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**SKILTSPESIALISTEN AS** (Org.nr. `977540747`) is a Norwegian `AS` located in **VENNESLA** operating within *Produksjon av belysningsutstyr* (NACE `27.400`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.skiltspesialisten.no/. Leadership: Daglig leder **Leder 0747** and Styrets leder **Styrets leder 0747**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in VENNESLA, Norway",
+        "Industry: Produksjon av belysningsutstyr (NACE 27.400)",
+        "Legal Form: AS",
+        "Executive: Leder 0747 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (SKILTSPESIALISTEN AS styrker satsingen i VENN...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.skiltspesialisten.no/",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -8522,11 +9251,28 @@
     "employees": 9,
     "website": "https://www.norla.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**NORLA, STIFTELSE FOR NORSK LITTERATUR I UTLANDET** (Org.nr. `981242297`) is a Norwegian `STI` located in **OSLO** operating within *Offentlig administrasjon tilknyttet helsestell, undervisning, kultur og annen sosial virksomhet* (NACE `84.120`).",
-      "**Corporate Vitality:** 9 registered employees. Official website: https://www.norla.no. Leadership: Daglig leder **Leder 2297** and Styrets leder **Styrets leder 2297**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 1 recent dated activity event(s). 2 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Offentlig administrasjon tilknyttet helsestell, undervisning, kultur og annen sosial virksomhet (NACE 84.120)",
+        "Legal Form: STI",
+        "Executive: Leder 2297 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "1 recent dated activity event(s) (NORLA, STIFTELSE FOR NORSK LITTERATUR I UTLAN...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9",
+        "+ Added job: Fagmedarbeider"
+      ],
+      "evidence": [
+        "4 verified source citation(s) attached",
+        "Official website: https://www.norla.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -8670,11 +9416,29 @@
     "employees": 7,
     "website": "https://www.personaltjenester.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**PERSONALTJENESTER TELEMARK AS** (Org.nr. `983807801`) is a Norwegian `AS` located in **SKIEN** operating within *Utleie av arbeidskraft og andre personaladministrative tjenester* (NACE `78.200`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.personaltjenester.no. Leadership: Daglig leder **Leder 7801** and Styrets leder **Styrets leder 7801**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in SKIEN, Norway",
+        "Industry: Utleie av arbeidskraft og andre personaladministrative tjenester (NACE 78.200)",
+        "Legal Form: AS",
+        "Executive: Leder 7801 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (PERSONALTJENESTER TELEMARK AS styrker satsing...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.personaltjenester.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -8875,11 +9639,29 @@
     "employees": 9,
     "website": "https://www.systemnaevestad.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**KNUT NÆVESTAD SNEKKERVERKSTED AS** (Org.nr. `985836744`) is a Norwegian `AS` located in **OSLO** operating within *Produksjon av møbler* (NACE `31.000`).",
-      "**Corporate Vitality:** 9 registered employees. Official website: https://www.systemnaevestad.no. Leadership: Daglig leder **Leder 6744** and Styrets leder **Styrets leder 6744**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Produksjon av møbler (NACE 31.000)",
+        "Legal Form: AS",
+        "Executive: Leder 6744 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (KNUT NÆVESTAD SNEKKERVERKSTED AS styrker sats...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.systemnaevestad.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -9080,11 +9862,29 @@
     "employees": 9,
     "website": "https://lokka.barnehage.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**LØKKA BARNEHAGE AS** (Org.nr. `987773928`) is a Norwegian `AS` located in **NANNESTAD** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 9 registered employees. Official website: https://lokka.barnehage.no. Leadership: Daglig leder **Leder 3928** and Styrets leder **Styrets leder 3928**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in NANNESTAD, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: AS",
+        "Executive: Leder 3928 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (LØKKA BARNEHAGE AS styrker satsingen i NANNES...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://lokka.barnehage.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -9285,11 +10085,29 @@
     "employees": 8,
     "website": "https://www.varierfurniture.com",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**VARIER FURNITURE AS** (Org.nr. `989804804`) is a Norwegian `AS` located in **OSLO** operating within *Produksjon av møbler* (NACE `31.000`).",
-      "**Corporate Vitality:** 8 registered employees. Official website: https://www.varierfurniture.com. Leadership: Daglig leder **Leder 4804** and Styrets leder **Styrets leder 4804**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Produksjon av møbler (NACE 31.000)",
+        "Legal Form: AS",
+        "Executive: Leder 4804 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (VARIER FURNITURE AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.varierfurniture.com",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -9490,11 +10308,29 @@
     "employees": 7,
     "website": "https://www.mk-illumination.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**MK ILLUMINATION AS** (Org.nr. `991633413`) is a Norwegian `AS` located in **OSLO** operating within *Engroshandel med husholdnings-, kontor- og butikkmøbler, gulvtepper og belysningsutstyr* (NACE `46.470`).",
-      "**Corporate Vitality:** 7 registered employees. Official website: https://www.mk-illumination.no. Leadership: Daglig leder **Leder 3413** and Styrets leder **Styrets leder 3413**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Engroshandel med husholdnings-, kontor- og butikkmøbler, gulvtepper og belysningsutstyr (NACE 46.470)",
+        "Legal Form: AS",
+        "Executive: Leder 3413 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (MK ILLUMINATION AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.mk-illumination.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -9695,11 +10531,29 @@
     "employees": 6,
     "website": "https://www.privatmegleren.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**BJØRNEFJORDEN AS** (Org.nr. `993909262`) is a Norwegian `AS` located in **BJØRNAFJORDEN** operating within *Eiendomsmegling og andre formidlingstjenester for eiendom* (NACE `68.310`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.privatmegleren.no. Leadership: Daglig leder **Leder 9262** and Styrets leder **Styrets leder 9262**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in BJØRNAFJORDEN, Norway",
+        "Industry: Eiendomsmegling og andre formidlingstjenester for eiendom (NACE 68.310)",
+        "Legal Form: AS",
+        "Executive: Leder 9262 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (BJØRNEFJORDEN AS styrker satsingen i BJØRNAFJ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.privatmegleren.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -9900,11 +10754,29 @@
     "employees": 8,
     "website": "https://www.bitas.no",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**BERGEN INDUSTRI TEKNIKK AS** (Org.nr. `995905981`) is a Norwegian `AS` located in **BERGEN** operating within *Reparasjon og vedlikehold av maskiner* (NACE `33.120`).",
-      "**Corporate Vitality:** 8 registered employees. Official website: https://www.bitas.no. Leadership: Daglig leder **Leder 5981** and Styrets leder **Styrets leder 5981**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in BERGEN, Norway",
+        "Industry: Reparasjon og vedlikehold av maskiner (NACE 33.120)",
+        "Legal Form: AS",
+        "Executive: Leder 5981 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (BERGEN INDUSTRI TEKNIKK AS styrker satsingen ...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.bitas.no",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10105,11 +10977,29 @@
     "employees": 6,
     "website": "https://www.dbnorge.com",
     "cohort": "operating_small_with_web",
-    "deterministic_summary": [
-      "**DB NORGE AS** (Org.nr. `997806328`) is a Norwegian `AS` located in **OSLO** operating within *Oppføring av bygninger* (NACE `41.000`).",
-      "**Corporate Vitality:** 6 registered employees. Official website: https://www.dbnorge.com. Leadership: Daglig leder **Leder 6328** and Styrets leder **Styrets leder 6328**.",
-      "**Intelligence Footprint:** 1 active verified job opening(s). 2 recent dated activity event(s). 3 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Oppføring av bygninger (NACE 41.000)",
+        "Legal Form: AS",
+        "Executive: Leder 6328 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "1 active job opening(s) (Fagmedarbeider)",
+        "2 recent dated activity event(s) (DB NORGE AS styrker satsingen i OSLO...)"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6",
+        "+ Added job: Fagmedarbeider",
+        "+ Added activity: Samarbeidsavtale inngått for energieffektive løsninger"
+      ],
+      "evidence": [
+        "5 verified source citation(s) attached",
+        "Official website: https://www.dbnorge.com",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10310,11 +11200,27 @@
     "employees": 11,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**SANDNES ELEKTRISKE AS** (Org.nr. `810034882`) is a Norwegian `AS` located in **SANDNES** operating within *Elektrisk installasjonsarbeid* (NACE `43.210`).",
-      "**Corporate Vitality:** 11 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4882** and Styrets leder **Styrets leder 4882**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "11 registered employees",
+        "Based in SANDNES, Norway",
+        "Industry: Elektrisk installasjonsarbeid (NACE 43.210)",
+        "Legal Form: AS",
+        "Executive: Leder 4882 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 9 → 11"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10371,11 +11277,27 @@
     "employees": 14,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**MAJO BYGG AS** (Org.nr. `831097272`) is a Norwegian `AS` located in **ALVER** operating within *Oppføring av bygninger* (NACE `41.000`).",
-      "**Corporate Vitality:** 14 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7272** and Styrets leder **Styrets leder 7272**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "14 registered employees",
+        "Based in ALVER, Norway",
+        "Industry: Oppføring av bygninger (NACE 41.000)",
+        "Legal Form: AS",
+        "Executive: Leder 7272 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 12 → 14"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10432,11 +11354,27 @@
     "employees": 13,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**EL SERVICE GRENLAND AS** (Org.nr. `892961662`) is a Norwegian `AS` located in **BAMBLE** operating within *Elektrisk installasjonsarbeid* (NACE `43.210`).",
-      "**Corporate Vitality:** 13 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1662** and Styrets leder **Styrets leder 1662**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "13 registered employees",
+        "Based in BAMBLE, Norway",
+        "Industry: Elektrisk installasjonsarbeid (NACE 43.210)",
+        "Legal Form: AS",
+        "Executive: Leder 1662 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 11 → 13"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10493,11 +11431,27 @@
     "employees": 9,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**ØYLAND MAT AS** (Org.nr. `913027353`) is a Norwegian `AS` located in **SELJORD** operating within *Detaljhandel med bredt vareutvalg med hovedvekt på nærings- og nytelsesmidler* (NACE `47.110`).",
-      "**Corporate Vitality:** 9 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7353** and Styrets leder **Styrets leder 7353**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "9 registered employees",
+        "Based in SELJORD, Norway",
+        "Industry: Detaljhandel med bredt vareutvalg med hovedvekt på nærings- og nytelsesmidler (NACE 47.110)",
+        "Legal Form: AS",
+        "Executive: Leder 7353 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 7 → 9"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10554,11 +11508,27 @@
     "employees": 6,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**DYNAMO ANALYTICS NORDIC AS** (Org.nr. `915061877`) is a Norwegian `AS` located in **STAVANGER** operating within *All annen faglig, vitenskapelig og teknisk virksomhet ikke nevnt annet sted* (NACE `74.990`).",
-      "**Corporate Vitality:** 6 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1877** and Styrets leder **Styrets leder 1877**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in STAVANGER, Norway",
+        "Industry: All annen faglig, vitenskapelig og teknisk virksomhet ikke nevnt annet sted (NACE 74.990)",
+        "Legal Form: AS",
+        "Executive: Leder 1877 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10615,11 +11585,27 @@
     "employees": 5,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**SALOTTO AS** (Org.nr. `917021597`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Frisering og barbering* (NACE `96.210`).",
-      "**Corporate Vitality:** 5 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1597** and Styrets leder **Styrets leder 1597**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Frisering og barbering (NACE 96.210)",
+        "Legal Form: AS",
+        "Executive: Leder 1597 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10656,11 +11642,27 @@
     "employees": 12,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**THAI KLINIKK AS** (Org.nr. `918876812`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Aktiviteter i dagspa, badstue og dampbad* (NACE `96.230`).",
-      "**Corporate Vitality:** 12 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 6812** and Styrets leder **Styrets leder 6812**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "12 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Aktiviteter i dagspa, badstue og dampbad (NACE 96.230)",
+        "Legal Form: AS",
+        "Executive: Leder 6812 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 10 → 12"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10717,11 +11719,27 @@
     "employees": 21,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**LARVIKITTBLOKKA AS** (Org.nr. `920677479`) is a Norwegian `AS` located in **LARVIK** operating within *Hogging og bearbeiding av monument- og bygningsstein* (NACE `23.700`).",
-      "**Corporate Vitality:** 21 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7479** and Styrets leder **Styrets leder 7479**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "21 registered employees",
+        "Based in LARVIK, Norway",
+        "Industry: Hogging og bearbeiding av monument- og bygningsstein (NACE 23.700)",
+        "Legal Form: AS",
+        "Executive: Leder 7479 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 19 → 21"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10778,11 +11796,27 @@
     "employees": 11,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**REGNSKAPSHUSET BORG AS** (Org.nr. `922364184`) is a Norwegian `AS` located in **TRONDHEIM** operating within *Regnskapsføring og bokføring* (NACE `69.202`).",
-      "**Corporate Vitality:** 11 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4184** and Styrets leder **Styrets leder 4184**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "11 registered employees",
+        "Based in TRONDHEIM, Norway",
+        "Industry: Regnskapsføring og bokføring (NACE 69.202)",
+        "Legal Form: AS",
+        "Executive: Leder 4184 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 9 → 11"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10839,11 +11873,27 @@
     "employees": 5,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**NORSELAB INVESTMENT MANAGEMENT AS** (Org.nr. `924588519`) is a Norwegian `AS` located in **OSLO** operating within *Verdipapirmegling* (NACE `66.120`).",
-      "**Corporate Vitality:** 5 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8519** and Styrets leder **Styrets leder 8519**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Verdipapirmegling (NACE 66.120)",
+        "Legal Form: AS",
+        "Executive: Leder 8519 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10880,11 +11930,27 @@
     "employees": 13,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**GAUSTAEKSPRESSEN AS** (Org.nr. `926338072`) is a Norwegian `AS` located in **TINN** operating within *Passasjertransport utenom rutetabell* (NACE `49.320`).",
-      "**Corporate Vitality:** 13 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8072** and Styrets leder **Styrets leder 8072**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "13 registered employees",
+        "Based in TINN, Norway",
+        "Industry: Passasjertransport utenom rutetabell (NACE 49.320)",
+        "Legal Form: AS",
+        "Executive: Leder 8072 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 11 → 13"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10941,11 +12007,27 @@
     "employees": 5,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**STAVANGER RIB AS** (Org.nr. `928075648`) is a Norwegian `AS` located in **STAVANGER** operating within *Opplevelsesaktiviteter* (NACE `93.291`).",
-      "**Corporate Vitality:** 5 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 5648** and Styrets leder **Styrets leder 5648**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in STAVANGER, Norway",
+        "Industry: Opplevelsesaktiviteter (NACE 93.291)",
+        "Legal Form: AS",
+        "Executive: Leder 5648 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -10982,11 +12064,27 @@
     "employees": 5,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**HYDRAULIC SUPPORT AS** (Org.nr. `929773195`) is a Norwegian `AS` located in **NORDRE FOLLO** operating within *Produksjon av komponenter til hydraulisk og pneumatisk utstyr* (NACE `28.120`).",
-      "**Corporate Vitality:** 5 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 3195** and Styrets leder **Styrets leder 3195**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in NORDRE FOLLO, Norway",
+        "Industry: Produksjon av komponenter til hydraulisk og pneumatisk utstyr (NACE 28.120)",
+        "Legal Form: AS",
+        "Executive: Leder 3195 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11023,11 +12121,27 @@
     "employees": 7,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**MARM AS** (Org.nr. `931125427`) is a Norwegian `AS` located in **TYNSET** operating within *Drift av restauranter* (NACE `56.110`).",
-      "**Corporate Vitality:** 7 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 5427** and Styrets leder **Styrets leder 5427**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "7 registered employees",
+        "Based in TYNSET, Norway",
+        "Industry: Drift av restauranter (NACE 56.110)",
+        "Legal Form: AS",
+        "Executive: Leder 5427 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 5 → 7"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11084,11 +12198,27 @@
     "employees": 197,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**BARNEHAGESENTRALEN AS** (Org.nr. `933020622`) is a Norwegian `AS` located in **OSLO** operating within *Utleie av arbeidskraft og andre personaladministrative tjenester* (NACE `78.200`).",
-      "**Corporate Vitality:** 197 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 0622** and Styrets leder **Styrets leder 0622**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "197 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Utleie av arbeidskraft og andre personaladministrative tjenester (NACE 78.200)",
+        "Legal Form: AS",
+        "Executive: Leder 0622 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 195 → 197"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11145,11 +12275,27 @@
     "employees": 8,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**GARDERMOEN MEDISINSKE SENTER LEGEKONTORET AS** (Org.nr. `934743512`) is a Norwegian `AS` located in **ULLENSAKER** operating within *Allmennlegetjenester* (NACE `86.210`).",
-      "**Corporate Vitality:** 8 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 3512** and Styrets leder **Styrets leder 3512**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in ULLENSAKER, Norway",
+        "Industry: Allmennlegetjenester (NACE 86.210)",
+        "Legal Form: AS",
+        "Executive: Leder 3512 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11206,11 +12352,27 @@
     "employees": 6,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**WAGNER ANLEGGSERVICE AS** (Org.nr. `936547486`) is a Norwegian `AS` located in **HARAM** operating within *Grunnarbeid* (NACE `43.120`).",
-      "**Corporate Vitality:** 6 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7486** and Styrets leder **Styrets leder 7486**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "6 registered employees",
+        "Based in HARAM, Norway",
+        "Industry: Grunnarbeid (NACE 43.120)",
+        "Legal Form: AS",
+        "Executive: Leder 7486 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 4 → 6"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11267,11 +12429,27 @@
     "employees": 8,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**BYGG OG ENERGISERVICE AS** (Org.nr. `953205238`) is a Norwegian `AS` located in **OSLO** operating within *Oppføring av bygninger* (NACE `41.000`).",
-      "**Corporate Vitality:** 8 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 5238** and Styrets leder **Styrets leder 5238**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Oppføring av bygninger (NACE 41.000)",
+        "Legal Form: AS",
+        "Executive: Leder 5238 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11328,11 +12506,27 @@
     "employees": 11,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**THINK HAIR WEAR KNARVIK AS** (Org.nr. `970961194`) is a Norwegian `AS` located in **ALVER** operating within *Frisering og barbering* (NACE `96.210`).",
-      "**Corporate Vitality:** 11 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1194** and Styrets leder **Styrets leder 1194**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "11 registered employees",
+        "Based in ALVER, Norway",
+        "Industry: Frisering og barbering (NACE 96.210)",
+        "Legal Form: AS",
+        "Executive: Leder 1194 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 9 → 11"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11389,11 +12583,27 @@
     "employees": 24,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**REMØY MANAGEMENT AS** (Org.nr. `979322151`) is a Norwegian `AS` located in **HERØY** operating within *Andre tjenester tilknyttet sjøtransport* (NACE `52.220`).",
-      "**Corporate Vitality:** 24 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 2151** and Styrets leder **Styrets leder 2151**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "24 registered employees",
+        "Based in HERØY, Norway",
+        "Industry: Andre tjenester tilknyttet sjøtransport (NACE 52.220)",
+        "Legal Form: AS",
+        "Executive: Leder 2151 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 22 → 24"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11450,11 +12660,27 @@
     "employees": 8,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**ALFRED BERGE AS** (Org.nr. `982735556`) is a Norwegian `AS` located in **KRISTIANSUND** operating within *Detaljhandel med medisinske og ortopediske artikler* (NACE `47.740`).",
-      "**Corporate Vitality:** 8 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 5556** and Styrets leder **Styrets leder 5556**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "8 registered employees",
+        "Based in KRISTIANSUND, Norway",
+        "Industry: Detaljhandel med medisinske og ortopediske artikler (NACE 47.740)",
+        "Legal Form: AS",
+        "Executive: Leder 5556 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 6 → 8"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11511,11 +12737,27 @@
     "employees": 5,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**ORKLA LAFT AS** (Org.nr. `986471219`) is a Norwegian `AS` located in **ORKLAND** operating within *Oppføring av bygninger* (NACE `41.000`).",
-      "**Corporate Vitality:** 5 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1219** and Styrets leder **Styrets leder 1219**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "5 registered employees",
+        "Based in ORKLAND, Norway",
+        "Industry: Oppføring av bygninger (NACE 41.000)",
+        "Legal Form: AS",
+        "Executive: Leder 1219 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11552,11 +12794,27 @@
     "employees": 93,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**DE LILLA AS** (Org.nr. `989987364`) is a Norwegian `AS` located in **OSLO** operating within *Snekkerarbeid* (NACE `43.320`).",
-      "**Corporate Vitality:** 93 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7364** and Styrets leder **Styrets leder 7364**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "93 registered employees",
+        "Based in OSLO, Norway",
+        "Industry: Snekkerarbeid (NACE 43.320)",
+        "Legal Form: AS",
+        "Executive: Leder 7364 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 91 → 93"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11613,11 +12871,27 @@
     "employees": 26,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**PAUL BERG AS** (Org.nr. `993331104`) is a Norwegian `AS` located in **GJØVIK** operating within *Grunnarbeid* (NACE `43.120`).",
-      "**Corporate Vitality:** 26 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1104** and Styrets leder **Styrets leder 1104**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "26 registered employees",
+        "Based in GJØVIK, Norway",
+        "Industry: Grunnarbeid (NACE 43.120)",
+        "Legal Form: AS",
+        "Executive: Leder 1104 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 24 → 26"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11674,11 +12948,27 @@
     "employees": 24,
     "website": null,
     "cohort": "operating_no_reg_web",
-    "deterministic_summary": [
-      "**STUBBESKOGEN NATURBARNEHAGE AS** (Org.nr. `997098811`) is a Norwegian `AS` located in **INDRE ØSTFOLD** operating within *Førskoleundervisning og drift av barnehager* (NACE `85.100`).",
-      "**Corporate Vitality:** 24 registered employees. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8811** and Styrets leder **Styrets leder 8811**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 1 verified change event(s) recorded."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "24 registered employees",
+        "Based in INDRE ØSTFOLD, Norway",
+        "Industry: Førskoleundervisning og drift av barnehager (NACE 85.100)",
+        "Legal Form: AS",
+        "Executive: Leder 8811 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "↑ Employees updated: 22 → 24"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11735,11 +13025,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**AASEN & FARSTAD AS** (Org.nr. `810059672`) is a Norwegian `AS` located in **MOLDE** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 9672** and Styrets leder **Styrets leder 9672**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in MOLDE, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 9672 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11776,11 +13082,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**ÅSHILD HERDLEVÆR INVEST AS** (Org.nr. `829009722`) is a Norwegian `AS` located in **BERGEN** operating within *Uoppgitt* (NACE `00.000`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 9722** and Styrets leder **Styrets leder 9722**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in BERGEN, Norway",
+        "Industry: Uoppgitt (NACE 00.000)",
+        "Legal Form: AS",
+        "Executive: Leder 9722 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11817,11 +13139,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**SPECTRE EIENDOM AS** (Org.nr. `889810122`) is a Norwegian `AS` located in **SUNNFJORD** operating within *Uoppgitt* (NACE `00.000`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 0122** and Styrets leder **Styrets leder 0122**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in SUNNFJORD, Norway",
+        "Industry: Uoppgitt (NACE 00.000)",
+        "Legal Form: AS",
+        "Executive: Leder 0122 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11858,11 +13196,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**SENJA HELSE OG OMSORG AS** (Org.nr. `913238389`) is a Norwegian `AS` located in **SENJA** operating within *Andre helsetjenester ellers* (NACE `86.993`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8389** and Styrets leder **Styrets leder 8389**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in SENJA, Norway",
+        "Industry: Andre helsetjenester ellers (NACE 86.993)",
+        "Legal Form: AS",
+        "Executive: Leder 8389 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11899,11 +13253,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**GASTRONOMI I JOTUNHEIMEN AS** (Org.nr. `915611737`) is a Norwegian `AS` located in **LOM** operating within *Opplevelsesaktiviteter* (NACE `93.291`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 1737** and Styrets leder **Styrets leder 1737**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in LOM, Norway",
+        "Industry: Opplevelsesaktiviteter (NACE 93.291)",
+        "Legal Form: AS",
+        "Executive: Leder 1737 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11940,11 +13310,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**DUGG FOTO2 AS** (Org.nr. `917777985`) is a Norwegian `AS` located in **HAMAR** operating within *Fotografvirksomhet* (NACE `74.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7985** and Styrets leder **Styrets leder 7985**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in HAMAR, Norway",
+        "Industry: Fotografvirksomhet (NACE 74.200)",
+        "Legal Form: AS",
+        "Executive: Leder 7985 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -11981,11 +13367,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**CIL TRANSPORT AS** (Org.nr. `919623527`) is a Norwegian `AS` located in **RAKKESTAD** operating within *Godstransport på vei* (NACE `49.410`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 3527** and Styrets leder **Styrets leder 3527**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in RAKKESTAD, Norway",
+        "Industry: Godstransport på vei (NACE 49.410)",
+        "Legal Form: AS",
+        "Executive: Leder 3527 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12022,11 +13424,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**KONSEPT MUR & FLIS AS** (Org.nr. `921343663`) is a Norwegian `AS` located in **FROGN** operating within *Murerarbeid* (NACE `43.910`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 3663** and Styrets leder **Styrets leder 3663**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in FROGN, Norway",
+        "Industry: Murerarbeid (NACE 43.910)",
+        "Legal Form: AS",
+        "Executive: Leder 3663 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12063,11 +13481,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**GALDHØPIGGEN INVEST 5 AS** (Org.nr. `923030999`) is a Norwegian `AS` located in **OSLO** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 0999** and Styrets leder **Styrets leder 0999**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 0999 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12104,11 +13538,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**SLÅVIKA AS** (Org.nr. `924880708`) is a Norwegian `AS` located in **ASKER** operating within *Bedriftsrådgivning og annen administrativ rådgivning* (NACE `70.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 0708** and Styrets leder **Styrets leder 0708**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in ASKER, Norway",
+        "Industry: Bedriftsrådgivning og annen administrativ rådgivning (NACE 70.200)",
+        "Legal Form: AS",
+        "Executive: Leder 0708 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12145,11 +13595,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**MONSTERA RECORDS AS** (Org.nr. `926194135`) is a Norwegian `AS` located in **OSLO** operating within *Produksjon og utgivelse av musikk- og lydopptak* (NACE `59.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4135** and Styrets leder **Styrets leder 4135**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Produksjon og utgivelse av musikk- og lydopptak (NACE 59.200)",
+        "Legal Form: AS",
+        "Executive: Leder 4135 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12186,11 +13652,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**JS ENTREPRENØR SERVICE AS** (Org.nr. `927424401`) is a Norwegian `AS` located in **BERGEN** operating within *Grunnarbeid* (NACE `43.120`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4401** and Styrets leder **Styrets leder 4401**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in BERGEN, Norway",
+        "Industry: Grunnarbeid (NACE 43.120)",
+        "Legal Form: AS",
+        "Executive: Leder 4401 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12227,11 +13709,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**SARPSBORG EIENDOMSUTVIKLING AS** (Org.nr. `928687538`) is a Norwegian `AS` located in **OSLO** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7538** and Styrets leder **Styrets leder 7538**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 7538 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12268,11 +13766,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**STORDALIGHT AS** (Org.nr. `929984250`) is a Norwegian `AS` located in **STORD** operating within *Detaljhandel med belysningsartikler* (NACE `47.552`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4250** and Styrets leder **Styrets leder 4250**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in STORD, Norway",
+        "Industry: Detaljhandel med belysningsartikler (NACE 47.552)",
+        "Legal Form: AS",
+        "Executive: Leder 4250 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12309,11 +13823,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**MOLTRES EIENDOM AS** (Org.nr. `931228781`) is a Norwegian `AS` located in **OSLO** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8781** and Styrets leder **Styrets leder 8781**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 8781 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12350,11 +13880,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**ERLING EGGE HOLDING AS** (Org.nr. `932578379`) is a Norwegian `AS` located in **GLOPPEN** operating within *Uoppgitt* (NACE `00.000`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 8379** and Styrets leder **Styrets leder 8379**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in GLOPPEN, Norway",
+        "Industry: Uoppgitt (NACE 00.000)",
+        "Legal Form: AS",
+        "Executive: Leder 8379 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12391,11 +13937,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**DØLI AS** (Org.nr. `933724697`) is a Norwegian `AS` located in **HEMSEDAL** operating within *Drift av restauranter* (NACE `56.110`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4697** and Styrets leder **Styrets leder 4697**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in HEMSEDAL, Norway",
+        "Industry: Drift av restauranter (NACE 56.110)",
+        "Legal Form: AS",
+        "Executive: Leder 4697 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12432,11 +13994,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**METMAS AS** (Org.nr. `934899024`) is a Norwegian `AS` located in **AURSKOG-HØLAND** operating within *Engroshandel med maskiner og utstyr til bergverksdrift, olje- og gassutvinning og bygge- og anleggsvirksomhet* (NACE `46.630`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 9024** and Styrets leder **Styrets leder 9024**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in AURSKOG-HØLAND, Norway",
+        "Industry: Engroshandel med maskiner og utstyr til bergverksdrift, olje- og gassutvinning og bygge- og anleggsvirksomhet (NACE 46.630)",
+        "Legal Form: AS",
+        "Executive: Leder 9024 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12473,11 +14051,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**AF EIKELAND AS** (Org.nr. `935862485`) is a Norwegian `AS` located in **STAVANGER** operating within *Konsulentvirksomhet tilknyttet informasjonsteknologi og forvaltning og drift av it-systemer* (NACE `62.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 2485** and Styrets leder **Styrets leder 2485**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in STAVANGER, Norway",
+        "Industry: Konsulentvirksomhet tilknyttet informasjonsteknologi og forvaltning og drift av it-systemer (NACE 62.200)",
+        "Legal Form: AS",
+        "Executive: Leder 2485 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12514,11 +14108,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**M P EIENDOM AS** (Org.nr. `943652511`) is a Norwegian `AS` located in **JEVNAKER** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 2511** and Styrets leder **Styrets leder 2511**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in JEVNAKER, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 2511 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12555,11 +14165,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**REPPE HOLDING AS** (Org.nr. `979940092`) is a Norwegian `AS` located in **FRØYA** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 0092** and Styrets leder **Styrets leder 0092**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in FRØYA, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 0092 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12596,11 +14222,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**NORFRESH TRADING AS** (Org.nr. `987929235`) is a Norwegian `AS` located in **OSLO** operating within *Engroshandel med frukt og grønnsaker* (NACE `46.310`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 9235** and Styrets leder **Styrets leder 9235**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Engroshandel med frukt og grønnsaker (NACE 46.310)",
+        "Legal Form: AS",
+        "Executive: Leder 9235 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12637,11 +14279,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**TRUTTA HOLDING AS** (Org.nr. `989237217`) is a Norwegian `AS` located in **OSLO** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 7217** and Styrets leder **Styrets leder 7217**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in OSLO, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 7217 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12678,11 +14336,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**SKOLEMAGASINET AS** (Org.nr. `992193549`) is a Norwegian `AS` located in **ASKER** operating within *Andre tjenester tilknyttet undervisning ikke nevnt annet sted* (NACE `85.699`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 3549** and Styrets leder **Styrets leder 3549**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in ASKER, Norway",
+        "Industry: Andre tjenester tilknyttet undervisning ikke nevnt annet sted (NACE 85.699)",
+        "Legal Form: AS",
+        "Executive: Leder 3549 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
@@ -12719,11 +14393,27 @@
     "employees": null,
     "website": null,
     "cohort": "holding_no_web_abstain",
-    "deterministic_summary": [
-      "**ØKSNES UTLEIE AS** (Org.nr. `996854922`) is a Norwegian `AS` located in **ØKSNES** operating within *Utleie av egen eller leid fast eiendom* (NACE `68.200`).",
-      "**Corporate Vitality:** Headcount not registered in Brreg. No registered website in Brreg (abstained). Leadership: Daglig leder **Leder 4922** and Styrets leder **Styrets leder 4922**.",
-      "**Intelligence Footprint:** No verified open job positions. No verified public announcements. 0 changes recorded (stable state)."
-    ],
+    "structured_summary": {
+      "operational_profile": [
+        "Headcount unlisted in registry",
+        "Based in ØKSNES, Norway",
+        "Industry: Utleie av egen eller leid fast eiendom (NACE 68.200)",
+        "Legal Form: AS",
+        "Executive: Leder 4922 (Daglig leder (CEO))"
+      ],
+      "current_signals": [
+        "0 active verified job openings",
+        "0 recent public announcements captured"
+      ],
+      "recent_changes": [
+        "0 changes recorded since previous snapshot (stable state)"
+      ],
+      "evidence": [
+        "1 verified source citation(s) attached",
+        "No registered website in Brreg (abstained)",
+        "100% cryptographic SHA-256 provenance verified"
+      ]
+    },
     "roles": [
       {
         "type": "daglig_leder",
