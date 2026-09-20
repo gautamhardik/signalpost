@@ -124,6 +124,13 @@ class HiringAdapter(BaseSourceAdapter):
         if not org or not is_publishable:
             return observations
 
+        # 1. First-class discrete job openings via jobs.py
+        from ..jobs import extract_job_observations
+        discrete_jobs = extract_job_observations(profile)
+        if discrete_jobs:
+            return discrete_jobs
+
+        # 2. Career page presence fallback if career section exists
         pages = val.get("pages") or []
         career_pages = []
         career_keywords = (
@@ -141,7 +148,6 @@ class HiringAdapter(BaseSourceAdapter):
                 career_pages.append(pg)
 
         if career_pages:
-            # Pick primary career page
             primary = career_pages[0]
             url = str(primary.get("url") or "")
             digest = str(primary.get("content_sha256") or "")
@@ -173,6 +179,7 @@ class HiringAdapter(BaseSourceAdapter):
                 }
                 observations.append(obs)
         return observations
+
 
 
 class SiteNewsAdapter(BaseSourceAdapter):
