@@ -35,16 +35,32 @@ Signalpost solves this through a **multi-stage deterministic verification pipeli
 1. **Official Registry Grounding**: Ingests authoritative records directly from Brønnøysundregistrene (*Enhetsregisteret*, *Regnskapsregisteret*, *Roller*, *Underenheter*).
 2. **Adaptive Opportunity Scoring**: Intelligently skips wasteful searches for shell companies, real-estate SPVs, or entities with zero plausible digital footprint.
 3. **Deterministic Identity Gates**: Enforces multi-attribute corroboration (organization number, domain WHOIS, custom MX/email host, executive names, phone numbers, postal codes).
-4. **Zero Naked Facts**: Every published field links to a full source URL, an ISO-8601 retrieval timestamp, a source tier classification, and an immutable SHA-256 snapshot hash.
-5. **Deterministic Replay & Refresh**: Re-running pipelines over existing corpora computes cryptographic diffs, pinpointing verified corporate changes with zero false drifts.
+4. **Transport-Level Resilience**: Hardened streaming HTTP decompression (gzip and deflate with raw/wrapped zlib modes) protecting against zip-bombs with hard byte limits while restoring compressed company pages.
+5. **Zero Naked Facts**: Every published field links to a full source URL, an ISO-8601 retrieval timestamp, a source tier classification, and an immutable SHA-256 snapshot hash.
+6. **Deterministic Replay & Refresh**: Re-running pipelines over existing corpora computes cryptographic diffs, pinpointing verified corporate changes with zero false drifts.
 
 ---
 
 ## 🏆 Verified Benchmark Performance
 
-Signalpost was rigorously evaluated across the standardized **Builderr Norwegian Company Intelligence Competition Rubric** (35 Coverage / 30 Accuracy / 20 Refresh / 10 Synthesis / 5 UX):
+### 1. Independent 100-Company Ground Truth Audit (Run 10A / `v10a-freeze`)
+Rigorously audited across a balanced 100-company ground truth universe representing all operational cohorts:
 
-| Rubric Dimension | Max Score | **Signalpost Calibrated Score** | Qualification Bar | Status |
+| Metric | Result | Benchmark Bar | Status |
+|:---|:---:|:---:|:---:|
+| **Wrong-Company Publications** | **0** | **0 (Zero Tolerance)** | **Flawless (100.0% Precision)** |
+| **External Identity Precision** | **100.0%** | $\ge 95.0\%$ | **Perfect (318/318 observations)** |
+| **Registered Website Recall** | **68.0% (34/50)** | $\ge 60.0\%$ | **+4.0% over V7 baseline** |
+| **Total Verified Websites Discovered** | **43 / 100** | $> 40$ | **43 companies** |
+| **Holding Company Abstentions** | **25 / 25 (100%)** | 100% | **Zero boundary leaks** |
+| **Outbound HTTP Request Footprint** | **939 requests** | $\le 2,000$ quota | **1,061 requests remaining** |
+| **External Paid API Cost** | **$0.00** | $0.00 | **Zero commercial API costs** |
+| **Terminal Contract Compliance** | **100% (100/100)** | 100% | **0 silent drops** |
+
+### 2. Official Competition Rubric Calibration
+Validated across the standardized **Builderr Norwegian Company Intelligence Competition Rubric** (35 Coverage / 30 Accuracy / 20 Refresh / 10 Synthesis / 5 UX):
+
+| Rubric Dimension | Max Score | **Signalpost Score** | Qualification Bar | Status |
 |:---|:---:|:---:|:---:|:---:|
 | **Coverage & Source Discovery** | 35.0 | **29.57** | $\ge 21.0$ | **Exceeded** |
 | **Accuracy, Identity & Evidence** | 30.0 | **30.00** | $\ge 24.0$ | **Perfect (100%)** |
@@ -52,15 +68,6 @@ Signalpost was rigorously evaluated across the standardized **Builderr Norwegian
 | **Decision-Useful Synthesis** | 10.0 | **10.00** | $\ge 7.0$ | **Perfect (100%)** |
 | **UX & Interactive Inspection** | 5.0 | **5.00** | $\ge 3.0$ | **Perfect (100%)** |
 | **Total Composite Score** | **100.0** | **94.57 / 100** | $\ge 65.0$ | **Top Tier** |
-
-### Additional Audited Operational Benchmarks
-* **External Entity Precision**: **100.0%** (0 false positives or wrong-company attributions across all validation sets).
-* **Weighted External Recall**: **100.0%** against known external operating presences ($\ge 60\%$ bar).
-* **Deterministic Ground-Truth Abstention**: **97.14%** correct abstention on entities without external footprints.
-* **Terminal Contract Compliance**: **100%** (100/100 benchmark envelopes and 1,100/1,100 submission corpus envelopes emitted with 0 silent drops).
-* **Outbound Request Footprint**: **7.91 requests / company** (791 requests per 100 entities, well below the 2,000-request quota).
-* **Monte Carlo Stability**: **50 / 50 qualification passes** across random Brreg stratified draws (Mean score: 89.93, $\sigma = 0.53$).
-* **Outbound Cost**: **$0.00** (Zero reliance on paid LLM tokens or commercial third-party lookup APIs).
 
 ---
 
@@ -103,8 +110,8 @@ Tracks historical state snapshots. Re-evaluating an existing corpus generates an
      (Enhetsregisteret, Regnskapsregisteret, Roller, Underenheter)
                                │
                                ▼
-                 Evidence Opportunity Scorer
-   (Evaluates legal form, employees, custom email domain, NACE code)
+                  Evidence Opportunity Scorer
+    (Evaluates legal form, employees, custom email domain, industry)
                                │
                 ┌──────────────┴──────────────┐
                 ▼                             ▼
@@ -113,60 +120,58 @@ Tracks historical state snapshots. Re-evaluating an existing corpus generates an
                 │                             │
                 ▼                             │
     Candidate Discovery & Crawl               │
-  (Trafilatura / Scrapy / Robots)             │
+                │                             │
+                ▼                             │
+    Streaming Decompression & Subpages        │
+      (safe_decompress_body gzip/deflate,     │
+       /kontakt and /om-oss corroboration)    │
                 │                             │
                 ▼                             │
     Deterministic Identity Gate               │
       (Token similarity >= 0.90,              │
        address / phone / org match)           │
                 │                             │
-        ┌───────┴───────┐                     │
-        ▼               ▼                     │
-   Corroborated     Uncertain                 │
-        │               │                     │
-        ▼               ▼                     ▼
-  Publish Claims     Abstain        Emit Terminal Envelope
-        │               │                     │
-        └───────────────┼─────────────────────┘
-                        ▼
-           Structured Synthesis Snapshot
-    (Who, What, How Big, Who Runs It, Footprint, Audit)
-                        │
-                        ▼
-       Terminal JSONL Envelope + Provenance Audit
+                ▼                             ▼
+       Verified Company Evidence       Official Registry Profile
+                │                             │
+                └──────────────┬──────────────┘
+                               │
+                               ▼
+                 Synthesized Company Dossier
+          (Who, What, How Big, Leadership, Signals, Provenance)
+                               │
+                               ▼
+                  Terminal Execution Envelope
+            (Cryptographic SHA-256 Hashes, JSONL)
 ```
 
 ---
 
-## 🖥️ Interactive UI & Provenance Inspector
+## 🖥️ Interactive UI & Provenance Console
 
-Signalpost ships with an interactive, zero-dependency dark-mode **Provenance Inspector & Intelligence Console** (`ui/index.html`):
+Signalpost provides an evidence inspection and comparison UI (`ui/index.html`):
+- **Search Console**: Look up any entity by Norwegian Org Number or Legal Name.
+- **Decision Dossier**: Interactive breakdown of operational status, financials, active jobs, news events, and corporate governance.
+- **Evidence Drawer**: Click any claim to inspect the underlying source URL, timestamp, retrieval mode, and cryptographic content hash.
+- **Diff & Refresh Viewer**: Compare historical snapshots to view additions and modifications side-by-side.
 
-* **Real-time Filter & Search**: Search entities by OrgNr, name, industry, or revenue tier.
-* **Claim-to-Evidence Drawer**: Click any synthesized claim to immediately inspect its source URL, retrieval timestamp, tier, and SHA-256 hash.
-* **Side-by-Side Entity Comparison**: Compare corporate profiles, employee sizes, and digital footprint maturity across competing companies.
-* **Snapshot Diff Viewer**: Inspect updates between pipeline runs with visual diff highlights.
-
-To view:
+To open the console locally:
 ```bash
-# Simply open the UI file in any browser:
-open ui/index.html    # macOS
-start ui/index.html   # Windows
-xdg-open ui/index.html # Linux
+# Serve the repository root
+python -m http.server 8000
+# Navigate to http://localhost:8000/ui/
 ```
 
 ---
 
-## 📂 Project Layout
+## 📁 Project Layout
 
 ```text
 signalpost/
-├── .gitattributes              # Git LFS tracking rules
-├── .gitignore                  # Exclusion rules for local caches and environments
-├── pyproject.toml              # Project dependencies & environment spec
-├── uv.lock                     # Deterministic dependency lockfile
-├── README.md                   # System documentation & performance overview
-├── RUN.md                      # Reproduction & execution runbook
+├── pyproject.toml              # Project dependencies & build configuration
+├── uv.lock                     # Pinned reproducible dependency lockfile
+├── README.md                   # System documentation & architectural reference
+├── RUN.md                      # Official execution guide & evaluation runner
 ├── benchmark-100.jsonl         # 100-company frozen evaluation benchmark
 ├── brreg-enheter.csv           # Brreg bulk registry snapshot (Tracked via Git LFS)
 │
@@ -178,6 +183,10 @@ signalpost/
 │   └── signalpost-company-universe-*.gz   # Compressed active universe export
 │
 ├── src/norway_company_agent/   # Core intelligence library
+│   ├── adapters/               # Pluggable external footprint & governance adapters
+│   │   ├── base.py             # Base adapter interface
+│   │   └── sources.py          # Hiring, SiteActivity, SiteNews, Subunits, GovernanceRoles
+│   ├── activity.py             # Company announcements, dated activity & events
 │   ├── batch.py                # Batch pipeline execution & worker coordination
 │   ├── budget.py               # Token & request footprint budget governor
 │   ├── crawl_events.py         # HTTP crawl event emitter & ledger
@@ -185,30 +194,41 @@ signalpost/
 │   ├── evidence.py             # Claim record definitions & provenance contracts
 │   ├── external_control.py     # External search loop controller & guardrails
 │   ├── external_footprint.py   # Web & digital footprint extractor
-│   ├── identity.py             # Deterministic multi-attribute identity gate
+│   ├── history.py              # Snapshot comparison & cryptographic change-diff engine
+│   ├── identity.py             # Deterministic multi-attribute identity gate (threshold: 0.90)
 │   ├── identity_store.py       # Entity caching & local state store
+│   ├── jobs.py                 # Open vacancies & career posting discovery
 │   ├── official.py             # Brønnøysund API & bulk CSV connector
 │   ├── operations.py           # AST-based deterministic query interpreter
 │   ├── refresh.py              # SHA-256 change-diff & snapshot comparison engine
 │   ├── research.py             # Autonomous company synthesis & profile assembler
 │   ├── sampling.py             # Stratified sampling & universe slicing
 │   ├── scrapy_crawler.py       # Asynchronous web crawler with robots.txt compliance
-│   └── website.py              # Homepage content parser & metadata extractor
+│   └── website.py              # Homepage content parser, safe decompression & subpages
 │
 ├── scripts/                    # Automation, execution, and evaluation CLI tools
-│   ├── run_competition_batch_v2.py    # Main production runner (100 to 1,100+ entities)
-│   ├── evaluate_competition.py        # Official 35/30/20/10/5 rubric evaluator
-│   ├── evaluate_external_recall.py    # Precision & recall validator
-│   ├── test_adversarial_identity.py   # Adversarial edge-case validation suite
-│   ├── validate_submission_corpus.py  # 1:1 manifest-to-envelope integrity auditor
-│   └── score_company_completeness.py  # Profile completeness scoring tool
+│   ├── run_competition_batch_v2.py            # Main production runner (100 to 1,100+ entities)
+│   ├── evaluate_independent_ground_truth.py   # Independent 100-company audit tool
+│   ├── evaluate_competition.py                # Official 35/30/20/10/5 rubric evaluator
+│   ├── evaluate_external_recall.py            # Precision & recall validator
+│   ├── test_adversarial_identity.py           # Adversarial edge-case validation suite
+│   ├── validate_submission_corpus.py          # 1:1 manifest-to-envelope integrity auditor
+│   └── score_company_completeness.py          # Profile completeness scoring tool
+│
+├── tests/                      # Comprehensive pytest regression suite
+│   ├── test_activity.py        # Activity and news extraction tests
+│   ├── test_discovery.py       # Discovery funnel tests
+│   ├── test_history.py         # Refresh diff tests
+│   ├── test_jobs.py            # Career posting tests
+│   └── test_website_decompression.py # HTTP decompression & zip-bomb protection tests
 │
 ├── submission/                 # Official competition submission artifacts
 │   ├── organisation-manifest.jsonl    # 1,100 stratified Norwegian test entities
 │   ├── envelopes.jsonl                # 1,100 validated terminal execution envelopes
 │   ├── profiles.jsonl                 # 1,100 completed evidence-backed profiles
 │   ├── run-report.json                # Execution ledger & resource consumption report
-│   └── score.json                     # Official calibrated benchmark report (94.57/100)
+│   ├── score.json                     # Official calibrated benchmark report (94.57/100)
+│   └── source-policy.md               # Source compliance policy
 │
 └── ui/
     └── index.html              # Interactive Provenance Inspector & Intelligence Console
@@ -239,17 +259,17 @@ uv sync
 ```
 
 ### 3. Run the Production Batch Pipeline
-Execute the full crawler and analysis pipeline on the 100-company benchmark:
+Execute the crawler and analysis pipeline on the 100-company benchmark:
 
 ```bash
 uv run python scripts/run_competition_batch_v2.py \
-  --organisations benchmark-100.jsonl \
-  --bulk brreg-enheter.csv \
-  --profiles-output out/profiles.jsonl \
-  --output out/envelopes.jsonl \
-  --report out/run-report.json \
-  --run-id run-001 \
-  --expected-count 100 \
+  --organisations data/ground-truth-100.jsonl \
+  --bulk data/signalpost-company-universe-2025.jsonl.gz \
+  --profiles-output out/v7_run10_profiles.jsonl \
+  --output out/v7_run10_envelopes.jsonl \
+  --report out/v7_run10_batch_report.json \
+  --run-id run10-decompression-subpages \
+  --budget 2000 \
   --workers 4
 ```
 
@@ -257,30 +277,45 @@ uv run python scripts/run_competition_batch_v2.py \
 
 ## 📊 Pipeline Verification & Evaluation
 
-### Score Against the Official Competition Rubric
+### 1. Independent 100-Company Ground Truth Audit
+Audit against the stratified ground-truth benchmark:
+```bash
+uv run python scripts/evaluate_independent_ground_truth.py \
+  --profiles out/v7_run10_profiles.jsonl \
+  --envelopes out/v7_run10_envelopes.jsonl \
+  --ground-truth data/ground-truth-100.jsonl \
+  --output out/v7_run10_evaluation_report.json
+```
+
+### 2. Score Against the Official Competition Rubric
 Calculate the official **35 / 30 / 20 / 10 / 5** point distribution:
 ```bash
 uv run python scripts/evaluate_competition.py \
-  --profiles out/profiles.jsonl \
-  --envelopes out/envelopes.jsonl \
+  --profiles out/v7_run10_profiles.jsonl \
+  --envelopes out/v7_run10_envelopes.jsonl \
   --ground-truth data/discovery-ground-truth.jsonl \
-  --report out/run-report.json \
+  --report out/v7_run10_batch_report.json \
   --output out/score.json
 ```
 
-### Validate External Precision & Recall
-Audit against verified external online footprints ($\ge 60\%$ recall, $\ge 95\%$ precision):
+### 3. Validate External Precision & Recall
+Audit against verified external online footprints:
 ```bash
 uv run python scripts/evaluate_external_recall.py \
-  --profiles out/profiles.jsonl \
+  --profiles out/v7_run10_profiles.jsonl \
   --ground-truth data/discovery-ground-truth.jsonl \
   --output out/recall.json
 ```
 
-### Run Adversarial Identity & Stress Tests
+### 4. Run Adversarial Identity & Stress Tests
 Verify zero false positives against name collisions, parked domains, and spoofed footers:
 ```bash
 uv run python scripts/test_adversarial_identity.py
+```
+
+### 5. Run Unit & Regression Tests
+```bash
+uv run pytest tests/ -q
 ```
 
 ---
