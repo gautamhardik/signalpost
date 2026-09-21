@@ -1,0 +1,93 @@
+{
+  "run_id": "run10-decompression-subpages",
+  "started_at": "2026-09-21T02:24:08.576462Z",
+  "completed_at": "2026-09-21T02:27:11.339719Z",
+  "expected_count": 100,
+  "emitted_envelopes": 100,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 100,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "registry_live",
+    "financials",
+    "roles",
+    "group",
+    "locations",
+    "website",
+    "external_footprint"
+  ],
+  "registry": {
+    "identity_store": "hybrid",
+    "primary_error": "file is not a database",
+    "fallback_resolved": 100,
+    "requested": 100,
+    "selected": 100
+  },
+  "discovery_funnel": {
+    "generated": 224,
+    "fetched": 104,
+    "plausible": 11,
+    "verified": 10,
+    "rejected": 214,
+    "rejection_reasons": {
+      "wrong_orgnr": 0,
+      "wrong_domain": 0,
+      "parent_entity": 0,
+      "subsidiary_entity": 0,
+      "parked_domain": 0,
+      "generic_aggregator": 0,
+      "unrelated_company": 1,
+      "no_identity_evidence": 5,
+      "blocked": 78,
+      "dead_domain": 10,
+      "invalid_url": 0,
+      "unfetched_capped": 84,
+      "unfetched_early_terminated": 36,
+      "prefilter_blocked": 0
+    },
+    "requests": 129,
+    "bytes": 9602662,
+    "verified_yield": 0.096,
+    "candidate_efficiency": 0.078
+  },
+  "operations": {
+    "outbound_requests": 939,
+    "requests": 939,
+    "bytes": 28377200,
+    "p50_ms": 828,
+    "p95_ms": 1905
+  },
+  "budget": {
+    "total_budget": 2000,
+    "budget_reservations": 939,
+    "budget_remaining": 1061,
+    "cache_hits": 0,
+    "category_consumed": {
+      "registry": 500,
+      "website": 439,
+      "external_footprint": 0,
+      "search": 0,
+      "reserve": 0
+    },
+    "category_budgets": {
+      "registry": 500,
+      "website": 600,
+      "external_footprint": 400,
+      "search": 400,
+      "reserve": 100
+    },
+    "accounting_note": "outbound_requests represents actual physical HTTP requests sent to external servers; budget_reservations tracks units allocated against the 2,000 ceiling across modules and searches."
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}

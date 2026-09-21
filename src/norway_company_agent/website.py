@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import gzip
+import io
 import json
 import ipaddress
 import re
@@ -9,6 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import urllib.robotparser
+import zlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -208,6 +211,33 @@ def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 4) -> list[
     return [url for url, _ in sorted(candidates.items(), key=lambda item: (item[1], item[0]))[:limit]]
 
 
+def safe_decompress_body(raw: bytes, encoding: str = "", max_bytes: int = 2_000_000) -> tuple[bytes, str | None]:
+    """Safely decompress gzip or deflate HTTP payloads with streaming byte limit enforcement."""
+    if not raw:
+        return raw, None
+    enc = encoding.lower()
+    is_gzip = (len(raw) >= 2 and raw[:2] == b"\x1f\x8b") or "gzip" in enc
+    is_deflate = "deflate" in enc
+    if not (is_gzip or is_deflate):
+        return raw, None
+    try:
+        if is_gzip:
+            buf = io.BytesIO(raw)
+            with gzip.GzipFile(fileobj=buf) as gz:
+                decompressed = gz.read(max_bytes + 1)
+                return decompressed, None
+        elif is_deflate:
+            # Handles raw deflate (-MAX_WBITS) as well as zlib-wrapped deflate (MAX_WBITS)
+            try:
+                decompressed = zlib.decompress(raw, -zlib.MAX_WBITS, max_bytes + 1)
+            except zlib.error:
+                decompressed = zlib.decompress(raw, zlib.MAX_WBITS, max_bytes + 1)
+            return decompressed, None
+    except Exception as exc:
+        return raw, f"decompression_error: {type(exc).__name__}"
+    return raw, None
+
+
 def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:
     if not _robots_allowed(url, timeout):
         return None, [], 1, 0, 0, "robots.txt disallows page"
@@ -215,21 +245,29 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
     try:
         with SAFE_OPENER.open(request, timeout=timeout) as response:
+            content_type = response.headers.get("content-type", "")
+            encoding = response.headers.get("content-encoding", "")
             raw = response.read(max_bytes + 1)
             elapsed = int((time.monotonic() - started) * 1000)
             final_url = response.geturl()
-            if len(raw) > max_bytes or "html" not in response.headers.get("content-type", "").lower():
+            if len(raw) > max_bytes or "html" not in content_type.lower():
                 return None, [], 2, len(raw), elapsed, "unsupported or oversized page"
             if _registered_domain(final_url) != homepage_domain:
                 return None, [], 2, len(raw), elapsed, "redirected outside registered domain"
-        page_html = raw.decode("utf-8", errors="replace")
+        decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
+        if len(decompressed_raw) > max_bytes:
+            return None, [], 2, len(raw), elapsed, "decompressed page exceeds byte limit"
+        page_html = decompressed_raw.decode("utf-8", errors="replace")
         page_soup = BeautifulSoup(page_html, "lxml")
+        structured = extruct.extract(page_html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         page_text = trafilatura.extract(page_html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
+        meta_identity = _extract_metadata_identity_text(structured, page_soup)
         page = {
             "url": final_url,
             "title": page_soup.title.get_text(" ", strip=True)[:500] if page_soup.title else "",
             "main_text_excerpt": page_text[:5000],
-            "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
+            "identity_text_excerpt": meta_identity,
+            "content_sha256": __import__("hashlib").sha256(decompressed_raw).hexdigest(),
         }
         return page, _social_links(final_url, page_soup), 2, len(raw), elapsed, None
     except Exception as exc:
@@ -255,6 +293,39 @@ def _jsonld_organisations(metadata: dict[str, Any]) -> list[dict[str, Any]]:
     return values[:20]
 
 
+def _extract_metadata_identity_text(structured: dict[str, Any], soup: BeautifulSoup) -> str:
+    """Extract authoritative brand & identity text from structured metadata (OpenGraph & JSON-LD).
+    
+    Used when HTML body is minimal (password page, JS shell) but site declares its identity in headers.
+    """
+    parts: list[str] = []
+    # 1. OpenGraph site_name and title
+    og_items = structured.get("opengraph") or []
+    for item in og_items:
+        props = dict(item.get("properties") or [])
+        if props.get("og:site_name"):
+            parts.append(str(props["og:site_name"]).strip())
+        if props.get("og:title"):
+            parts.append(str(props["og:title"]).strip())
+        if props.get("og:description"):
+            parts.append(str(props["og:description"]).strip())
+            
+    # 2. Direct meta tags fallback
+    for selector in ('meta[property="og:site_name"]', 'meta[name="application-name"]'):
+        tag = soup.select_one(selector)
+        if tag and tag.get("content"):
+            parts.append(str(tag["content"]).strip())
+            
+    # 3. JSON-LD organization names
+    for org in _jsonld_organisations(structured):
+        for k in ("name", "legalName", "alternateName"):
+            val = org.get(k)
+            if isinstance(val, str) and val.strip():
+                parts.append(val.strip())
+
+    return " ".join(dict.fromkeys(parts))[:2000]
+
+
 def _extraction_state(text: str, soup: BeautifulSoup) -> str:
     return "js_fallback_candidate" if len(text.strip()) < 100 and len(soup.select("script[src]")) >= 2 else "static_complete"
 
@@ -276,6 +347,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
     try:
         with SAFE_OPENER.open(request, timeout=timeout) as response:
             content_type = response.headers.get("content-type", "")
+            encoding = response.headers.get("content-encoding", "")
             raw = response.read(max_bytes + 1)
             elapsed = int((time.monotonic() - started) * 1000)
             if len(raw) > max_bytes:
@@ -284,13 +356,17 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
                 return evidence("website", "source_error", "registry_linked_company_website", normalized, note=f"Unsupported content type: {content_type}"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
             final_url = response.geturl()
             assert_public_url(final_url)
-        html = raw.decode("utf-8", errors="replace")
+        decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
+        if len(decompressed_raw) > max_bytes:
+            return evidence("website", "blocked", "registry_linked_company_website", normalized, note="Decompressed homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
+        html = decompressed_raw.decode("utf-8", errors="replace")
         soup = BeautifulSoup(html, "lxml")
         structured = extruct.extract(html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         text = trafilatura.extract(html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
         title = soup.title.get_text(" ", strip=True) if soup.title else ""
         description_tag = soup.select_one('meta[name="description"], meta[property="og:description"]')
         description = str(description_tag.get("content") or "").strip() if description_tag else ""
+        meta_identity = _extract_metadata_identity_text(structured, soup)
         value = {
             "requested_url": normalized,
             "final_url": final_url,
@@ -298,6 +374,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             "title": title[:500],
             "description": description[:2000],
             "main_text_excerpt": text[:5000],
+            "identity_text_excerpt": meta_identity,
             "social_links": _social_links(final_url, soup),
             "structured_organisations": _jsonld_organisations(structured),
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),

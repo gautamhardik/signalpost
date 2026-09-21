@@ -1,0 +1,962 @@
+{
+  "benchmark": "Signalpost Independent 100-Company Ground Truth Audit",
+  "companies_evaluated": 100,
+  "metrics": {
+    "website_recall": 0.68,
+    "website_expected": 50,
+    "website_discovered": 34,
+    "wrong_company_publications": 0,
+    "external_precision": 1.0,
+    "subunit_recall": 1.0,
+    "avg_claims_per_company": 28.94,
+    "avg_statutory_claims_per_company": 25.99,
+    "avg_external_claims_per_company": 2.95,
+    "external_claim_share": 0.1019,
+    "external_intelligence_coverage": 0.43,
+    "registry_intelligence_coverage": 1.0,
+    "combined_intelligence_coverage": 1.0
+  },
+  "cohort_breakdown": {
+    "operating_large_with_web": {
+      "total": 25,
+      "web_discovered": 17,
+      "web_expected": 25,
+      "abstentions": 0
+    },
+    "operating_small_with_web": {
+      "total": 25,
+      "web_discovered": 17,
+      "web_expected": 25,
+      "abstentions": 0
+    },
+    "operating_no_reg_web": {
+      "total": 25,
+      "web_discovered": 9,
+      "web_expected": 0,
+      "abstentions": 16
+    },
+    "holding_no_web_abstain": {
+      "total": 25,
+      "web_discovered": 0,
+      "web_expected": 0,
+      "abstentions": 25
+    }
+  },
+  "claims_summary": {
+    "total_claims": 2894,
+    "statutory_claims": 2599,
+    "external_claims": 295
+  },
+  "accuracy_summary": {
+    "total_external_observations": 318,
+    "wrong_entity_publications": 0,
+    "false_entity_links": 0
+  },
+  "intelligence_coverage": {
+    "companies_with_external": 43,
+    "companies_with_registry": 100,
+    "companies_with_combined": 100
+  },
+  "per_company_results": [
+    {
+      "organisation_number": "810359862",
+      "legal_name": "AUTOBJØRN A/S",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "871235422",
+      "legal_name": "ELEKTRO PARTNER AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "895891622",
+      "legal_name": "ZYNK AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.zynk.no/",
+      "total_claims": 40
+    },
+    {
+      "organisation_number": "912700704",
+      "legal_name": "SONSHUS AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://sonshus.no/",
+      "total_claims": 34
+    },
+    {
+      "organisation_number": "914886473",
+      "legal_name": "NATURBASEN BARNEHAGE AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.naturbasen.no/",
+      "total_claims": 34
+    },
+    {
+      "organisation_number": "917361266",
+      "legal_name": "ERASE AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://erase.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "920742130",
+      "legal_name": "BØIFOT EIENDOM AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "926183273",
+      "legal_name": "AS NYE TROMS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.nyetroms.no/",
+      "total_claims": 45
+    },
+    {
+      "organisation_number": "932252163",
+      "legal_name": "LØNNEBERGET BARNEHAGE AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "938993335",
+      "legal_name": "COLUMBI MICRO AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.columbi.no/",
+      "total_claims": 42
+    },
+    {
+      "organisation_number": "950318651",
+      "legal_name": "ZERO AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://zero.no/",
+      "total_claims": 43
+    },
+    {
+      "organisation_number": "960256778",
+      "legal_name": "PALFINGER MARINE NORWAY AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "967607568",
+      "legal_name": "MALERMESTRENE INDRE ØSTLAND AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.malermestrene.no/",
+      "total_claims": 31
+    },
+    {
+      "organisation_number": "971489979",
+      "legal_name": "SPIREN GARDSBARNEHAGE SA",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "976336224",
+      "legal_name": "DP TRONDHEIM AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "979496079",
+      "legal_name": "NORBYGATA ENGROS AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://ndonline.no/",
+      "total_claims": 35
+    },
+    {
+      "organisation_number": "981320611",
+      "legal_name": "TROMSØTERMINALEN AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.tromsoterminalen.no/",
+      "total_claims": 32
+    },
+    {
+      "organisation_number": "983437672",
+      "legal_name": "JØRGEN OTTEREN AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://otteren.no/",
+      "total_claims": 35
+    },
+    {
+      "organisation_number": "985188068",
+      "legal_name": "SAFETEC NORDIC AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://safetec.tuv.com/",
+      "total_claims": 38
+    },
+    {
+      "organisation_number": "987002654",
+      "legal_name": "SKULESTAD BARNEHAGE SA",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.skulestadbarnehage.no/",
+      "total_claims": 38
+    },
+    {
+      "organisation_number": "988832448",
+      "legal_name": "NORDIC SEASON PRODUCTS AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.nordicseason.no/",
+      "total_claims": 30
+    },
+    {
+      "organisation_number": "990790213",
+      "legal_name": "STIFTELSEN SAGATUN RECOVERY",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://sagatun.no/",
+      "total_claims": 37
+    },
+    {
+      "organisation_number": "992766670",
+      "legal_name": "JORDBÆRPIKENE STJØRDAL AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "995075385",
+      "legal_name": "ABRA BESLAG AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.abrabeslag.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "997166043",
+      "legal_name": "KORSVOLL MASKIN AS",
+      "cohort": "operating_large_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.korsvollmaskin.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "811563382",
+      "legal_name": "AKA TELECOM AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "859336302",
+      "legal_name": "BÅDE OG AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://badeog.no/",
+      "total_claims": 37
+    },
+    {
+      "organisation_number": "896358022",
+      "legal_name": "ARENDAL BÅTSKADE SERVICE AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.arendalbatskadeservice.no/",
+      "total_claims": 30
+    },
+    {
+      "organisation_number": "912663930",
+      "legal_name": "NARVESEN REVISJON AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://narvesenrevisjon.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "914424585",
+      "legal_name": "WANDERING OWL AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.wanderingowl.com/",
+      "total_claims": 40
+    },
+    {
+      "organisation_number": "915980430",
+      "legal_name": "RAKKESTAD SLANGESERVICE AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "http://rakkestad-slangeservice.no/",
+      "total_claims": 31
+    },
+    {
+      "organisation_number": "918170316",
+      "legal_name": "C FOOD NORWAY AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://c-food.no/",
+      "total_claims": 37
+    },
+    {
+      "organisation_number": "920554466",
+      "legal_name": "MEDIO CONSULTING AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "924028084",
+      "legal_name": "RÆIN AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.raein.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "927834650",
+      "legal_name": "VIKOS PROSJEKT AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.vikos.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "931932217",
+      "legal_name": "HUSFLIDEN HOLMESTRAND SA",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.norskflid.no/butikker/holmestrand/",
+      "total_claims": 35
+    },
+    {
+      "organisation_number": "935882303",
+      "legal_name": "BUTIKKDRIFT ALEM MEBRAHTOM AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "950146885",
+      "legal_name": "GODLIA BORETTSLAG",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "964285284",
+      "legal_name": "PREBEN TELLEFSEN AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.tellefsen.no/",
+      "total_claims": 34
+    },
+    {
+      "organisation_number": "971489014",
+      "legal_name": "STIFTELSEN BARNAS BESTE",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "977540747",
+      "legal_name": "SKILTSPESIALISTEN AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://skiltspesialisten.no/",
+      "total_claims": 36
+    },
+    {
+      "organisation_number": "981242297",
+      "legal_name": "NORLA, STIFTELSE FOR NORSK LITTERATUR I UTLANDET",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://norla.no/",
+      "total_claims": 39
+    },
+    {
+      "organisation_number": "983807801",
+      "legal_name": "PERSONALTJENESTER TELEMARK AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.personaltjenester.no/",
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "985836744",
+      "legal_name": "KNUT NÆVESTAD SNEKKERVERKSTED AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.systemnaevestad.no/",
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "987773928",
+      "legal_name": "LØKKA BARNEHAGE AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "989804804",
+      "legal_name": "VARIER FURNITURE AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://www.varierfurniture.com/en",
+      "total_claims": 31
+    },
+    {
+      "organisation_number": "991633413",
+      "legal_name": "MK ILLUMINATION AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://mk-illumination.no/",
+      "total_claims": 32
+    },
+    {
+      "organisation_number": "993909262",
+      "legal_name": "BJØRNEFJORDEN AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "995905981",
+      "legal_name": "BERGEN INDUSTRI TEKNIKK AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": true,
+      "discovered_url": "https://bitas.no/",
+      "total_claims": 33
+    },
+    {
+      "organisation_number": "997806328",
+      "legal_name": "DB NORGE AS",
+      "cohort": "operating_small_with_web",
+      "gt_web_status": "AVAILABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "810034882",
+      "legal_name": "SANDNES ELEKTRISKE AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 29
+    },
+    {
+      "organisation_number": "831097272",
+      "legal_name": "MAJO BYGG AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "892961662",
+      "legal_name": "EL SERVICE GRENLAND AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "913027353",
+      "legal_name": "ØYLAND MAT AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "915061877",
+      "legal_name": "DYNAMO ANALYTICS NORDIC AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "917021597",
+      "legal_name": "SALOTTO AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://salotto.com/",
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "918876812",
+      "legal_name": "THAI KLINIKK AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://thaiklinikk.no/",
+      "total_claims": 34
+    },
+    {
+      "organisation_number": "920677479",
+      "legal_name": "LARVIKITTBLOKKA AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://www.larvikittblokka.no/",
+      "total_claims": 40
+    },
+    {
+      "organisation_number": "922364184",
+      "legal_name": "REGNSKAPSHUSET BORG AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "924588519",
+      "legal_name": "NORSELAB INVESTMENT MANAGEMENT AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "926338072",
+      "legal_name": "GAUSTAEKSPRESSEN AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "928075648",
+      "legal_name": "STAVANGER RIB AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://www.stavangerrib.no/",
+      "total_claims": 35
+    },
+    {
+      "organisation_number": "929773195",
+      "legal_name": "HYDRAULIC SUPPORT AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "931125427",
+      "legal_name": "MARM AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "933020622",
+      "legal_name": "BARNEHAGESENTRALEN AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://www.barnehagesentralen.no/",
+      "total_claims": 36
+    },
+    {
+      "organisation_number": "934743512",
+      "legal_name": "GARDERMOEN MEDISINSKE SENTER LEGEKONTORET AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "936547486",
+      "legal_name": "WAGNER ANLEGGSERVICE AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "953205238",
+      "legal_name": "BYGG OG ENERGISERVICE AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "970961194",
+      "legal_name": "THINK HAIR WEAR KNARVIK AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 27
+    },
+    {
+      "organisation_number": "979322151",
+      "legal_name": "REMØY MANAGEMENT AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "982735556",
+      "legal_name": "ALFRED BERGE AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://www.alfredaberge.no/",
+      "total_claims": 32
+    },
+    {
+      "organisation_number": "986471219",
+      "legal_name": "ORKLA LAFT AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://orklalaft.no/",
+      "total_claims": 31
+    },
+    {
+      "organisation_number": "989987364",
+      "legal_name": "DE LILLA AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://delilla.no/",
+      "total_claims": 40
+    },
+    {
+      "organisation_number": "993331104",
+      "legal_name": "PAUL BERG AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": true,
+      "discovered_url": "https://paulberg.no/",
+      "total_claims": 30
+    },
+    {
+      "organisation_number": "997098811",
+      "legal_name": "STUBBESKOGEN NATURBARNEHAGE AS",
+      "cohort": "operating_no_reg_web",
+      "gt_web_status": "NOT_FOUND",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "810059672",
+      "legal_name": "AASEN & FARSTAD AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "829009722",
+      "legal_name": "ÅSHILD HERDLEVÆR INVEST AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 21
+    },
+    {
+      "organisation_number": "889810122",
+      "legal_name": "SPECTRE EIENDOM AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 22
+    },
+    {
+      "organisation_number": "913238389",
+      "legal_name": "SENJA HELSE OG OMSORG AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 23
+    },
+    {
+      "organisation_number": "915611737",
+      "legal_name": "GASTRONOMI I JOTUNHEIMEN AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 22
+    },
+    {
+      "organisation_number": "917777985",
+      "legal_name": "DUGG FOTO2 AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 23
+    },
+    {
+      "organisation_number": "919623527",
+      "legal_name": "CIL TRANSPORT AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 23
+    },
+    {
+      "organisation_number": "921343663",
+      "legal_name": "KONSEPT MUR & FLIS AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "923030999",
+      "legal_name": "GALDHØPIGGEN INVEST 5 AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 21
+    },
+    {
+      "organisation_number": "924880708",
+      "legal_name": "SLÅVIKA AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 19
+    },
+    {
+      "organisation_number": "926194135",
+      "legal_name": "MONSTERA RECORDS AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 20
+    },
+    {
+      "organisation_number": "927424401",
+      "legal_name": "JS ENTREPRENØR SERVICE AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 22
+    },
+    {
+      "organisation_number": "928687538",
+      "legal_name": "SARPSBORG EIENDOMSUTVIKLING AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 21
+    },
+    {
+      "organisation_number": "929984250",
+      "legal_name": "STORDALIGHT AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 22
+    },
+    {
+      "organisation_number": "931228781",
+      "legal_name": "MOLTRES EIENDOM AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 23
+    },
+    {
+      "organisation_number": "932578379",
+      "legal_name": "ERLING EGGE HOLDING AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 20
+    },
+    {
+      "organisation_number": "933724697",
+      "legal_name": "DØLI AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "934899024",
+      "legal_name": "METMAS AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 26
+    },
+    {
+      "organisation_number": "935862485",
+      "legal_name": "AF EIKELAND AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 22
+    },
+    {
+      "organisation_number": "943652511",
+      "legal_name": "M P EIENDOM AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 20
+    },
+    {
+      "organisation_number": "979940092",
+      "legal_name": "REPPE HOLDING AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    },
+    {
+      "organisation_number": "987929235",
+      "legal_name": "NORFRESH TRADING AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "989237217",
+      "legal_name": "TRUTTA HOLDING AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 25
+    },
+    {
+      "organisation_number": "992193549",
+      "legal_name": "SKOLEMAGASINET AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 23
+    },
+    {
+      "organisation_number": "996854922",
+      "legal_name": "ØKSNES UTLEIE AS",
+      "cohort": "holding_no_web_abstain",
+      "gt_web_status": "NOT_APPLICABLE",
+      "web_discovered": false,
+      "discovered_url": null,
+      "total_claims": 24
+    }
+  ]
+}
