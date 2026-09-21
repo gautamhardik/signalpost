@@ -3,7 +3,7 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Package Manager: uv](https://img.shields.io/badge/package%20manager-uv-purple.svg)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Builderr Benchmark Score](https://img.shields.io/badge/rubric%20score-94.57%20%2F%20100-success.svg)](#-verified-benchmark-performance)
+[![Local Calibration Score](https://img.shields.io/badge/local%20calibration-94.57%20%2F%20100-blue.svg)](#-verified-benchmark-performance)
 [![External Precision](https://img.shields.io/badge/external%20precision-100%25-brightgreen.svg)](#-verified-benchmark-performance)
 [![Naked Facts](https://img.shields.io/badge/naked%20facts-0-brightgreen.svg)](#-core-architectural-tenets)
 
@@ -57,17 +57,19 @@ Rigorously audited across a balanced 100-company ground truth universe represent
 | **External Paid API Cost** | **$0.00** | $0.00 | **Zero commercial API costs** |
 | **Terminal Contract Compliance** | **100% (100/100)** | 100% | **0 silent drops** |
 
-### 2. Official Competition Rubric Calibration
-Validated across the standardized **Builderr Norwegian Company Intelligence Competition Rubric** (35 Coverage / 30 Accuracy / 20 Refresh / 10 Synthesis / 5 UX):
+### 2. Local Calibration on Competition Rubric
+Validated locally using the open-source evaluation suite across the standardized **Builderr Norwegian Company Intelligence Competition Rubric** (35 Coverage / 30 Accuracy / 20 Refresh / 10 Synthesis / 5 UX):
 
-| Rubric Dimension | Max Score | **Signalpost Score** | Qualification Bar | Status |
+| Rubric Dimension | Max Score | **Local Calibrated Score** | Qualification Bar | Status |
 |:---|:---:|:---:|:---:|:---:|
 | **Coverage & Source Discovery** | 35.0 | **29.57** | $\ge 21.0$ | **Exceeded** |
 | **Accuracy, Identity & Evidence** | 30.0 | **30.00** | $\ge 24.0$ | **Perfect (100%)** |
 | **Refresh & Extensibility** | 20.0 | **20.00** | $\ge 14.0$ | **Perfect (100%)** |
 | **Decision-Useful Synthesis** | 10.0 | **10.00** | $\ge 7.0$ | **Perfect (100%)** |
 | **UX & Interactive Inspection** | 5.0 | **5.00** | $\ge 3.0$ | **Perfect (100%)** |
-| **Total Composite Score** | **100.0** | **94.57 / 100** | $\ge 65.0$ | **Top Tier** |
+| **Total Composite Score** | **100.0** | **94.57 / 100** | $\ge 65.0$ | **Calibrated** |
+
+> **Note on Evaluation Status**: The 94.57 score represents an internal local calibration on fixture data. Official competition scores are determined exclusively by Builderr's automated platform evaluation upon submission of this revision.
 
 ---
 
