@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 from .base import BaseSourceAdapter
 from .sources import (
+    GovernanceRolesAdapter,
     HiringAdapter,
     SiteActivityAdapter,
     SiteNewsAdapter,
@@ -16,6 +17,7 @@ DEFAULT_ADAPTERS: list[BaseSourceAdapter] = [
     HiringAdapter(),
     SiteNewsAdapter(),
     SubunitsAdapter(),
+    GovernanceRolesAdapter(),
 ]
 
 

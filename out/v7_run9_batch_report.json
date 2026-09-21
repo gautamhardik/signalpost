@@ -1,0 +1,70 @@
+{
+  "run_id": "run9-coverage-expansion",
+  "started_at": "2026-09-21T01:58:16.966990Z",
+  "completed_at": "2026-09-21T02:02:28.668148Z",
+  "expected_count": 100,
+  "emitted_envelopes": 100,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 100,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "registry_live",
+    "financials",
+    "roles",
+    "group",
+    "locations",
+    "website"
+  ],
+  "registry": {
+    "identity_store": "hybrid",
+    "primary_error": "file is not a database",
+    "fallback_resolved": 100,
+    "requested": 100,
+    "selected": 100
+  },
+  "discovery_funnel": {
+    "generated": 345,
+    "fetched": 176,
+    "plausible": 14,
+    "verified": 12,
+    "rejected": 333,
+    "rejection_reasons": {
+      "wrong_orgnr": 0,
+      "wrong_domain": 0,
+      "parent_entity": 0,
+      "subsidiary_entity": 0,
+      "parked_domain": 0,
+      "generic_aggregator": 0,
+      "unrelated_company": 2,
+      "no_identity_evidence": 14,
+      "blocked": 133,
+      "dead_domain": 15,
+      "invalid_url": 0,
+      "unfetched_capped": 132,
+      "unfetched_early_terminated": 37,
+      "prefilter_blocked": 0
+    },
+    "requests": 192,
+    "bytes": 14320308,
+    "verified_yield": 0.068,
+    "candidate_efficiency": 0.062
+  },
+  "operations": {
+    "requests": 1000,
+    "bytes": 32922313,
+    "p50_ms": 828,
+    "p95_ms": 2062
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}

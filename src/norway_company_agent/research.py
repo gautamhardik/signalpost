@@ -108,13 +108,16 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
         if footprint.get("status") == "available":
             for obs in fp_val.get("observations") or []:
                 if obs.get("exact_entity"):
+                    plat = obs.get("platform")
+                    is_official = plat == "brreg" or obs.get("source_class") == "official_registry"
+                    classification = f"official_registry_{obs.get('signal_type')}" if is_official else f"external_{plat}_observation"
                     facts.append({
-                        "claim": f"Verified {obs.get('platform')} presence",
+                        "claim": f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}",
                         "value": obs.get("source_url"),
-                        "classification": f"external_{obs.get('platform')}_observation",
+                        "classification": classification,
                         "source_url": obs.get("source_url"),
                         "retrieved_at": obs.get("retrieved_at"),
-                        "source_class": obs.get("source_class") or obs.get("platform"),
+                        "source_class": obs.get("source_class") or plat,
                         "content_sha256": obs.get("content_sha256"),
                     })
 

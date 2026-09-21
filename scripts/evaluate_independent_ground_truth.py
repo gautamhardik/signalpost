@@ -63,6 +63,11 @@ def main() -> None:
         "relationships": {"ground_truth_available": 0, "discovered": 0},
         "claims": {"total_claims": 0, "statutory_claims": 0, "external_claims": 0},
         "accuracy": {"total_external_observations": 0, "wrong_entity_publications": 0, "false_entity_links": 0},
+        "intelligence_coverage": {
+            "companies_with_external": 0,
+            "companies_with_registry": 0,
+            "companies_with_combined": 0,
+        },
     }
 
     per_company_results = []
@@ -120,6 +125,16 @@ def main() -> None:
             if not obs.get("exact_entity") or not obs.get("identity_proof"):
                 stats["accuracy"]["wrong_entity_publications"] += 1
 
+        # Decoupled Intelligence Coverage Tracking
+        has_external_obs = any(obs.get("platform") != "brreg" and obs.get("exact_entity") for obs in fp_obs) or bool(web_publishable)
+        has_registry_obs = any(obs.get("platform") == "brreg" and obs.get("exact_entity") for obs in fp_obs) or bool(ev.get("roles", {}).get("status") == "available")
+        if has_external_obs:
+            stats["intelligence_coverage"]["companies_with_external"] += 1
+        if has_registry_obs:
+            stats["intelligence_coverage"]["companies_with_registry"] += 1
+        if has_external_obs or has_registry_obs:
+            stats["intelligence_coverage"]["companies_with_combined"] += 1
+
         # Subunits check
         gt_sub = gt["subunit_footprint"]
         if gt_sub["status"] == "AVAILABLE":
@@ -172,6 +187,10 @@ def main() -> None:
     sub_discovered = stats["subunits"]["discovered"]
     subunit_recall = round(sub_discovered / sub_expected, 4) if sub_expected else 1.0
 
+    ext_cov = round(stats["intelligence_coverage"]["companies_with_external"] / n_comp, 4)
+    reg_cov = round(stats["intelligence_coverage"]["companies_with_registry"] / n_comp, 4)
+    comb_cov = round(stats["intelligence_coverage"]["companies_with_combined"] / n_comp, 4)
+
     report = {
         "benchmark": "Signalpost Independent 100-Company Ground Truth Audit",
         "companies_evaluated": n_comp,
@@ -186,10 +205,14 @@ def main() -> None:
             "avg_statutory_claims_per_company": avg_statutory,
             "avg_external_claims_per_company": avg_external,
             "external_claim_share": round(stats["claims"]["external_claims"] / stats["claims"]["total_claims"], 4) if stats["claims"]["total_claims"] else 0.0,
+            "external_intelligence_coverage": ext_cov,
+            "registry_intelligence_coverage": reg_cov,
+            "combined_intelligence_coverage": comb_cov,
         },
         "cohort_breakdown": stats["cohorts"],
         "claims_summary": stats["claims"],
         "accuracy_summary": stats["accuracy"],
+        "intelligence_coverage": stats["intelligence_coverage"],
         "per_company_results": per_company_results,
     }
 
@@ -204,6 +227,9 @@ def main() -> None:
     print(f"Website Recall:                  {website_recall*100:.1f}% ({web_discovered}/{web_expected})")
     print(f"Wrong-Company Publications:      {wrong_obs} (100% precision target: {external_precision*100:.1f}%)")
     print(f"Subunit Recall:                  {subunit_recall*100:.1f}% ({sub_discovered}/{sub_expected})")
+    print(f"External Intelligence Coverage:  {ext_cov*100:.1f}% ({stats['intelligence_coverage']['companies_with_external']}/{n_comp})")
+    print(f"Registry Intelligence Coverage:  {reg_cov*100:.1f}% ({stats['intelligence_coverage']['companies_with_registry']}/{n_comp})")
+    print(f"Combined Intelligence Coverage:  {comb_cov*100:.1f}% ({stats['intelligence_coverage']['companies_with_combined']}/{n_comp})")
     print(f"Avg Claims / Company:            {avg_claims} (Statutory: {avg_statutory}, External: {avg_external})")
     print(f"External Claim Share:            {report['metrics']['external_claim_share']*100:.1f}%")
     print("\nCohort Performance:")

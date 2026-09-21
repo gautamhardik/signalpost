@@ -299,3 +299,56 @@ class SubunitsAdapter(BaseSourceAdapter):
             }
             observations.append(obs)
         return observations
+
+
+class GovernanceRolesAdapter(BaseSourceAdapter):
+    """Extracts verified corporate governance and board leadership intelligence from official BRREG records."""
+
+    @property
+    def source_type(self) -> str:
+        return "governance_roles"
+
+    def extract_observations(self, profile: dict[str, Any]) -> list[dict[str, Any]]:
+        observations: list[dict[str, Any]] = []
+        org = str(profile.get("organisation_number") or "")
+        roles_rec = profile.get("evidence", {}).get("roles", {})
+        val = roles_rec.get("value") or {}
+        roles = [item for item in (val.get("roles") or []) if not item.get("inactive")]
+        digest = roles_rec.get("content_sha256")
+        source_url = roles_rec.get("source_url")
+
+        if org and roles and digest and len(str(digest)) == 64:
+            # Emit verified corporate leadership summary
+            key_leaders = [
+                f"{r.get('role', 'Role')}: {r.get('name')}"
+                for r in roles[:5]
+                if r.get("name")
+            ]
+            obs = {
+                "id": f"brreg-governance-{org}",
+                "organisation_number": org,
+                "platform": "brreg",
+                "signal_type": "company_profile",
+                "source_url": source_url or f"https://data.brreg.no/enhetsregisteret/api/enheter/{org}/roller",
+                "retrieved_at": roles_rec.get("retrieved_at") or utc_now(),
+                "content_sha256": digest,
+                "exact_entity": True,
+                "identity_proof": [
+                    {
+                        "type": "official_brreg_role_registry",
+                        "organisation_number": org,
+                        "active_roles_count": len(roles),
+                    }
+                ],
+                "acquisition_mode": "official_api",
+                "rights_status": "approved",
+                "source_class": "official_registry",
+                "evidence_span": f"Official BRREG registered governance leadership ({len(roles)} active roles): {', '.join(key_leaders)}",
+                "metrics": {
+                    "active_roles_count": len(roles),
+                    "key_leaders": key_leaders,
+                },
+            }
+            observations.append(obs)
+        return observations
+
