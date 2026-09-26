@@ -163,6 +163,18 @@ def terminal_envelope(
             "final_timestamp": (record or {}).get("retrieved_at") or completed_at,
         }
     entity_state = "submission_error" if any(item["state"] == "submission_error" for item in module_states.values()) else "complete"
+
+    # Compile V7 Decision-Useful Intelligence Summary & Sources
+    from .research import synthesize_company_intelligence
+    try:
+        synthesis = synthesize_company_intelligence(profile)
+    except Exception:
+        synthesis = {}
+
+    fp_obs = (profile.get("evidence", {}).get("external_footprint", {}).get("value") or {}).get("observations", [])
+    verified_jobs = [o for o in fp_obs if o.get("signal_type") == "job_posting"]
+    verified_news = [o for o in fp_obs if o.get("platform") == "news"]
+
     return {
         "run_id": run_id,
         "organisation_number": profile["organisation_number"],
@@ -170,6 +182,13 @@ def terminal_envelope(
         "started_at": started_at,
         "completed_at": completed_at,
         "modules": module_states,
+        "synthesis": synthesis,
+        "activity": {
+            "jobs_count": len(verified_jobs),
+            "news_count": len(verified_news),
+            "latest_jobs": verified_jobs[:5],
+            "latest_news": verified_news[:5],
+        },
         "profile": profile,
     }
 

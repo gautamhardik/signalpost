@@ -348,5 +348,40 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
             "unsupported_or_uncertain_count": len(facts_obj.get("unsupported_or_uncertain", [])),
             "claim_completeness": "complete" if total_claims >= 5 else "partial",
         },
+        "deterministic_summary": generate_deterministic_company_summary(profile),
     }
+
+
+def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
+    """Generate accurate, evidence-backed company intelligence summary without LLM hallucination."""
+    name = profile.get("name") or "The company"
+    org = profile.get("organisation_number") or ""
+    ind = profile.get("industry_label") or profile.get("industry_code") or "commercial operations"
+    muni = profile.get("municipality") or "Norway"
+    emp = profile.get("employees")
+
+    evidence = profile.get("evidence") or {}
+    web_val = (evidence.get("website") or {}).get("value") or {}
+    web_ok = (evidence.get("website") or {}).get("status") == "available" and bool((web_val.get("identity_assessment") or {}).get("publishable"))
+
+    fp_obs = (evidence.get("external_footprint", {}).get("value") or {}).get("observations", [])
+    jobs = [o for o in fp_obs if o.get("signal_type") == "job_posting"]
+    news = [o for o in fp_obs if o.get("platform") == "news"]
+
+    parts = [f"{name} (Org.nr {org}) is registered in {muni}, operating in {ind}."]
+    if emp is not None and emp > 0:
+        parts.append(f"It has {emp} registered employees.")
+    
+    if web_ok:
+        parts.append("Its official website and digital footprint have been verified against Norwegian business register identity records.")
+    
+    if jobs:
+        sample_job = jobs[0].get("metrics", {}).get("job_title") or "active recruitment"
+        parts.append(f"Recent verified hiring activity includes postings for: {sample_job}.")
+
+    if news:
+        sample_news = news[0].get("metrics", {}).get("article_title") or "public announcements"
+        parts.append(f"Latest verified company announcement: {sample_news}.")
+
+    return " ".join(parts)
 

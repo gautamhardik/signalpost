@@ -1,7 +1,7 @@
 {
-  "run_id": "batch-1100-v6",
-  "started_at": "2026-09-14T13:20:17.166320Z",
-  "completed_at": "2026-09-14T13:38:51.626390Z",
+  "run_id": "v7-dryrun-1100",
+  "started_at": "2026-09-25T18:29:01.000022Z",
+  "completed_at": "2026-09-25T18:46:27.935287Z",
   "expected_count": 1100,
   "emitted_envelopes": 1100,
   "resumed_profiles": 0,
@@ -17,16 +17,17 @@
     "website"
   ],
   "registry": {
-    "registry_snapshot_sha256": "5604d3b41f38056d34e6bf82be54e017d990da34cbda5ee9112e6ecd020ec981",
-    "registry_rows_scanned": 49904,
+    "identity_store": "hybrid",
+    "primary_resolved": 425,
+    "fallback_resolved": 675,
     "requested": 1100,
     "selected": 1100
   },
   "operations": {
-    "requests": 6845,
-    "bytes": 101919315,
-    "p50_ms": 843,
-    "p95_ms": 1905
+    "requests": 6273,
+    "bytes": 55349327,
+    "p50_ms": 937,
+    "p95_ms": 2187
   },
   "validation": {
     "passed": true,
