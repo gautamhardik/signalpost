@@ -238,6 +238,22 @@ def safe_decompress_body(raw: bytes, encoding: str = "", max_bytes: int = 2_000_
     return raw, None
 
 
+def _bounded_html(soup: BeautifulSoup) -> str:
+    """Return a highly minimal HTML fragment preserving only structural layout and date/identity metadata."""
+    for tag in soup.find_all(["style", "svg", "nav", "footer", "form", "iframe", "canvas", "img", "video", "audio", "noscript"]):
+        tag.decompose()
+    for tag in soup.find_all("script"):
+        if tag.get("type") != "application/ld+json":
+            tag.decompose()
+    
+    allowed_attrs = {"class", "id", "href", "datetime", "property", "content", "name", "type"}
+    for tag in soup.find_all(True):
+        if tag.name != "script":
+            tag.attrs = {k: v for k, v in tag.attrs.items() if k in allowed_attrs}
+    
+    return str(soup)[:150000]
+
+
 def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:
     if not _robots_allowed(url, timeout):
         return None, [], 1, 0, 0, "robots.txt disallows page"
@@ -268,6 +284,7 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
             "main_text_excerpt": page_text[:5000],
             "identity_text_excerpt": meta_identity,
             "content_sha256": __import__("hashlib").sha256(decompressed_raw).hexdigest(),
+            "html": _bounded_html(page_soup),
         }
         return page, _social_links(final_url, page_soup), 2, len(raw), elapsed, None
     except Exception as exc:
@@ -380,7 +397,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
             "extraction_state": _extraction_state(text, soup),
         }
-        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"]}]
+        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"], "html": _bounded_html(soup)}]
         social = value["social_links"]
         crawl_errors = []
         requests = 2

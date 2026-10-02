@@ -202,11 +202,6 @@ def main() -> None:
             
         profile["synthesis"] = synthesize_company_intelligence(profile)
 
-        # Cleanup ephemeral HTML to avoid bloating final evidence envelopes
-        if isinstance(profile.get("evidence", {}).get("website", {}).get("value"), dict):
-            for pg in profile["evidence"]["website"]["value"].get("pages", []):
-                pg.pop("html", None)
-
         metric = {
             "requests": len(metrics) + website_metrics["requests"],
             "bytes": sum(item.bytes_received for item in metrics) + website_metrics["bytes"],

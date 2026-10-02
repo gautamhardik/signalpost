@@ -293,6 +293,12 @@ def extract_activity_from_html_articles(
     soup = BeautifulSoup(html, "lxml")
     org_nr = str(profile.get("organisation_number") or "")
     records: list[ActivityRecord] = []
+    
+    # Global page-level publication date from metadata
+    page_meta_date = None
+    meta_tag = soup.select_one('meta[property="article:published_time"], meta[name="publication_date"], meta[name="date"]')
+    if meta_tag and meta_tag.get("content"):
+        page_meta_date = normalize_date_string(meta_tag.get("content"))
 
     # Article or card containers
     selectors = [
@@ -357,11 +363,13 @@ def extract_activity_from_html_articles(
 
         card_text = card.get_text(" ", strip=True)
 
-        # Date extraction: search <time> tags first, then text regex
+        # Date extraction: search <time> tags first, then text regex, then page meta
         time_el = card.select_one("time")
         activity_date = None
         if time_el:
             activity_date = normalize_date_string(time_el.get("datetime") or time_el.get_text(" ", strip=True))
+        if not activity_date:
+            activity_date = page_meta_date
         if not activity_date:
             activity_date = extract_activity_date_from_text(card_text)
 

@@ -64,7 +64,7 @@ def normalize_date_string(raw: str | None) -> str | None:
     if not raw or not isinstance(raw, str):
         return None
     cleaned = raw.strip()
-    iso_match = re.search(r"\b(202\d-[01]\d-[0-3]\d)\b", cleaned)
+    iso_match = re.search(r"\b(202\d-[01]\d-[0-3]\d)(?:T|\b|\s)", cleaned)
     if iso_match:
         return iso_match.group(1)
 
