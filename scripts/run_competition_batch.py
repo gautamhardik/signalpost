@@ -11,14 +11,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from norway_company_agent.batch import profile_complete_for_modules, profiles_from_bulk, read_organisation_inputs, terminal_envelope, validate_envelopes  # noqa: E402
+from norway_company_agent.budget import RequestBudget
 from norway_company_agent.evidence import evidence, utc_now  # noqa: E402
 from norway_company_agent.external_footprint import aggregate_footprint, extract_profile_footprint_observations  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 from norway_company_agent.official import fetch_official_modules  # noqa: E402
+from norway_company_agent.research import synthesize_company_intelligence
 from norway_company_agent.website import fetch_website  # noqa: E402
 from norway_company_agent.discovery import (
     assess_candidate_funnel,
     build_flexible_company_search_queries,
+    calculate_discovery_opportunity,
     choose_search_candidate,
     generate_company_candidate_sources,
     normalize_candidate_url,
@@ -48,7 +51,8 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--checkpoint-every", type=int, default=25)
     parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--modules", default="registry,accounting_obligation,registry_live,financials,roles,group,locations,website")
+    parser.add_argument("--budget", type=int, default=2000, help="Total outbound request budget")
+    parser.add_argument("--modules", default="registry,accounting_obligation,registry_live,financials,roles,group,locations,website,external_footprint")
     args = parser.parse_args()
 
     started_at = utc_now()
@@ -63,25 +67,65 @@ def main() -> None:
             if key in annotations[profile["organisation_number"]]:
                 profile[key] = annotations[profile["organisation_number"]][key]
     requested_modules = [item.strip() for item in args.modules.split(",") if item.strip()]
-    fetch_modules = set(requested_modules) - {"registry", "accounting_obligation", "website"}
+    fetch_modules = set(requested_modules) - {"registry", "accounting_obligation", "website", "external_footprint"}
+    
+    budget_mgr = RequestBudget(
+        total_budget=args.budget,
+        category_budgets={
+            "registry": 500,
+            "website": 600,
+            "external_footprint": 400,
+            "search": 400,
+            "reserve": 100,
+        },
+    )
+    
     operations = {"requests": 0, "bytes": 0, "latencies_ms": []}
 
     def enrich(profile: dict) -> tuple[dict, dict]:
-        records, metrics = fetch_official_modules(profile["organisation_number"], fetch_modules)
-        profile["evidence"].update(records)
+        if budget_mgr.can_request("registry", cost=len(fetch_modules)):
+            records, metrics = fetch_official_modules(profile["organisation_number"], fetch_modules)
+            profile["evidence"].update(records)
+            budget_mgr.consume("registry", cost=len(metrics))
+        else:
+            metrics = []
+            for mod in fetch_modules:
+                if mod not in profile["evidence"]:
+                    profile["evidence"][mod] = evidence(
+                        mod,
+                        "budget_exhausted",
+                        "official_registry",
+                        "https://data.brreg.no",
+                        note="Request budget limit reached for batch",
+                    )
+
         website_metrics = {"requests": 0, "bytes": 0, "latencies_ms": []}
         if "website" in requested_modules:
             website_url = profile.get("website")
-            website_record, website_metrics = fetch_website(website_url)
+            if website_url:
+                if budget_mgr.can_request("website", cost=1):
+                    website_record, website_metrics = fetch_website(website_url)
+                    budget_mgr.consume("website", cost=website_metrics.get("requests", 1))
+                else:
+                    website_record = evidence("website", "not_found", "registry_linked_company_website", "https://data.brreg.no/enhetsregisteret/api/enheter", note="Request budget reached")
+            else:
+                website_record, website_metrics = fetch_website(None)
+            
             gated = apply_website_identity_gate(profile, website_record)
+            opportunity = calculate_discovery_opportunity(profile)
             
             # If no website or not publishable/available, execute structured candidate discovery funnel
-            if gated["website"].get("status") not in ("available", "blocked") or not (gated["assessment"] or {}).get("publishable"):
+            if (
+                gated["website"].get("status") not in ("available", "blocked") or not (gated.get("assessment") or {}).get("publishable")
+            ) and opportunity >= 0.35:
                 candidate_sources = generate_company_candidate_sources(profile)
                 unfetched_cands = [c for c in candidate_sources if normalize_candidate_url(c.url) != normalize_candidate_url(website_url)]
                 
                 def batch_fetch(url: str) -> tuple[dict, dict]:
+                    if not budget_mgr.can_request("website", cost=1):
+                        return evidence("website", "not_found", "registry_linked_company_website", url, note="Budget limit reached"), {"requests": 0, "bytes": 0, "latencies_ms": []}
                     rec, met = fetch_website(url)
+                    budget_mgr.consume("website", cost=met.get("requests", 1))
                     website_metrics["requests"] += met.get("requests", 0)
                     website_metrics["bytes"] += met.get("bytes", 0)
                     website_metrics["latencies_ms"].extend(met.get("latencies_ms", []))
@@ -101,13 +145,17 @@ def main() -> None:
                     gated = apply_website_identity_gate(profile, v_rec)
 
             # If still not found or not publishable, attempt Layer 2: Controlled Search Discovery
-            if not (gated.get("assessment") or {}).get("publishable"):
+            if not (gated.get("assessment") or {}).get("publishable") and opportunity >= 0.35 and budget_mgr.can_request("search", cost=1):
                 queries = build_flexible_company_search_queries(profile)
-                for q_str in queries[:2]:
+                max_queries = 3 if opportunity >= 0.70 else 2 if opportunity >= 0.50 else 1
+                for q_str in queries[:max_queries]:
+                    if not budget_mgr.can_request("search", cost=1):
+                        break
                     try:
                         q_url = f"http://localhost:8080/search?{urllib.parse.urlencode({'q': q_str, 'format': 'json'})}"
                         req = urllib.request.Request(q_url, headers={"User-Agent": "signalpost-batch/0.1"})
                         with urllib.request.urlopen(req, timeout=5) as resp:
+                            budget_mgr.consume("search", cost=1)
                             s_data = json.loads(resp.read().decode("utf-8"))
                             s_results = [{
                                 "rank": idx,
@@ -118,8 +166,9 @@ def main() -> None:
                             
                             decision = choose_search_candidate(profile, s_results)
                             sel = decision.get("selected")
-                            if sel:
+                            if sel and budget_mgr.can_request("website", cost=1):
                                 s_rec, s_met = fetch_website(sel["url"])
+                                budget_mgr.consume("website", cost=s_met.get("requests", 1))
                                 website_metrics["requests"] += s_met.get("requests", 0)
                                 website_metrics["bytes"] += s_met.get("bytes", 0)
                                 website_metrics["latencies_ms"].extend(s_met.get("latencies_ms", []))
@@ -136,18 +185,22 @@ def main() -> None:
             profile["evidence"]["website"] = gated["website"]
 
         # Extract verified external footprint observations (jobs, activity, social, subunits)
-        observations = extract_profile_footprint_observations(profile)
-        footprint_summary = aggregate_footprint(observations)
-        footprint_summary["observations"] = observations
-        top_url = (profile.get("evidence", {}).get("website", {}).get("value") or {}).get("final_url") or profile.get("website") or ""
-        profile["evidence"]["external_footprint"] = evidence(
-            "external_footprint",
-            "available" if observations else "not_available",
-            "external_footprint",
-            top_url or f"urn:external-footprint:{profile['organisation_number']}",
-            value=footprint_summary,
-            as_of=utc_now(),
-        )
+        if "external_footprint" in requested_modules:
+            observations = extract_profile_footprint_observations(profile)
+            footprint_summary = aggregate_footprint(observations)
+            footprint_summary["observations"] = observations
+            top_url = (profile.get("evidence", {}).get("website", {}).get("value") or {}).get("final_url") or profile.get("website") or ""
+            profile["evidence"]["external_footprint"] = evidence(
+                "external_footprint",
+                "available" if observations else "not_found",
+                "external_footprint_aggregator",
+                profile.get("evidence", {}).get("registry", {}).get("source_url") or "https://data.brreg.no",
+                value=footprint_summary,
+                retrieved_at=utc_now(),
+                content_sha256=profile.get("evidence", {}).get("registry", {}).get("content_sha256"),
+            )
+            
+        profile["synthesis"] = synthesize_company_intelligence(profile)
 
         metric = {
             "requests": len(metrics) + website_metrics["requests"],
