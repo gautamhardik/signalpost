@@ -306,49 +306,67 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
     facts_obj = answer_profile(profile, "all")
     total_claims = len(facts_obj.get("facts", []))
 
+    # Extract what changed (dated news)
+    what_changed = []
+    for obs in fp_val.get("observations", []):
+        d = obs.get("metrics", {}).get("activity_date")
+        if d:
+            what_changed.append({
+                "date": d,
+                "description": obs.get("description") or obs.get("activity_type") or "Activity reported",
+                "source_url": obs.get("source_url")
+            })
+            
+    # Extract unknown / abstained
+    what_is_unknown = []
+    if not website_ok:
+        what_is_unknown.append("No verified official website.")
+    if not ceo:
+        what_is_unknown.append("No registered CEO (DAGL).")
+    if not chair:
+        what_is_unknown.append("No registered Board Chair (LEDE).")
+    if fin_record.get("revenue") is None:
+        what_is_unknown.append("Recent revenue figures not available.")
+    if not what_changed:
+        what_is_unknown.append("No recently dated external activity or news discovered.")
+        
+    # Evidence mapping
+    evidence_list = []
+    if website_ok:
+        evidence_list.append({
+            "claim": "Official digital footprint verified.",
+            "source_url": website_val.get("final_url"),
+            "publication_date": None,
+            "retrieval_date": website_rec.get("retrieved_at")
+        })
+    for obs in fp_val.get("observations", []):
+        evidence_list.append({
+            "claim": obs.get("description") or obs.get("activity_type") or "External footprint activity",
+            "source_url": obs.get("source_url"),
+            "publication_date": obs.get("metrics", {}).get("activity_date"),
+            "retrieval_date": obs.get("retrieved_at")
+        })
+
     return {
-        "organisation_number": profile.get("organisation_number"),
-        "legal_name": profile.get("name"),
-        "who": {
-            "legal_identity": profile.get("name"),
-            "organisation_number": profile.get("organisation_number"),
-            "legal_form": profile.get("legal_form"),
-            "municipality": profile.get("municipality"),
-            "registered_address": reg.get("forretningsadresse.adresse") or (reg.get("business_address") or {}).get("adresse"),
-        },
-        "what": {
-            "industry_code": profile.get("industry_code"),
-            "industry_label": profile.get("industry_label"),
-            "activity_description": reg.get("aktivitet"),
-            "website_available": website_ok,
-            "official_website_url": website_val.get("final_url") or website_rec.get("source_url") if website_ok else None,
-        },
-        "how_big": {
-            "registered_employees": profile.get("employees"),
+        "what_is_this_company": f"{profile.get('name')} (Org.nr {profile.get('organisation_number')}) is a {profile.get('legal_form')} registered in {profile.get('municipality', 'Norway')}.",
+        "what_does_it_do": reg.get("aktivitet") or profile.get("industry_label") or "No explicit activity description registered.",
+        "how_big_is_it": {
+            "employees": profile.get("employees"),
             "revenue_nok": fin_record.get("revenue"),
             "operating_result_nok": fin_record.get("operating_result"),
-            "annual_result_nok": fin_record.get("annual_result"),
-            "assets_nok": fin_record.get("assets"),
-            "debt_nok": fin_record.get("debt"),
-            "reporting_period": fin_record.get("period"),
+            "reporting_period": fin_record.get("period")
         },
         "who_runs_it": {
-            "ceo": ceo,
-            "board_chair": chair,
-            "active_role_count": len([r for r in roles if not r.get("inactive")]),
+            "ceo": ceo or "Unknown",
+            "board_chair": chair or "Unknown"
         },
+        "what_changed": what_changed,
         "digital_footprint": {
-            "official_website_verified": website_ok,
-            "verified_social_links": social_links,
-            "external_observations_count": len(fp_val.get("observations") or []),
-            "platforms_present": fp_val.get("platforms") or ([item["platform"] for item in social_links]),
+            "website": website_val.get("final_url") if website_ok else "Abstained",
+            "social_platforms": [item.get("platform") for item in social_links] if social_links else []
         },
-        "evidence_audit": {
-            "supported_claims_count": total_claims,
-            "unsupported_or_uncertain_count": len(facts_obj.get("unsupported_or_uncertain", [])),
-            "claim_completeness": "complete" if total_claims >= 5 else "partial",
-        },
-        "deterministic_summary": generate_deterministic_company_summary(profile),
+        "what_is_unknown": what_is_unknown,
+        "evidence": evidence_list
     }
 
 
