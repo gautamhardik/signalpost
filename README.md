@@ -260,6 +260,15 @@ uv run python scripts/run_competition_batch_v2.py \
   --workers 4
 ```
 
+### 4. Run the Evidence-First Workspace UI
+Signalpost includes a premium, 3-column verification workspace built for navigating the output profiles. It explicitly visualizes the identity verification gates and exact provenance.
+
+Simply double-click the `start.bat` file in the project root, or run it from your terminal:
+```bash
+.\start.bat
+```
+This will launch the local Python server and automatically serve the `ui/index.html` dashboard mapping to the extracted `companies.json` intelligence.
+
 ---
 
 ## 📊 Pipeline Verification & Evaluation
