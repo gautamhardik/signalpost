@@ -529,7 +529,31 @@
         if (filter === 'all' && btn.innerText === 'All') btn.classList.add('active');
         if (filter === 'abstained' && btn.innerText === 'Abstained') btn.classList.add('active');
       });
-      // In a real app we'd filter the autocomplete or search. But here we can just alert or filter the UI.
+      
+      const cards = document.querySelectorAll('.sidebar-item');
+      cards.forEach(card => {
+        const orgNumber = card.getAttribute('data-org');
+        const comp = COMPANIES.find(c => c.organisation_number === orgNumber);
+        if (!comp) return;
+        
+        let show = false;
+        if (filter === 'all') show = true;
+        else if (filter === 'website') show = !!comp.website;
+        else if (filter === 'hiring') show = !!(comp.jobs && comp.jobs.length > 0);
+        else if (filter === 'news') show = !!(comp.activities && comp.activities.length > 0);
+        else if (filter === 'abstained') show = !comp.website;
+        
+        card.style.display = show ? 'block' : 'none';
+      });
+      
+      // Select the first visible company if the current one is hidden
+      const currentVisible = document.querySelector('.sidebar-item.active[style="display: block;"], .sidebar-item.active:not([style="display: none;"])');
+      if (!currentVisible) {
+        const firstVisible = document.querySelector('.sidebar-item[style="display: block;"], .sidebar-item:not([style="display: none;"])');
+        if (firstVisible) {
+          selectCompany(firstVisible.getAttribute('data-org'));
+        }
+      }
     }
 
     function exportJSON() {
