@@ -3,1680 +3,1126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signalpost — Norwegian Intelligence Console</title>
-  <meta name="description" content="Audited Norwegian Corporate Intelligence Surface. V8 Verified.">
-
-  <!-- Fonts -->
+  <title>SIGNALPOST — Norwegian Entity Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-
-  <!-- Vanta.js (NET effect) -->
-  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
-
-  <!-- GSAP -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- GSAP ecosystem -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <!-- Anime.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-
-  <!-- D3.js -->
+  <!-- D3 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 
-  <style>
-    :root {
-      --bg: #03060f;
-      --surface: rgba(10, 16, 32, 0.78);
-      --surface-2: rgba(16, 24, 48, 0.85);
-      --glass: rgba(255,255,255,0.04);
-      --glass-border: rgba(255,255,255,0.08);
-      --glass-hover: rgba(255,255,255,0.07);
-
-      --cyan:    #00d4ff;
-      --blue:    #3b82f6;
-      --violet:  #8b5cf6;
-      --emerald: #10b981;
-      --amber:   #f59e0b;
-      --rose:    #f43f5e;
-
-      --text: #f1f5f9;
-      --muted: #64748b;
-      --dim: #334155;
-
-      --font: 'Space Grotesk', system-ui, sans-serif;
-      --mono: 'JetBrains Mono', monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-
-    /* ─────────── VANTA BG ─────────── */
-    #vanta-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    /* ─────────── OVERLAY GRAIN ─────────── */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity: 0.4;
-    }
-
-    /* ─────────── HEADER ─────────── */
-    #header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(3, 6, 15, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border);
-      padding: 0 2.5rem;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      opacity: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .brand-logo {
-      position: relative;
-      width: 38px;
-      height: 38px;
-    }
-
-    .brand-logo svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .brand-text h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1;
-    }
-
-    .brand-text p {
-      font-size: 0.68rem;
-      color: var(--muted);
-      font-family: var(--mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .header-status {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.28rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      font-family: var(--mono);
-      border: 1px solid;
-      transition: all 0.3s;
-    }
-
-    .status-pill .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      animation: livePulse 2s infinite;
-    }
-
-    @keyframes livePulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
-      50% { opacity: 0.7; box-shadow: 0 0 0 4px transparent; }
-    }
-
-    .pill-green { color: var(--emerald); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); }
-    .pill-cyan  { color: var(--cyan);    border-color: rgba(0,212,255,0.3);  background: rgba(0,212,255,0.08);  }
-    .pill-amber { color: var(--amber);   border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
-
-    /* ─────────── APP SHELL ─────────── */
-    #app {
-      position: relative;
-      z-index: 10;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      height: calc(100vh - 64px);
-    }
-
-    /* ─────────── LEFT SIDEBAR ─────────── */
-    #sidebar {
-      background: rgba(5, 9, 22, 0.82);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-right: 1px solid var(--glass-border);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-
-    .sidebar-top {
-      padding: 1.25rem;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    /* Search */
-    .search-wrap {
-      position: relative;
-      margin-bottom: 1rem;
-    }
-
-    .search-wrap svg {
-      position: absolute;
-      left: 0.9rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 15px;
-      height: 15px;
-      color: var(--muted);
-      pointer-events: none;
-    }
-
-    #searchInput {
-      width: 100%;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--glass-border);
-      border-radius: 10px;
-      padding: 0.65rem 1rem 0.65rem 2.3rem;
-      font-size: 0.875rem;
-      color: var(--text);
-      font-family: var(--font);
-      outline: none;
-      transition: all 0.3s;
-    }
-
-    #searchInput:focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(0,212,255,0.12), 0 0 20px rgba(0,212,255,0.08);
-      background: rgba(0,212,255,0.04);
-    }
-
-    /* Filter Chips */
-    .filter-row {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .fchip {
-      padding: 0.3rem 0.65rem;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--glass-border);
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .fchip:hover { background: var(--glass-hover); color: var(--text); }
-    .fchip.on { background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.35); color: var(--cyan); }
-
-    /* Stats bar */
-    .stats-bar {
-      padding: 0.5rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--muted);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-
-    /* Entity Feed */
-    #entityFeed {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0.6rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,212,255,0.15) transparent;
-    }
-
-    #entityFeed::-webkit-scrollbar { width: 4px; }
-    #entityFeed::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 10px; }
-
-    /* Entity Card */
-    .ecard {
-      border-radius: 10px;
-      padding: 0.85rem 1rem;
-      cursor: pointer;
-      border: 1px solid transparent;
-      background: rgba(255,255,255,0.02);
-      transition: all 0.25s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .ecard::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
-      background: transparent;
-      border-radius: 10px 0 0 10px;
-      transition: background 0.3s;
-    }
-
-    .ecard:hover {
-      background: var(--glass-hover);
-      border-color: rgba(255,255,255,0.08);
-      transform: translateX(3px);
-    }
-
-    .ecard.active {
-      background: rgba(0,212,255,0.07);
-      border-color: rgba(0,212,255,0.3);
-      box-shadow: 0 4px 20px -5px rgba(0,0,0,0.6), inset 0 0 12px rgba(0,212,255,0.05);
-    }
-
-    .ecard.active::before {
-      background: linear-gradient(to bottom, var(--cyan), var(--blue));
-    }
-
-    .ecard-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 0.5rem;
-      margin-bottom: 0.3rem;
-    }
-
-    .ecard-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      line-height: 1.3;
-      color: var(--text);
-    }
-
-    .ecard-orgnr {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--cyan);
-      white-space: nowrap;
-    }
-
-    .ecard-sub {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: 0.45rem;
-    }
-
-    .ecard-badges {
-      display: flex;
-      gap: 0.3rem;
-      flex-wrap: wrap;
-    }
-
-    .mbadge {
-      font-size: 0.62rem;
-      font-weight: 700;
-      font-family: var(--mono);
-      padding: 0.12rem 0.4rem;
-      border-radius: 4px;
-      border: 1px solid;
-    }
-
-    .mb-web     { color: var(--emerald); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); }
-    .mb-jobs    { color: var(--cyan);    border-color: rgba(0,212,255,0.3);  background: rgba(0,212,255,0.08);  }
-    .mb-news    { color: var(--amber);   border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
-    .mb-no      { color: var(--muted);   border-color: rgba(255,255,255,0.08); background: transparent; }
-
-    /* Sidebar export bar */
-    .sidebar-foot {
-      border-top: 1px solid var(--glass-border);
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.75rem;
-    }
-
-    .xbtn {
-      flex: 1;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--muted);
-      padding: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: var(--font);
-    }
-
-    .xbtn:hover { background: var(--glass-hover); color: var(--text); }
-
-    /* ─────────── RIGHT DOSSIER ─────────── */
-    #dossier {
-      overflow-y: auto;
-      padding: 2rem 3rem 5rem 3rem;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,212,255,0.15) transparent;
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    #dossier::-webkit-scrollbar { width: 5px; }
-    #dossier::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 10px; }
-
-    /* ─────────── HERO BANNER ─────────── */
-    .hero {
-      background: var(--surface);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      padding: 2.5rem;
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Animated shimmer on hero */
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, rgba(59,130,246,0.03) 50%, transparent 70%);
-      pointer-events: none;
-      animation: heroBreath 8s ease-in-out infinite;
-    }
-
-    @keyframes heroBreath {
-      0%, 100% { transform: scale(1) translateY(0); opacity: 0.8; }
-      50% { transform: scale(1.15) translateY(-10px); opacity: 1; }
-    }
-
-    .hero-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    #heroName {
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      background: linear-gradient(120deg, #fff 30%, var(--cyan) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-meta {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      flex-wrap: wrap;
-      font-size: 0.88rem;
-      color: var(--muted);
-      margin-top: 0.5rem;
-    }
-
-    .hero-meta strong {
-      color: var(--cyan);
-      font-family: var(--mono);
-    }
-
-    /* Website link */
-    .web-action {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.3rem;
-      border-radius: 12px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s;
-      white-space: nowrap;
-      font-family: var(--mono);
-    }
-
-    .wa-on  {
-      background: rgba(0,212,255,0.1);
-      border: 1px solid rgba(0,212,255,0.35);
-      color: var(--cyan);
-    }
-
-    .wa-on:hover {
-      background: rgba(0,212,255,0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px rgba(0,212,255,0.25);
-    }
-
-    .wa-off {
-      background: rgba(244,63,94,0.08);
-      border: 1px solid rgba(244,63,94,0.25);
-      color: var(--rose);
-      cursor: default;
-    }
-
-    /* Metrics row */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.25rem;
-    }
-
-    .mbox {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
-      transition: all 0.3s;
-      cursor: default;
-    }
-
-    .mbox:hover {
-      background: rgba(0,212,255,0.05);
-      border-color: rgba(0,212,255,0.2);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 25px -8px rgba(0,0,0,0.5);
-    }
-
-    .mbox-label {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 0.35rem;
-    }
-
-    .mbox-val {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* ─────────── D3 SIGNAL CHART ─────────── */
-    .chart-section {
-      margin-bottom: 2rem;
-    }
-
-    .section-label {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, rgba(255,255,255,0.08), transparent);
-    }
-
-    #signalChart {
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 1.5rem;
-      overflow: hidden;
-    }
-
-    /* ─────────── TABS ─────────── */
-    .tabs {
-      display: flex;
-      gap: 0.25rem;
-      border-bottom: 1px solid var(--glass-border);
-      margin-bottom: 2rem;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 0.9rem 1.5rem;
-      cursor: pointer;
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      transition: color 0.2s;
-      font-family: var(--font);
-    }
-
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.on { color: var(--cyan); }
-
-    .tab-btn::after {
-      content: '';
-      position: absolute;
-      bottom: -1px; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--cyan), var(--blue));
-      transform: scaleX(0);
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-
-    .tab-btn.on::after { transform: scaleX(1); }
-
-    .tcnt {
-      font-size: 0.68rem;
-      font-family: var(--mono);
-      padding: 0.12rem 0.42rem;
-      border-radius: 9999px;
-      background: rgba(255,255,255,0.06);
-      color: var(--muted);
-    }
-
-    .tab-btn.on .tcnt { background: rgba(0,212,255,0.15); color: var(--cyan); }
-
-    /* ─────────── TAB VIEWS ─────────── */
-    .tview { display: none; }
-    .tview.on {
-      display: block;
-      animation: viewIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-    }
-
-    @keyframes viewIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ─────────── OVERVIEW 4 PILLARS ─────────── */
-    .pillars {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-    }
-
-    .pillar {
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 1.75rem;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s;
-    }
-
-    .pillar:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
-    }
-
-    .pillar::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-
-    .pl-blue::before   { background: linear-gradient(90deg, var(--blue), var(--violet)); }
-    .pl-cyan::before   { background: linear-gradient(90deg, var(--cyan), var(--blue));   }
-    .pl-amber::before  { background: linear-gradient(90deg, var(--amber), var(--rose));  }
-    .pl-green::before  { background: linear-gradient(90deg, var(--emerald), var(--cyan));}
-
-    .pillar-head {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .pillar-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-    }
-
-    .pl-blue  .pillar-icon { background: rgba(59,130,246,0.15);  }
-    .pl-cyan  .pillar-icon { background: rgba(0,212,255,0.15);   }
-    .pl-amber .pillar-icon { background: rgba(245,158,11,0.15);  }
-    .pl-green .pillar-icon { background: rgba(16,185,129,0.15);  }
-
-    .pillar-title {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text);
-    }
-
-    .pillar-items { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
-
-    .pillar-item {
-      font-size: 0.88rem;
-      color: #94a3b8;
-      display: flex;
-      gap: 0.65rem;
-      align-items: flex-start;
-      line-height: 1.5;
-    }
-
-    .pi-dot {
-      font-size: 0.7rem;
-      margin-top: 0.35rem;
-      flex-shrink: 0;
-    }
-
-    .pl-blue  .pi-dot { color: var(--blue);    }
-    .pl-cyan  .pi-dot { color: var(--cyan);    }
-    .pl-amber .pi-dot { color: var(--amber);   }
-    .pl-green .pi-dot { color: var(--emerald); }
-
-    /* ─────────── STREAM CARDS ─────────── */
-    .scard {
-      background: var(--surface-2);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      transition: all 0.3s;
-      cursor: default;
-    }
-
-    .scard:hover {
-      border-color: rgba(0,212,255,0.3);
-      background: rgba(10,20,44,0.92);
-      transform: translateY(-3px) translateX(2px);
-      box-shadow: 0 12px 35px -8px rgba(0,0,0,0.5);
-    }
-
-    .scard-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 0.65rem;
-    }
-
-    .scard-title { font-size: 1rem; font-weight: 600; color: var(--text); }
-
-    .scard-meta {
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      font-size: 0.83rem;
-      color: var(--muted);
-      margin-bottom: 0.75rem;
-    }
-
-    .scard-meta strong { color: var(--cyan); }
-
-    .scard-desc {
-      font-size: 0.88rem;
-      color: #94a3b8;
-      line-height: 1.65;
-      margin-bottom: 0.85rem;
-    }
-
-    .pill-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.8rem;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      text-decoration: none;
-      background: rgba(0,212,255,0.08);
-      border: 1px solid rgba(0,212,255,0.25);
-      color: var(--cyan);
-      transition: all 0.2s;
-      font-family: var(--mono);
-    }
-
-    .pill-link:hover {
-      background: rgba(0,212,255,0.18);
-      box-shadow: 0 0 15px rgba(0,212,255,0.2);
-    }
-
-    /* diff pills */
-    .dpill {
-      display: inline-block;
-      font-size: 0.68rem;
-      font-weight: 700;
-      font-family: var(--mono);
-      padding: 0.2rem 0.55rem;
-      border-radius: 5px;
-      border: 1px solid;
-    }
-
-    .dp-add  { color: var(--emerald); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1); }
-    .dp-chg  { color: var(--amber);   border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.1); }
-    .dp-rem  { color: var(--rose);    border-color: rgba(244,63,94,0.3);  background: rgba(244,63,94,0.1);  }
-
-    /* ─────────── PROVENANCE TABLE ─────────── */
-    .table-wrap {
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
-    .ptable {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    .ptable th {
-      background: rgba(5,9,22,0.8);
-      padding: 1rem 1.25rem;
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--cyan);
-      border-bottom: 1px solid var(--glass-border);
-      text-align: left;
-    }
-
-    .ptable td {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      color: #94a3b8;
-      vertical-align: middle;
-    }
-
-    .ptable tr:hover td { background: rgba(0,212,255,0.03); }
-    .ptable tr:last-child td { border-bottom: none; }
-
-    /* ─────────── EMPTY STATE ─────────── */
-    .empty {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: var(--surface);
-      border: 1px dashed rgba(255,255,255,0.08);
-      border-radius: 14px;
-    }
-
-    .empty h3 { color: var(--text); font-size: 1.1rem; margin-bottom: 0.5rem; }
-    .empty p  { color: var(--muted); font-size: 0.9rem; }
-
-    /* ─────────── FLOATING SCAN LINE ─────────── */
-    .scanline {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-      z-index: 200;
-      pointer-events: none;
-      opacity: 0;
-    }
-
-    /* ─────────── COUNTER NUMBERS ─────────── */
-    .big-counter {
-      font-family: var(--mono);
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--cyan);
-      line-height: 1;
-    }
-
-    /* ─────────── RESPONSIVE ─────────── */
-    @media (max-width: 1100px) {
-      #app { grid-template-columns: 1fr; }
-      #sidebar { height: auto; }
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-      .pillars { grid-template-columns: 1fr; }
-    }
-  </style>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #060608;
+  --white: #f5f4f0;
+  --accent: #b8ff5b;
+  --accent2: #ff5b5b;
+  --muted: rgba(245,244,240,0.35);
+  --border: rgba(245,244,240,0.1);
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+  cursor: none;
+}
+
+html { overflow-x: hidden; background: var(--black); }
+body { background: var(--black); color: var(--white); font-family: var(--font-body); overflow-x: hidden; cursor: none; }
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  transition: width .25s, height .25s, opacity .25s;
+}
+#cursor-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(184,255,91,0.5);
+  transform: translate(-50%, -50%);
+  transition: width .5s cubic-bezier(.16,1,.3,1), height .5s cubic-bezier(.16,1,.3,1), border-color .3s;
+}
+body:has(a:hover) #cursor, body:has(button:hover) #cursor,
+body:has(.ecard:hover) #cursor { width: 60px; height: 60px; }
+body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring,
+body:has(.ecard:hover) #cursor-ring { width: 80px; height: 80px; border-color: var(--accent); }
+
+/* ── THREE.JS CANVAS ── */
+#canvas-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ── NOISE OVERLAY ── */
+.noise {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2rem 3rem; mix-blend-mode: difference;
+}
+.nav-brand {
+  font-family: var(--font-display); font-size: .9rem; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--white);
+}
+.nav-signal {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-size: .72rem; color: var(--muted);
+}
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.2 } }
+
+/* ── HERO SECTION ── */
+#hero {
+  position: relative; z-index: 10; min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 3rem 6rem;
+  overflow: hidden;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.hero-eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--accent); }
+
+.hero-title {
+  font-family: var(--font-display); font-size: clamp(4.5rem, 10vw, 11rem);
+  font-weight: 800; line-height: .92; letter-spacing: -.04em;
+  color: var(--white); overflow: hidden; margin-bottom: 3rem;
+}
+.hero-title .line { display: block; overflow: hidden; }
+.hero-title .word { display: inline-block; }
+
+.hero-bottom {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-top: 1px solid var(--border); padding-top: 2rem;
+}
+.hero-stat { display: flex; flex-direction: column; gap: .25rem; }
+.hero-stat-num {
+  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 800; color: var(--accent); line-height: 1;
+}
+.hero-stat-label { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+
+.hero-desc {
+  max-width: 380px; font-size: .95rem; color: var(--muted); line-height: 1.7;
+}
+
+.scroll-hint {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  letter-spacing: .15em; text-transform: uppercase;
+}
+.scroll-line { width: 1px; height: 80px; background: linear-gradient(to bottom, var(--accent), transparent); animation: scrollLine 2s ease-in-out infinite; }
+@keyframes scrollLine { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 50.001% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+
+/* ── MARQUEE ── */
+.marquee-section {
+  position: relative; z-index: 10; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  overflow: hidden; padding: 1.25rem 0; background: transparent;
+}
+.marquee-track { display: flex; gap: 4rem; white-space: nowrap; animation: marqueeScroll 25s linear infinite; }
+.marquee-track:hover { animation-play-state: paused; }
+.marquee-item {
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 2rem;
+}
+.marquee-item span { color: var(--accent); }
+@keyframes marqueeScroll { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+/* ── MAIN APP LAYOUT ── */
+#app {
+  position: relative; z-index: 10;
+  display: grid; grid-template-columns: 420px 1fr;
+  height: 100vh; border-top: 1px solid var(--border);
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  background: rgba(6,6,8,.92); backdrop-filter: blur(30px);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  height: 100vh; position: sticky; top: 0;
+}
+
+.sidebar-header {
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-bar {
+  position: relative; margin-bottom: 1rem;
+}
+.search-bar input {
+  width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  border-radius: 2px; padding: .75rem 1rem .75rem 2.5rem;
+  font-family: var(--font-mono); font-size: .82rem; color: var(--white); outline: none;
+  transition: all .3s;
+}
+.search-bar input:focus { border-color: var(--accent); background: rgba(184,255,91,.04); }
+.search-bar input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--muted);
+}
+
+.filter-pills { display: flex; gap: .4rem; flex-wrap: wrap; }
+.fpill {
+  font-family: var(--font-mono); font-size: .68rem; padding: .3rem .65rem;
+  border: 1px solid var(--border); border-radius: 1px; color: var(--muted);
+  cursor: none; transition: all .2s; text-transform: uppercase; letter-spacing: .05em;
+}
+.fpill:hover { color: var(--white); border-color: rgba(255,255,255,.3); }
+.fpill.on { color: var(--accent); border-color: var(--accent); background: rgba(184,255,91,.08); }
+
+.sidebar-stats {
+  padding: .6rem 2rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
+  display: flex; justify-content: space-between;
+}
+.sidebar-stats strong { color: var(--accent); }
+
+#entityFeed {
+  flex: 1; overflow-y: auto; padding: .75rem;
+  scrollbar-width: thin; scrollbar-color: rgba(184,255,91,.15) transparent;
+}
+#entityFeed::-webkit-scrollbar { width: 3px; }
+#entityFeed::-webkit-scrollbar-thumb { background: rgba(184,255,91,.2); }
+
+/* ── ENTITY CARD ── */
+.ecard {
+  padding: 1rem 1.25rem; border: 1px solid transparent;
+  margin-bottom: .35rem; cursor: none; position: relative; overflow: hidden;
+  transition: border-color .25s, background .25s, transform .25s;
+}
+.ecard::after {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent); transform: scaleY(0); transform-origin: bottom;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.ecard:hover { background: rgba(184,255,91,.04); border-color: rgba(184,255,91,.2); transform: translateX(4px); }
+.ecard:hover::after { transform: scaleY(1); }
+.ecard.active { background: rgba(184,255,91,.07); border-color: rgba(184,255,91,.35); transform: translateX(4px); }
+.ecard.active::after { transform: scaleY(1); }
+
+.ecard-name { font-family: var(--font-display); font-size: .92rem; font-weight: 700; margin-bottom: .2rem; line-height: 1.2; }
+.ecard-orgnr { font-family: var(--font-mono); font-size: .68rem; color: var(--accent); margin-bottom: .4rem; }
+.ecard-meta { font-size: .75rem; color: var(--muted); margin-bottom: .5rem; }
+.ecard-tags { display: flex; gap: .3rem; flex-wrap: wrap; }
+.etag {
+  font-family: var(--font-mono); font-size: .62rem; padding: .1rem .45rem;
+  border: 1px solid; text-transform: uppercase; letter-spacing: .04em;
+}
+.t-web  { color: #b8ff5b; border-color: rgba(184,255,91,.35); }
+.t-jobs { color: #5bf5ff; border-color: rgba(91,245,255,.35); }
+.t-news { color: #ffb85b; border-color: rgba(255,184,91,.35); }
+.t-no   { color: var(--muted); border-color: var(--border); }
+
+.sidebar-foot { border-top: 1px solid var(--border); padding: .75rem; display: flex; gap: .5rem; }
+.foot-btn {
+  flex: 1; background: transparent; border: 1px solid var(--border); padding: .55rem;
+  font-family: var(--font-mono); font-size: .7rem; color: var(--muted); cursor: none;
+  transition: all .2s; text-transform: uppercase; letter-spacing: .08em;
+}
+.foot-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── DOSSIER (RIGHT PANEL) ── */
+#dossier {
+  overflow-y: auto; height: 100vh;
+  scrollbar-width: thin; scrollbar-color: rgba(184,255,91,.1) transparent;
+}
+#dossier::-webkit-scrollbar { width: 3px; }
+#dossier::-webkit-scrollbar-thumb { background: rgba(184,255,91,.15); }
+
+/* ── DOSSIER HERO ── */
+.dos-hero {
+  position: relative; padding: 4rem 3.5rem 3rem; border-bottom: 1px solid var(--border);
+  overflow: hidden; min-height: 340px; display: flex; flex-direction: column; justify-content: flex-end;
+}
+/* animated background mesh for dossier */
+.dos-canvas-wrap { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.dos-hero > *:not(.dos-canvas-wrap) { position: relative; z-index: 1; }
+
+.dos-kicker {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--accent);
+  letter-spacing: .2em; text-transform: uppercase; margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+
+.dos-name {
+  font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 800; line-height: .95; letter-spacing: -.03em;
+  color: var(--white); margin-bottom: 1.5rem;
+}
+
+.dos-meta-row {
+  display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;
+  font-family: var(--font-mono); font-size: .78rem; color: var(--muted);
+}
+.dos-meta-row strong { color: var(--white); }
+
+.web-pill {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-size: .78rem; padding: .5rem 1.25rem;
+  border: 1px solid; text-decoration: none; transition: all .3s; cursor: none;
+}
+.wp-on  { color: var(--accent); border-color: var(--accent); }
+.wp-on:hover  { background: var(--accent); color: var(--black); }
+.wp-off { color: var(--muted); border-color: var(--border); }
+
+/* ── METRIC STRIP ── */
+.metrics-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.metric-box {
+  padding: 1.75rem 2rem; border-right: 1px solid var(--border);
+  position: relative; overflow: hidden; transition: background .3s;
+}
+.metric-box:last-child { border-right: none; }
+.metric-box:hover { background: rgba(184,255,91,.04); }
+.metric-box::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent); transform: scaleX(0); transform-origin: left;
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.metric-box:hover::after { transform: scaleX(1); }
+.metric-label { font-family: var(--font-mono); font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
+.metric-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--white); }
+
+/* ── D3 CHART STRIP ── */
+.chart-strip { padding: 2rem 3rem; border-bottom: 1px solid var(--border); }
+.strip-label {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .15em; margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.strip-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+#chart-svg { overflow: visible; }
+
+/* ── TABS ── */
+.tab-bar {
+  display: flex; border-bottom: 1px solid var(--border);
+  padding: 0 3rem; gap: 0; position: sticky; top: 0; z-index: 50;
+  background: rgba(6,6,8,.95); backdrop-filter: blur(20px);
+}
+.tab-btn {
+  font-family: var(--font-mono); font-size: .75rem; text-transform: uppercase;
+  letter-spacing: .1em; padding: 1.25rem 1.5rem; background: none; border: none;
+  color: var(--muted); cursor: none; transition: color .2s; position: relative;
+  display: flex; align-items: center; gap: .5rem;
+}
+.tab-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: var(--accent); transform: scaleX(0); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.tab-btn:hover { color: var(--white); }
+.tab-btn.on { color: var(--accent); }
+.tab-btn.on::after { transform: scaleX(1); }
+.tab-count {
+  font-size: .6rem; padding: .1rem .4rem; border: 1px solid var(--border); color: var(--muted);
+}
+.tab-btn.on .tab-count { border-color: rgba(184,255,91,.4); color: var(--accent); }
+
+/* ── TAB VIEWS ── */
+.tview { display: none; padding: 2.5rem 3rem 5rem; }
+.tview.on {
+  display: block;
+  animation: viewFadeUp .4s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes viewFadeUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+
+/* ── OVERVIEW ── */
+.intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin-bottom: 1px; }
+.intel-cell {
+  background: var(--black); padding: 2rem 2.25rem; transition: background .3s;
+}
+.intel-cell:hover { background: rgba(184,255,91,.04); }
+.intel-cell-head {
+  display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem;
+}
+.ic-icon { font-size: 1.3rem; }
+.ic-label {
+  font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--muted);
+}
+.intel-items { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+.intel-item { display: flex; gap: .75rem; align-items: flex-start; }
+.intel-item-bullet { color: var(--accent); font-size: .7rem; margin-top: .3rem; flex-shrink: 0; }
+.intel-item-text { font-size: .88rem; color: rgba(245,244,240,.7); line-height: 1.6; }
+
+/* ── STREAM ITEMS ── */
+.stream-item {
+  border-bottom: 1px solid var(--border); padding: 2rem 0;
+  transition: all .3s; position: relative;
+}
+.stream-item::before {
+  content: ''; position: absolute; left: -3rem; top: 0; bottom: 0; width: 3rem;
+  background: linear-gradient(to right, transparent, rgba(184,255,91,.03));
+  opacity: 0; transition: opacity .3s;
+}
+.stream-item:hover::before { opacity: 1; }
+.stream-item:hover { transform: translateX(6px); }
+.si-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .75rem; }
+.si-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
+.si-badge {
+  font-family: var(--font-mono); font-size: .65rem; padding: .2rem .6rem;
+  border: 1px solid; text-transform: uppercase; white-space: nowrap;
+}
+.si-badge-jobs { color: #5bf5ff; border-color: rgba(91,245,255,.35); }
+.si-badge-news { color: #ffb85b; border-color: rgba(255,184,91,.35); }
+.si-badge-chg-add { color: var(--accent); border-color: rgba(184,255,91,.35); }
+.si-badge-chg-rem { color: var(--accent2); border-color: rgba(255,91,91,.35); }
+.si-badge-chg-mod { color: #ffb85b; border-color: rgba(255,184,91,.35); }
+.si-meta { display: flex; gap: 2rem; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); margin-bottom: .75rem; }
+.si-meta strong { color: var(--white); }
+.si-body { font-size: .88rem; color: rgba(245,244,240,.6); line-height: 1.7; margin-bottom: 1rem; }
+.si-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--font-mono); font-size: .72rem; color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid rgba(184,255,91,.3); padding-bottom: 1px; transition: all .2s;
+}
+.si-link:hover { border-color: var(--accent); }
+
+/* ── SOURCE TABLE ── */
+.src-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.src-table th {
+  font-family: var(--font-mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); text-align: left; font-weight: 500;
+}
+.src-table td { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(245,244,240,.04); color: rgba(245,244,240,.65); vertical-align: middle; }
+.src-table tr:hover td { background: rgba(184,255,91,.03); }
+.src-table tr:last-child td { border-bottom: none; }
+
+/* ── EMPTY STATE ── */
+.empty-state { padding: 5rem 2rem; text-align: center; }
+.empty-state h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; color: var(--muted); }
+.empty-state p { font-family: var(--font-mono); font-size: .8rem; color: rgba(245,244,240,.3); }
+
+/* ── LOADING SCREEN ── */
+#loader {
+  position: fixed; inset: 0; z-index: 9000; background: var(--black);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3rem;
+}
+.loader-brand {
+  font-family: var(--font-display); font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 800; letter-spacing: -.04em; color: var(--white); text-align: center;
+  overflow: hidden;
+}
+.loader-num {
+  font-family: var(--font-mono); font-size: 1rem; color: var(--accent); letter-spacing: .1em;
+}
+.loader-bar { width: 200px; height: 1px; background: rgba(255,255,255,.1); position: relative; }
+.loader-bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .05s; }
+</style>
 </head>
 <body>
 
-  <!-- Vanta background target -->
-  <div id="vanta-bg"></div>
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
 
-  <!-- Scanline effect -->
-  <div class="scanline" id="scanLine"></div>
+<!-- NOISE -->
+<div class="noise"></div>
 
-  <!-- HEADER -->
-  <header id="header">
-    <div class="brand">
-      <!-- Animated SVG Logo -->
-      <div class="brand-logo">
-        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00d4ff"/>
-              <stop offset="100%" stop-color="#3b82f6"/>
-            </linearGradient>
-          </defs>
-          <rect width="38" height="38" rx="9" fill="url(#lg1)" opacity="0.15"/>
-          <rect x="0.5" y="0.5" width="37" height="37" rx="8.5" stroke="url(#lg1)" stroke-opacity="0.6"/>
-          <circle cx="19" cy="19" r="4" fill="url(#lg1)" class="logo-pulse"/>
-          <circle cx="19" cy="19" r="8" stroke="url(#lg1)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6" class="logo-spin"/>
-          <circle cx="19" cy="19" r="13" stroke="url(#lg1)" stroke-width="1" stroke-dasharray="2 5" opacity="0.3" class="logo-spin-slow"/>
-        </svg>
-      </div>
-      <div class="brand-text">
-        <h1>Signalpost Intelligence</h1>
-        <p>Autonomous Norwegian Verification Engine · V8 Candidate</p>
-      </div>
+<!-- THREE.JS CANVAS -->
+<canvas id="canvas-bg"></canvas>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-brand" id="loaderBrand">SIGNALPOST</div>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+  <div class="loader-num" id="loaderNum">0%</div>
+</div>
+
+<!-- HERO SECTION (visible before you scroll to app) -->
+<section id="hero">
+  <nav>
+    <div class="nav-brand">SIGNALPOST</div>
+    <div class="nav-signal">
+      <div class="nav-dot"></div>
+      <span>LIVE · V8 VERIFIED</span>
     </div>
-    <div class="header-status">
-      <div class="status-pill pill-green"><span class="dot" style="background:var(--emerald)"></span>Zero Wrong-Company</div>
-      <div class="status-pill pill-cyan"><span class="dot" style="background:var(--cyan)"></span>100% Provenance</div>
-      <div class="status-pill pill-amber"><span class="dot" style="background:var(--amber)"></span>Synthesis 12/12</div>
-    </div>
-  </header>
+  </nav>
 
-  <!-- APP SHELL -->
-  <div id="app">
+  <div class="hero-eyebrow">Norwegian Corporate Intelligence Engine</div>
 
-    <!-- LEFT SIDEBAR -->
-    <aside id="sidebar">
-      <div class="sidebar-top">
-        <!-- Search -->
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input id="searchInput" type="text" placeholder="Search entities, org numbers..." autocomplete="off">
-        </div>
-        <!-- Filters -->
-        <div class="filter-row">
-          <div class="fchip on"   onclick="setFilter('all')">All</div>
-          <div class="fchip"      onclick="setFilter('web')">Has Web</div>
-          <div class="fchip"      onclick="setFilter('jobs')">Hiring</div>
-          <div class="fchip"      onclick="setFilter('news')">News</div>
-          <div class="fchip"      onclick="setFilter('abstained')">Abstained</div>
-        </div>
-      </div>
-
-      <div class="stats-bar">
-        <span id="statsLeft">100 entities</span>
-        <span>BENCHMARK-100 · v8</span>
-      </div>
-
-      <div id="entityFeed"></div>
-
-      <div class="sidebar-foot">
-        <button class="xbtn" onclick="exportCSV()">↓ CSV</button>
-        <button class="xbtn" onclick="exportJSON()">↓ JSON</button>
-      </div>
-    </aside>
-
-    <!-- DOSSIER PANEL -->
-    <main id="dossier">
-
-      <!-- HERO BANNER -->
-      <div class="hero">
-        <div class="hero-top">
-          <div>
-            <h1 id="heroName">Loading...</h1>
-            <div class="hero-meta">
-              <span>Org: <strong id="heroOrg">—</strong></span>
-              <span>·</span>
-              <span id="heroForm">—</span>
-              <span>·</span>
-              <span id="heroMuni">—</span>
-              <span>·</span>
-              <span id="heroEmp">—</span>
-            </div>
-          </div>
-          <div id="heroWebBtn"></div>
-        </div>
-
-        <!-- Metrics -->
-        <div class="metrics">
-          <div class="mbox">
-            <div class="mbox-label">Industry</div>
-            <div class="mbox-val" id="metaInd">—</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox-label">Headcount</div>
-            <div class="mbox-val big-counter" id="metaEmp">—</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox-label">Daglig Leder</div>
-            <div class="mbox-val" id="metaCeo">—</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox-label">Styrets Leder</div>
-            <div class="mbox-val" id="metaChair">—</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- D3 Signal Intelligence Chart -->
-      <div class="chart-section">
-        <div class="section-label">Signal Intelligence Overview</div>
-        <div id="signalChart"></div>
-      </div>
-
-      <!-- TAB NAV -->
-      <div class="tabs">
-        <button class="tab-btn on" onclick="switchTab('overview',this)">Overview</button>
-        <button class="tab-btn"    onclick="switchTab('jobs',this)">Career Signals <span class="tcnt" id="tc-jobs">0</span></button>
-        <button class="tab-btn"    onclick="switchTab('activity',this)">Dated Activity <span class="tcnt" id="tc-act">0</span></button>
-        <button class="tab-btn"    onclick="switchTab('changes',this)">State Deltas <span class="tcnt" id="tc-chg">0</span></button>
-        <button class="tab-btn"    onclick="switchTab('sources',this)">Provenance <span class="tcnt" id="tc-src">0</span></button>
-      </div>
-
-      <!-- VIEWS -->
-      <div id="v-overview" class="tview on">
-        <div class="pillars" id="pillarsGrid"></div>
-      </div>
-
-      <div id="v-jobs" class="tview">
-        <div id="jobsList"></div>
-      </div>
-
-      <div id="v-activity" class="tview">
-        <div id="actList"></div>
-      </div>
-
-      <div id="v-changes" class="tview">
-        <div id="chgList"></div>
-      </div>
-
-      <div id="v-sources" class="tview">
-        <div class="table-wrap">
-          <table class="ptable">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Source URL</th>
-                <th>Retrieved</th>
-                <th>SHA-256</th>
-              </tr>
-            </thead>
-            <tbody id="srcBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </main>
+  <div class="hero-title">
+    <span class="line"><span class="word">EVERY</span></span>
+    <span class="line"><span class="word">SIGNAL.</span></span>
+    <span class="line"><span class="word">VERIFIED.</span></span>
   </div>
 
-  <!-- ═══════════════ SCRIPTS ═══════════════ -->
-  <script>
-    /* ─── STATE ─── */
-    let COMPANIES = [];
-    let ACTIVE_ORG = null;
-    let ACTIVE_FILTER = 'all';
-    let ACTIVE_TAB = 'overview';
+  <div class="hero-bottom">
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="statCompanies">0</div>
+      <div class="hero-stat-label">Entities Audited</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="statNews">0</div>
+      <div class="hero-stat-label">Dated News Signals</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="statJobs">0</div>
+      <div class="hero-stat-label">Hiring Observations</div>
+    </div>
+    <div class="hero-desc">
+      Autonomous intelligence surface for 100 Norwegian companies.
+      Every observation source-tagged, timestamped, and provenance-verified.
+    </div>
+    <div class="scroll-hint">
+      <span>Explore</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+</section>
 
-    /* ══════════════════════════════════
-       VANTA.js — Animated NET background
-    ══════════════════════════════════ */
-    let vantaEffect;
-    function initVanta() {
-      vantaEffect = VANTA.NET({
-        el: '#vanta-bg',
-        THREE: THREE,
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200,
-        minWidth: 200,
-        scale: 1.0,
-        scaleMobile: 1.0,
-        color: 0x00d4ff,
-        backgroundColor: 0x03060f,
-        points: 9.0,
-        maxDistance: 22.0,
-        spacing: 18.0,
-        showDots: true,
-      });
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input id="searchInput" type="text" placeholder="Entity / org no / municipality..." autocomplete="off">
+      </div>
+      <div class="filter-pills">
+        <div class="fpill on" onclick="setFilter('all')">All</div>
+        <div class="fpill"    onclick="setFilter('web')">Web</div>
+        <div class="fpill"    onclick="setFilter('jobs')">Hiring</div>
+        <div class="fpill"    onclick="setFilter('news')">News</div>
+        <div class="fpill"    onclick="setFilter('abstained')">No Web</div>
+      </div>
+    </div>
+    <div class="sidebar-stats">
+      <span id="statsLabel"><strong>100</strong> entities</span>
+      <span>BENCHMARK-100</span>
+    </div>
+    <div id="entityFeed"></div>
+    <div class="sidebar-foot">
+      <button class="foot-btn" onclick="exportCSV()">↓ CSV</button>
+      <button class="foot-btn" onclick="exportJSON()">↓ JSON</button>
+    </div>
+  </aside>
+
+  <!-- DOSSIER -->
+  <main id="dossier">
+    <!-- HERO -->
+    <div class="dos-hero">
+      <canvas class="dos-canvas-wrap" id="dosCanvas"></canvas>
+      <div class="dos-kicker">
+        <span id="dosOrgnr">—</span>
+        <span id="dosForm">—</span>
+        <span id="dosCohort">—</span>
+      </div>
+      <div class="dos-name" id="dosName">Select an entity</div>
+      <div class="dos-meta-row">
+        <span><strong id="dosMuni">—</strong> MUNICIPALITY</span>
+        <span><strong id="dosEmp">—</strong> EMPLOYEES</span>
+        <span><strong id="dosInd">—</strong> NACE CODE</span>
+      </div>
+      <div id="dosWebBtn"></div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-strip">
+      <div class="metric-box">
+        <div class="metric-label">Headcount</div>
+        <div class="metric-val" id="mEmp">—</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">CEO</div>
+        <div class="metric-val" id="mCeo" style="font-size:1rem; padding-top:.3rem; line-height:1.4">—</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Board Chair</div>
+        <div class="metric-val" id="mChair" style="font-size:1rem; padding-top:.3rem; line-height:1.4">—</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Sources</div>
+        <div class="metric-val" id="mSrc">0</div>
+      </div>
+    </div>
+
+    <!-- SIGNAL CHART -->
+    <div class="chart-strip">
+      <div class="strip-label">Signal Fingerprint</div>
+      <div id="chart-svg"></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn on" onclick="switchTab('overview',this)">Overview</button>
+      <button class="tab-btn" onclick="switchTab('jobs',this)">Careers <span class="tab-count" id="tc-jobs">0</span></button>
+      <button class="tab-btn" onclick="switchTab('activity',this)">Activity <span class="tab-count" id="tc-act">0</span></button>
+      <button class="tab-btn" onclick="switchTab('changes',this)">Deltas <span class="tab-count" id="tc-chg">0</span></button>
+      <button class="tab-btn" onclick="switchTab('sources',this)">Provenance <span class="tab-count" id="tc-src">0</span></button>
+    </div>
+
+    <div id="v-overview" class="tview on"><div class="intel-grid" id="overviewGrid"></div></div>
+    <div id="v-jobs"     class="tview"><div id="jobsStream"></div></div>
+    <div id="v-activity" class="tview"><div id="actStream"></div></div>
+    <div id="v-changes"  class="tview"><div id="chgStream"></div></div>
+    <div id="v-sources"  class="tview"><table class="src-table"><thead><tr><th>Type</th><th>Description</th><th>URL</th><th>Date</th><th>Hash</th></tr></thead><tbody id="srcBody"></tbody></table></div>
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   THREE.JS — Plasma / Fluid Background
+═══════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-bg');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, .1, 100);
+  camera.position.z = 3;
+
+  // Shader material for animated plasma
+  const vertSrc = `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }
+  `;
+  const fragSrc = `
+    uniform float uTime;
+    uniform vec2  uResolution;
+    uniform vec2  uMouse;
+    varying vec2  vUv;
+
+    float noise(vec2 p) {
+      return sin(p.x*6.28 + uTime*.6) * sin(p.y*6.28 + uTime*.4) * .5 + .5;
     }
 
-    /* ══════════════════════════════════
-       GSAP — Page intro animation
-    ══════════════════════════════════ */
-    function runIntroAnimation() {
-      gsap.registerPlugin(ScrollTrigger);
+    void main() {
+      vec2 uv  = vUv;
+      vec2 m   = uMouse / uResolution;
+      float d  = length(uv - m);
+      float n  = noise(uv * 3. + uTime * .2);
+      float n2 = noise(uv * 5. - uTime * .15);
+      float c  = n * n2 * .4;
+      c += smoothstep(.35, 0., d) * .12;
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' }});
-
-      tl.to('#header', { opacity: 1, duration: 0.8, y: 0 }, 0)
-        .to('#sidebar', { opacity: 1, x: 0, duration: 0.9 }, 0.2)
-        .to('#dossier', { opacity: 1, y: 0, duration: 0.9 }, 0.35);
-
-      // Animate scanline on load
-      gsap.fromTo('#scanLine',
-        { left: '-100%', opacity: 1 },
-        { left: '100%', opacity: 0, duration: 1.8, ease: 'power2.inOut', delay: 0.5 }
+      // Lime accent color
+      vec3 col = mix(
+        vec3(0.023, 0.023, 0.031),
+        vec3(0.72,  1.0,   0.357),
+        c * .25
       );
-
-      // Logo rings
-      gsap.to('.logo-spin', {
-        rotation: 360, duration: 12, repeat: -1, ease: 'none',
-        transformOrigin: '19px 19px'
-      });
-      gsap.to('.logo-spin-slow', {
-        rotation: -360, duration: 24, repeat: -1, ease: 'none',
-        transformOrigin: '19px 19px'
-      });
-      gsap.to('.logo-pulse', {
-        scale: 1.3, duration: 1.5, repeat: -1, yoyo: true,
-        ease: 'sine.inOut', transformOrigin: '19px 19px'
-      });
+      gl_FragColor = vec4(col, c * .6);
     }
+  `;
 
-    /* ══════════════════════════════════
-       ANIME.js — Number counter
-    ══════════════════════════════════ */
-    function animateCounter(el, target) {
-      if (target == null || isNaN(target)) { el.innerText = target || '—'; return; }
-      anime({
-        targets: { val: 0 },
-        val: target,
-        round: 1,
-        duration: 900,
-        easing: 'easeOutExpo',
-        update(a) {
-          el.innerText = a.animations[0].currentValue;
-        }
-      });
+  const geo = new THREE.PlaneGeometry(10, 10);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: vertSrc, fragmentShader: fragSrc,
+    transparent: true,
+    uniforms: {
+      uTime:       { value: 0 },
+      uResolution: { value: new THREE.Vector2(innerWidth, innerHeight) },
+      uMouse:      { value: new THREE.Vector2(innerWidth/2, innerHeight/2) },
     }
+  });
+  scene.add(new THREE.Mesh(geo, mat));
 
-    /* ══════════════════════════════════
-       ANIME.js — Stagger reveal for cards
-    ══════════════════════════════════ */
-    function staggerReveal(selector) {
-      anime({
-        targets: selector,
-        opacity: [0, 1],
-        translateY: [15, 0],
-        duration: 500,
-        delay: anime.stagger(80),
-        easing: 'easeOutCubic'
-      });
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    mat.uniforms.uResolution.value.set(innerWidth, innerHeight);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  window.addEventListener('mousemove', e => {
+    mat.uniforms.uMouse.value.set(e.clientX, innerHeight - e.clientY);
+  });
+
+  const clock = new THREE.Clock();
+  (function loop() {
+    mat.uniforms.uTime.value = clock.getElapsedTime();
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ═══════════════════════════════════════
+   DOSSIER MINI THREE.JS CANVAS
+═══════════════════════════════════════ */
+let dosRenderer, dosMat;
+(function() {
+  const c = document.getElementById('dosCanvas');
+  dosRenderer = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
+  dosRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene2  = new THREE.Scene();
+  const camera2 = new THREE.PerspectiveCamera(60, 1, .1, 100);
+  camera2.position.z = 3;
+
+  const fragSrc2 = `
+    uniform float uTime; uniform float uSeed;
+    varying vec2 vUv;
+    void main() {
+      vec2 p = vUv * 4. + uSeed;
+      float n = sin(p.x + uTime*.5) * sin(p.y + uTime*.3);
+      float n2 = sin(p.x*2. - uTime*.4) * .5;
+      float c = (n + n2) * .25 + .25;
+      vec3 col = mix(vec3(.04,.04,.06), vec3(.72,1.,.35), c * .18);
+      gl_FragColor = vec4(col, .55);
     }
+  `;
+  const vertSrc2 = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
+  dosMat = new THREE.ShaderMaterial({
+    vertexShader: vertSrc2, fragmentShader: fragSrc2, transparent: true,
+    uniforms: { uTime: { value: 0 }, uSeed: { value: 0 } }
+  });
+  scene2.add(new THREE.Mesh(new THREE.PlaneGeometry(10,10), dosMat));
 
-    /* ══════════════════════════════════
-       D3.js — Signal Intelligence Bar Chart
-    ══════════════════════════════════ */
-    function renderSignalChart(comp) {
-      const container = document.getElementById('signalChart');
-      container.innerHTML = '';
+  function rszDos() {
+    const w = c.parentElement.offsetWidth, h = c.parentElement.offsetHeight || 340;
+    dosRenderer.setSize(w, h);
+    camera2.aspect = w / h; camera2.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', rszDos);
+  rszDos();
 
-      const margin = { top: 20, right: 20, bottom: 50, left: 55 };
-      const W = container.offsetWidth - margin.left - margin.right || 600;
-      const H = 160 - margin.top - margin.bottom;
+  const clk2 = new THREE.Clock();
+  (function loop2() {
+    dosMat.uniforms.uTime.value = clk2.getElapsedTime();
+    dosRenderer.render(scene2, camera2);
+    requestAnimationFrame(loop2);
+  })();
+})();
 
-      const data = [
-        { label: 'Sources',    value: (comp.sources    || []).length, color: '#3b82f6' },
-        { label: 'Jobs',       value: (comp.jobs       || []).length, color: '#00d4ff' },
-        { label: 'Activities', value: (comp.activities || []).length, color: '#f59e0b' },
-        { label: 'Changes',    value: (comp.changes    || []).length, color: '#10b981' },
-        { label: 'Employees',  value: (comp.employees  || 0) / 5,     color: '#8b5cf6', raw: comp.employees },
-      ];
+/* ═══════════════════════════════════════
+   MAGNETIC CURSOR
+═══════════════════════════════════════ */
+(function() {
+  const dot  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let cx = -100, cy = -100, rx = -100, ry = -100;
+  let tx = -100, ty = -100;
 
-      const svg = d3.select('#signalChart')
-        .append('svg')
-        .attr('width',  W + margin.left + margin.right)
-        .attr('height', H + margin.top  + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+  window.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
 
-      const x = d3.scaleBand()
-        .domain(data.map(d => d.label))
-        .range([0, W])
-        .padding(0.35);
+  (function animCursor() {
+    cx += (tx - cx) * .25;
+    cy += (ty - cy) * .25;
+    rx += (tx - rx) * .1;
+    ry += (ty - ry) * .1;
+    dot.style.left  = cx + 'px'; dot.style.top  = cy + 'px';
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  })();
+})();
 
-      const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.25 || 1])
-        .range([H, 0]);
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let COMPANIES = [];
+let ACTIVE_ORG = null;
+let ACTIVE_FILTER = 'all';
 
-      // X Axis
-      svg.append('g')
-        .attr('transform', `translate(0,${H})`)
-        .call(d3.axisBottom(x).tickSize(0))
-        .call(g => {
-          g.select('.domain').remove();
-          g.selectAll('text')
-            .style('fill', '#64748b')
-            .style('font-family', 'Space Grotesk, sans-serif')
-            .style('font-size', '11px');
-        });
+/* ═══════════════════════════════════════
+   ANIME.JS COUNTER
+═══════════════════════════════════════ */
+function counter(el, target, decimals) {
+  if (!el || target == null || isNaN(+target)) { if(el) el.textContent = target || '—'; return; }
+  anime({ targets: {v:0}, v: +target, round: decimals ? 0 : 1, duration: 1200, easing: 'easeOutExpo',
+    update(a) { el.textContent = Math.round(a.animations[0].currentValue).toLocaleString(); }
+  });
+}
 
-      // Horizontal grid lines
-      svg.append('g')
-        .call(d3.axisLeft(y).ticks(4).tickSize(-W))
-        .call(g => {
-          g.select('.domain').remove();
-          g.selectAll('.tick line')
-            .style('stroke', 'rgba(255,255,255,0.05)')
-            .style('stroke-dasharray', '3,3');
-          g.selectAll('.tick text')
-            .style('fill', '#64748b')
-            .style('font-size', '10px')
-            .style('font-family', 'JetBrains Mono, monospace');
-        });
+/* ═══════════════════════════════════════
+   D3 SIGNAL CHART
+═══════════════════════════════════════ */
+function renderChart(comp) {
+  const wrap = document.getElementById('chart-svg');
+  wrap.innerHTML = '';
+  const W = wrap.offsetWidth || 600;
+  const H = 90, ml = 10, mr = 10, mt = 10, mb = 28;
+  const data = [
+    { k: 'Jobs',    v: (comp.jobs||[]).length,       c: '#5bf5ff' },
+    { k: 'News',    v: (comp.activities||[]).length,  c: '#ffb85b' },
+    { k: 'Changes', v: (comp.changes||[]).length,     c: '#b8ff5b' },
+    { k: 'Sources', v: (comp.sources||[]).length,     c: 'rgba(245,244,240,.4)' },
+  ];
+  const maxV = Math.max(d3.max(data, d=>d.v), 1);
+  const x = d3.scaleBand().domain(data.map(d=>d.k)).range([ml, W-mr]).padding(.5);
+  const y = d3.scaleLinear().domain([0, maxV]).range([H-mb, mt]);
 
-      // Bars with gradient + animation
-      data.forEach((d, i) => {
-        const defs = svg.append('defs');
-        const gid = `bg${i}`;
-        const grad = defs.append('linearGradient')
-          .attr('id', gid)
-          .attr('x1', '0%').attr('y1', '0%')
-          .attr('x2', '0%').attr('y2', '100%');
-        grad.append('stop').attr('offset', '0%')
-          .attr('stop-color', d.color).attr('stop-opacity', 0.9);
-        grad.append('stop').attr('offset', '100%')
-          .attr('stop-color', d.color).attr('stop-opacity', 0.25);
+  const svg = d3.select('#chart-svg').append('svg').attr('width', W).attr('height', H);
 
-        svg.append('rect')
-          .attr('x', x(d.label))
-          .attr('width', x.bandwidth())
-          .attr('y', H)
-          .attr('height', 0)
-          .attr('rx', 5)
-          .attr('fill', `url(#${gid})`)
-          .attr('stroke', d.color)
-          .attr('stroke-opacity', 0.4)
-          .attr('stroke-width', 1)
-          .transition()
-          .delay(i * 80)
-          .duration(700)
-          .ease(d3.easeCubicOut)
-          .attr('y', y(d.value))
-          .attr('height', H - y(d.value));
+  // Horizontal reference lines
+  [.5, 1].forEach(t => {
+    svg.append('line').attr('x1', ml).attr('x2', W-mr)
+      .attr('y1', y(maxV*t)).attr('y2', y(maxV*t))
+      .style('stroke', 'rgba(245,244,240,.06)').style('stroke-dasharray', '4,4');
+  });
 
-        // Value label on top
-        svg.append('text')
-          .attr('x', x(d.label) + x.bandwidth() / 2)
-          .attr('y', y(d.value) - 6)
-          .attr('text-anchor', 'middle')
-          .style('fill', d.color)
-          .style('font-family', 'JetBrains Mono, monospace')
-          .style('font-size', '11px')
-          .style('font-weight', '600')
-          .style('opacity', 0)
-          .text(d.raw != null ? d.raw : d.value)
-          .transition().delay(i * 80 + 400).duration(300)
-          .style('opacity', 1);
-      });
-    }
+  data.forEach((d,i) => {
+    const bx = x(d.k), bw = x.bandwidth();
 
-    /* ══════════════════════════════════
-       RENDER SIDEBAR
-    ══════════════════════════════════ */
-    function renderSidebar() {
-      const feed = document.getElementById('entityFeed');
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    // Glow background
+    svg.append('rect').attr('x', bx).attr('y', mt).attr('width', bw).attr('height', H-mb-mt)
+      .attr('rx', 2).style('fill', d.c).style('opacity', .04);
 
-      const filtered = COMPANIES.filter(c => {
-        const qMatch = !query ||
-          c.name.toLowerCase().includes(query) ||
-          c.organisation_number.includes(query) ||
-          (c.municipality || '').toLowerCase().includes(query);
-        if (!qMatch) return false;
+    // Animated bar
+    svg.append('rect').attr('x', bx).attr('y', H-mb).attr('width', bw).attr('height', 0)
+      .attr('rx', 2).style('fill', d.c).style('opacity', .85)
+      .transition().delay(i*80).duration(800).ease(d3.easeCubicOut)
+      .attr('y', y(d.v)).attr('height', Math.max(0, H-mb - y(d.v)));
 
-        if (ACTIVE_FILTER === 'web')       return !!c.website;
-        if (ACTIVE_FILTER === 'jobs')      return !!(c.jobs && c.jobs.length);
-        if (ACTIVE_FILTER === 'news')      return !!(c.activities && c.activities.length);
-        if (ACTIVE_FILTER === 'abstained') return !c.website;
-        return true;
-      });
+    // Value
+    svg.append('text').attr('x', bx+bw/2).attr('y', y(d.v)-6)
+      .attr('text-anchor','middle').style('fill', d.c)
+      .style('font-family', 'DM Mono, monospace').style('font-size','11px').style('font-weight','500')
+      .style('opacity', 0).text(d.v)
+      .transition().delay(i*80+500).duration(300).style('opacity',1);
 
-      document.getElementById('statsLeft').innerText = `${filtered.length} entities`;
+    // Label
+    svg.append('text').attr('x', bx+bw/2).attr('y', H-mb+14)
+      .attr('text-anchor','middle').style('fill','rgba(245,244,240,.4)')
+      .style('font-family','DM Mono, monospace').style('font-size','10px').text(d.k);
+  });
+}
 
-      feed.innerHTML = filtered.map(c => {
-        const active   = c.organisation_number === ACTIVE_ORG ? 'active' : '';
-        const hasWeb   = !!c.website;
-        const jobCnt   = (c.jobs || []).length;
-        const newsCnt  = (c.activities || []).length;
+/* ═══════════════════════════════════════
+   SIDEBAR RENDER
+═══════════════════════════════════════ */
+function renderSidebar() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = COMPANIES.filter(c => {
+    if (q && !c.name.toLowerCase().includes(q) && !c.organisation_number.includes(q)
+          && !(c.municipality||'').toLowerCase().includes(q)) return false;
+    if (ACTIVE_FILTER === 'web')       return !!c.website;
+    if (ACTIVE_FILTER === 'jobs')      return !!(c.jobs||[]).length;
+    if (ACTIVE_FILTER === 'news')      return !!(c.activities||[]).length;
+    if (ACTIVE_FILTER === 'abstained') return !c.website;
+    return true;
+  });
+  document.getElementById('statsLabel').innerHTML = `<strong>${filtered.length}</strong> entities`;
+  const feed = document.getElementById('entityFeed');
+  feed.innerHTML = filtered.map(c => {
+    const active = c.organisation_number === ACTIVE_ORG ? 'active' : '';
+    return `<div class="ecard ${active}" onclick="select('${c.organisation_number}')" data-org="${c.organisation_number}">
+      <div class="ecard-name">${c.name}</div>
+      <div class="ecard-orgnr">${c.organisation_number}</div>
+      <div class="ecard-meta">${c.legal_form||'AS'} · ${c.municipality||'NO'} · ${c.employees!=null ? c.employees+' emp' : 'Unlisted'}</div>
+      <div class="ecard-tags">
+        ${c.website ? '<span class="etag t-web">Web</span>' : '<span class="etag t-no">No Web</span>'}
+        ${(c.jobs||[]).length ? `<span class="etag t-jobs">${c.jobs.length} Jobs</span>` : ''}
+        ${(c.activities||[]).length ? `<span class="etag t-news">${c.activities.length} News</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
-        return `
-          <div class="ecard ${active}" onclick="select('${c.organisation_number}')" data-org="${c.organisation_number}">
-            <div class="ecard-top">
-              <span class="ecard-name">${c.name}</span>
-              <span class="ecard-orgnr">${c.organisation_number}</span>
-            </div>
-            <div class="ecard-sub">${c.legal_form || 'AS'} · ${c.municipality || 'Norway'} · ${c.employees != null ? c.employees + ' emp' : 'Unlisted'}</div>
-            <div class="ecard-badges">
-              ${hasWeb
-                ? '<span class="mbadge mb-web">WEB</span>'
-                : '<span class="mbadge mb-no">ABSTAINED</span>'}
-              ${jobCnt  ? `<span class="mbadge mb-jobs">${jobCnt} JOBS</span>`  : ''}
-              ${newsCnt ? `<span class="mbadge mb-news">${newsCnt} NEWS</span>` : ''}
-            </div>
-          </div>`;
-      }).join('');
+  anime({ targets: '#entityFeed .ecard', opacity: [0,1], translateX: [-12,0],
+    duration: 400, delay: anime.stagger(20), easing: 'easeOutCubic' });
+}
 
-      // Animate newly rendered cards
-      anime({
-        targets: '#entityFeed .ecard',
-        opacity: [0, 1],
-        translateX: [-10, 0],
-        duration: 350,
-        delay: anime.stagger(25),
-        easing: 'easeOutCubic'
-      });
-    }
+/* ═══════════════════════════════════════
+   SELECT COMPANY
+═══════════════════════════════════════ */
+function select(orgnr) {
+  ACTIVE_ORG = orgnr;
+  document.querySelectorAll('.ecard').forEach(el =>
+    el.classList.toggle('active', el.dataset.org === orgnr));
+  const comp = COMPANIES.find(c => c.organisation_number === orgnr);
+  if (!comp) return;
+  renderDossier(comp);
+  gsap.to('#dossier', { scrollTop: 0, duration: .6, ease: 'power3.out' });
+}
 
-    /* ══════════════════════════════════
-       SELECT COMPANY
-    ══════════════════════════════════ */
-    function select(orgnr) {
-      ACTIVE_ORG = orgnr;
-      const comp = COMPANIES.find(c => c.organisation_number === orgnr);
-      if (!comp) return;
+/* ═══════════════════════════════════════
+   RENDER DOSSIER
+═══════════════════════════════════════ */
+function renderDossier(comp) {
+  // Seed the dossier mini-canvas with company index for variety
+  if (dosMat) {
+    const idx = COMPANIES.findIndex(c => c.organisation_number === comp.organisation_number);
+    dosMat.uniforms.uSeed.value = idx * 1.7;
+  }
+  // Update DOM elements
+  document.getElementById('dosOrgnr').textContent = comp.organisation_number;
+  document.getElementById('dosForm').textContent  = comp.legal_form || 'AS';
+  document.getElementById('dosCohort').textContent = (comp.cohort||'').replace(/_/g,' ').toUpperCase();
+  document.getElementById('dosMuni').textContent   = comp.municipality || 'NORWAY';
+  document.getElementById('dosEmp').textContent    = comp.employees != null ? comp.employees : 'UNLISTED';
+  document.getElementById('dosInd').textContent    = comp.industry_code || '—';
 
-      // Update sidebar cards
-      document.querySelectorAll('.ecard').forEach(el => {
-        el.classList.toggle('active', el.getAttribute('data-org') === orgnr);
-      });
+  // Big animated name
+  const nameEl = document.getElementById('dosName');
+  gsap.fromTo(nameEl, { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power3.out' });
+  nameEl.textContent = comp.name;
 
-      renderDossier(comp);
+  // Website button
+  const wb = document.getElementById('dosWebBtn');
+  wb.innerHTML = comp.website
+    ? `<a href="${comp.website}" target="_blank" class="web-pill wp-on">${new URL(comp.website).hostname} ↗</a>`
+    : `<span class="web-pill wp-off">No registered website</span>`;
 
-      // Scroll dossier to top with GSAP
-      gsap.to('#dossier', { scrollTop: 0, duration: 0.5, ease: 'power2.out' });
+  // Metrics
+  counter(document.getElementById('mEmp'), comp.employees);
+  const ceo   = (comp.roles||[]).find(r=>r.type==='daglig_leder');
+  const chair = (comp.roles||[]).find(r=>r.type==='styreleder');
+  document.getElementById('mCeo').textContent   = ceo   ? ceo.name   : 'Not reported';
+  document.getElementById('mChair').textContent = chair ? chair.name : 'Not reported';
+  counter(document.getElementById('mSrc'), (comp.sources||[]).length);
 
-      // Scanline flash on company switch
-      gsap.fromTo('#scanLine',
-        { left: '-100%', opacity: 0.8 },
-        { left: '100%', opacity: 0, duration: 1.2, ease: 'power2.inOut' }
-      );
-    }
+  // Tab counts
+  document.getElementById('tc-jobs').textContent = (comp.jobs||[]).length;
+  document.getElementById('tc-act').textContent  = (comp.activities||[]).length;
+  document.getElementById('tc-chg').textContent  = (comp.changes||[]).length;
+  document.getElementById('tc-src').textContent  = (comp.sources||[]).length;
 
-    /* ══════════════════════════════════
-       RENDER DOSSIER
-    ══════════════════════════════════ */
-    function renderDossier(comp) {
-      // Hero
-      document.getElementById('heroName').innerText = comp.name;
-      document.getElementById('heroOrg').innerText  = comp.organisation_number;
-      document.getElementById('heroForm').innerText = comp.legal_form || 'AS';
-      document.getElementById('heroMuni').innerText = comp.municipality || 'Norway';
-      document.getElementById('heroEmp').innerText  = comp.employees != null ? `${comp.employees} employees` : 'Headcount unlisted';
+  renderChart(comp);
+  renderOverview(comp);
+  renderJobs(comp.jobs||[]);
+  renderActivity(comp.activities||[]);
+  renderChanges(comp.changes||[]);
+  renderSources(comp.sources||[]);
 
-      const webBtn = document.getElementById('heroWebBtn');
-      if (comp.website) {
-        const host = new URL(comp.website).hostname;
-        webBtn.innerHTML = `<a href="${comp.website}" target="_blank" rel="noreferrer" class="web-action wa-on">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>
-          ${host} ↗
-        </a>`;
-      } else {
-        webBtn.innerHTML = `<span class="web-action wa-off">No Registered Website</span>`;
-      }
+  // Animate metric boxes
+  gsap.fromTo('.metric-box', { opacity:0, y:12 }, { opacity:1, y:0, duration:.5, stagger:.06, ease:'power2.out' });
+}
 
-      // Metrics with counter animation
-      document.getElementById('metaInd').innerText = `${comp.industry_code || '—'} · ${comp.industry_label || '—'}`;
-      animateCounter(document.getElementById('metaEmp'), comp.employees);
+/* ─── OVERVIEW ─── */
+function renderOverview(comp) {
+  const g = document.getElementById('overviewGrid');
+  const s = comp.structured_summary || {};
+  const cells = [
+    { icon:'🏛', label:'Operational Profile', items: s.operational_profile },
+    { icon:'📡', label:'Current Signals',     items: s.current_signals     },
+    { icon:'⚡', label:'Recent Changes',      items: s.recent_changes      },
+    { icon:'🛡', label:'Evidence Provenance', items: s.evidence            },
+  ];
+  g.innerHTML = cells.map(cell => `
+    <div class="intel-cell">
+      <div class="intel-cell-head">
+        <span class="ic-icon">${cell.icon}</span>
+        <span class="ic-label">${cell.label}</span>
+      </div>
+      <ul class="intel-items">
+        ${(cell.items||['No data collected.']).map(it=>`
+          <li class="intel-item">
+            <span class="intel-item-bullet">▸</span>
+            <span class="intel-item-text">${it}</span>
+          </li>`).join('')}
+      </ul>
+    </div>`).join('');
+  anime({ targets: '.intel-cell', opacity:[0,1], translateY:[10,0], duration:500, delay:anime.stagger(80), easing:'easeOutCubic' });
+}
 
-      const ceo   = (comp.roles || []).find(r => r.type === 'daglig_leder');
-      const chair = (comp.roles || []).find(r => r.type === 'styreleder');
-      document.getElementById('metaCeo').innerText   = ceo   ? ceo.name   : 'Not reported';
-      document.getElementById('metaChair').innerText = chair ? chair.name : 'Not reported';
+/* ─── JOBS ─── */
+function renderJobs(jobs) {
+  const el = document.getElementById('jobsStream');
+  if (!jobs.length) { el.innerHTML = `<div class="empty-state"><h3>No Openings Verified</h3><p>Zero active postings at crawl time.</p></div>`; return; }
+  el.innerHTML = jobs.map(j=>`
+    <div class="stream-item">
+      <div class="si-head">
+        <span class="si-title">${j.title}</span>
+        <span class="si-badge si-badge-jobs">JOB</span>
+      </div>
+      <div class="si-meta">
+        <span><strong>${j.location||'Norway'}</strong> Location</span>
+        <span><strong>${j.posted_date||'Undated'}</strong> Posted</span>
+        <span><strong>${j.department||'—'}</strong> Department</span>
+      </div>
+      ${j.source_url ? `<a href="${j.source_url}" target="_blank" class="si-link">Apply URL ↗</a>` : ''}
+    </div>`).join('');
+  anime({ targets: '#jobsStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
+}
 
-      // Tab counters
-      document.getElementById('tc-jobs').innerText = (comp.jobs       || []).length;
-      document.getElementById('tc-act').innerText  = (comp.activities || []).length;
-      document.getElementById('tc-chg').innerText  = (comp.changes    || []).length;
-      document.getElementById('tc-src').innerText  = (comp.sources    || []).length;
+/* ─── ACTIVITY ─── */
+function renderActivity(acts) {
+  const el = document.getElementById('actStream');
+  if (!acts.length) { el.innerHTML = `<div class="empty-state"><h3>No Dated Activity</h3><p>No press releases or announcements located.</p></div>`; return; }
+  el.innerHTML = acts.map(a=>`
+    <div class="stream-item">
+      <div class="si-head">
+        <span class="si-title">${a.title||'Untitled'}</span>
+        <span class="si-badge si-badge-news">${(a.activity_type||'NEWS').toUpperCase()}</span>
+      </div>
+      <div class="si-meta">
+        <span><strong>${a.activity_date||'Undated'}</strong> Date</span>
+        <span><strong>${a.retrieved_at ? a.retrieved_at.split('T')[0] : '—'}</strong> Retrieved</span>
+      </div>
+      <div class="si-body">${a.description||''}</div>
+      ${a.source_url ? `<a href="${a.source_url}" target="_blank" class="si-link">Source Article ↗</a>` : ''}
+    </div>`).join('');
+  anime({ targets: '#actStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
+}
 
-      // D3 chart
-      renderSignalChart(comp);
+/* ─── CHANGES ─── */
+function renderChanges(changes) {
+  const el = document.getElementById('chgStream');
+  if (!changes.length) { el.innerHTML = `<div class="empty-state"><h3>No State Deltas</h3><p>Stable entity — no changes detected.</p></div>`; return; }
+  const cls = { ADDED:'si-badge-chg-add', REMOVED:'si-badge-chg-rem', CHANGED:'si-badge-chg-mod' };
+  el.innerHTML = changes.map(c=>{
+    const ev = (c.evidence||[])[0];
+    return `<div class="stream-item">
+      <div class="si-head">
+        <span class="si-title">${c.entity_type.toUpperCase()}.${c.field_name}</span>
+        <span class="si-badge ${cls[c.change_type]||'si-badge-chg-mod'}">${c.change_type}</span>
+      </div>
+      <div class="si-meta">
+        <span><strong>${c.detected_at||'—'}</strong> Detected</span>
+        ${c.effective_date ? `<span><strong>${c.effective_date}</strong> Effective</span>` : ''}
+        <span style="font-family:var(--font-mono); font-size:.65rem; color:var(--muted)">${c.change_id}</span>
+      </div>
+      ${ev?.evidence_text ? `<div class="si-body" style="font-family:var(--font-mono); font-size:.8rem; color:var(--accent)">▸ ${ev.evidence_text}</div>` : ''}
+      ${ev?.source_url ? `<a href="${ev.source_url}" target="_blank" class="si-link">Provenance ↗</a>` : ''}
+    </div>`;
+  }).join('');
+  anime({ targets: '#chgStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
+}
 
-      // Views
-      renderOverview(comp);
-      renderJobs(comp.jobs       || []);
-      renderActivities(comp.activities || []);
-      renderChanges(comp.changes     || []);
-      renderSources(comp.sources     || []);
+/* ─── SOURCES ─── */
+function renderSources(srcs) {
+  const tb = document.getElementById('srcBody');
+  if (!srcs.length) { tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:4rem;color:var(--muted)">No source records attached.</td></tr>`; return; }
+  tb.innerHTML = srcs.map(s=>`
+    <tr>
+      <td><span class="etag t-jobs" style="font-size:.65rem">${(s.source_type||'web').toUpperCase()}</span></td>
+      <td style="color:var(--white)">${s.description||'Verified observation'}</td>
+      <td>${s.url ? `<a href="${s.url}" target="_blank" style="color:var(--accent);font-family:var(--font-mono);font-size:.75rem">${s.url.length>45?s.url.slice(0,45)+'…':s.url}</a>` : 'Brreg'}</td>
+      <td style="font-family:var(--font-mono);font-size:.72rem">${s.retrieved_at?s.retrieved_at.split('T')[0]:'2026-09-20'}</td>
+      <td style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted)">${(s.content_sha256||'').slice(0,14)}…</td>
+    </tr>`).join('');
+  anime({ targets: '#srcBody tr', opacity:[0,1], translateY:[4,0], duration:400, delay:anime.stagger(30), easing:'easeOutCubic' });
+}
 
-      // Animate hero entry
-      gsap.fromTo('.hero',
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }
-      );
-      gsap.fromTo('.metrics .mbox',
-        { opacity: 0, y: 10, scale: 0.97 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.06, ease: 'power2.out', delay: 0.15 }
-      );
-    }
+/* ═══════════════════════════════════════
+   TAB SWITCH
+═══════════════════════════════════════ */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  document.querySelectorAll('.tview').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+name).classList.add('on');
+}
 
-    /* ─── RENDER OVERVIEW ─── */
-    function renderOverview(comp) {
-      const g = document.getElementById('pillarsGrid');
-      const s = comp.structured_summary;
+/* ═══════════════════════════════════════
+   FILTER / SEARCH
+═══════════════════════════════════════ */
+function setFilter(f) {
+  ACTIVE_FILTER = f;
+  document.querySelectorAll('.fpill').forEach(p=>{
+    const map = { all:'all', web:'web', hiring:'jobs', news:'news', 'no web':'abstained' };
+    p.classList.toggle('on', map[p.textContent.trim().toLowerCase()]===f || (f==='all' && p.textContent.trim().toLowerCase()==='all'));
+  });
+  renderSidebar();
+}
 
-      if (!s) {
-        g.innerHTML = `<div class="empty" style="grid-column:span 2;"><h3>Synthesis pending</h3></div>`;
-        return;
-      }
+/* ═══════════════════════════════════════
+   EXPORTS
+═══════════════════════════════════════ */
+function exportCSV() {
+  const rows = COMPANIES.map(c=>[c.organisation_number,`"${c.name}"`,c.website||'',(c.jobs||[]).length,(c.activities||[]).length].join(','));
+  const a = Object.assign(document.createElement('a'), { href:'data:text/csv;charset=utf-8,'+encodeURIComponent(['org,name,website,jobs,activities',...rows].join('\n')), download:'signalpost_v8.csv' });
+  a.click();
+}
+function exportJSON() {
+  const a = Object.assign(document.createElement('a'), { href:'data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(COMPANIES,null,2)), download:'signalpost_v8.json' });
+  a.click();
+}
 
-      const pillars = [
-        { cls: 'pl-blue',  icon: '🏛', title: 'Operational Profile', items: s.operational_profile },
-        { cls: 'pl-cyan',  icon: '📡', title: 'Current Signals',     items: s.current_signals     },
-        { cls: 'pl-amber', icon: '⚡', title: 'Recent Changes',      items: s.recent_changes      },
-        { cls: 'pl-green', icon: '🛡', title: 'Evidence Provenance', items: s.evidence            },
-      ];
+/* ═══════════════════════════════════════
+   MARQUEE BUILD
+═══════════════════════════════════════ */
+function buildMarquee(companies) {
+  const items = companies.slice(0, 20).map(c =>
+    `<span class="marquee-item">${c.name} <span>·</span></span>`
+  ).join('');
+  document.getElementById('marqueeTrack').innerHTML = items + items; // duplicate for seamless
+}
 
-      g.innerHTML = pillars.map(p => `
-        <div class="pillar ${p.cls}">
-          <div class="pillar-head">
-            <div class="pillar-icon">${p.icon}</div>
-            <div class="pillar-title">${p.title}</div>
-          </div>
-          <ul class="pillar-items">
-            ${(p.items || []).map(item => `
-              <li class="pillar-item">
-                <span class="pi-dot">▸</span>
-                <span>${item}</span>
-              </li>`).join('')}
-          </ul>
-        </div>`).join('');
+/* ═══════════════════════════════════════
+   LOADER + GSAP HERO INTRO
+═══════════════════════════════════════ */
+function runIntroSequence() {
+  gsap.registerPlugin(ScrollTrigger);
 
-      staggerReveal('#pillarsGrid .pillar');
-    }
+  const loaderFill = document.getElementById('loaderFill');
+  const loaderNum  = document.getElementById('loaderNum');
 
-    /* ─── RENDER JOBS ─── */
-    function renderJobs(jobs) {
-      const el = document.getElementById('jobsList');
-      if (!jobs.length) {
-        el.innerHTML = `<div class="empty"><h3>No Verified Job Openings</h3><p>Zero active postings observed at the reference crawl.</p></div>`;
-        return;
-      }
-      el.innerHTML = jobs.map(j => `
-        <div class="scard">
-          <div class="scard-top">
-            <div class="scard-title">${j.title}</div>
-            <span class="status-pill pill-cyan" style="font-size:0.7rem;">${j.job_id}</span>
-          </div>
-          <div class="scard-meta">
-            <span>Location: <strong>${j.location || 'Norway'}</strong></span>
-            <span>Posted: <strong>${j.posted_date || 'Undated'}</strong></span>
-            <span>Dept: <strong>${j.department || 'Operations'}</strong></span>
-          </div>
-          ${j.source_url ? `<a href="${j.source_url}" target="_blank" rel="noreferrer" class="pill-link">Apply URL ↗</a>` : ''}
-        </div>`).join('');
-      staggerReveal('#jobsList .scard');
-    }
+  // Fake progress bar
+  let pct = 0;
+  const pInterval = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 15, 95);
+    loaderFill.style.width = pct + '%';
+    loaderNum.textContent  = Math.round(pct) + '%';
+  }, 80);
 
-    /* ─── RENDER ACTIVITIES ─── */
-    function renderActivities(acts) {
-      const el = document.getElementById('actList');
-      if (!acts.length) {
-        el.innerHTML = `<div class="empty"><h3>No Dated Public Activities</h3><p>No press releases or announcements verified.</p></div>`;
-        return;
-      }
-      el.innerHTML = acts.map(a => `
-        <div class="scard">
-          <div class="scard-top">
-            <div class="scard-title">${a.title}</div>
-            <span class="status-pill pill-amber" style="font-size:0.7rem;">${(a.activity_type||'update').toUpperCase()}</span>
-          </div>
-          <div class="scard-meta">
-            <span>Date: <strong>${a.activity_date || 'Undated'}</strong></span>
-            <span>Retrieved: <strong>${a.retrieved_at ? a.retrieved_at.split('T')[0] : '—'}</strong></span>
-          </div>
-          <div class="scard-desc">${a.description || ''}</div>
-          ${a.source_url ? `<a href="${a.source_url}" target="_blank" rel="noreferrer" class="pill-link">Article Source ↗</a>` : ''}
-        </div>`).join('');
-      staggerReveal('#actList .scard');
-    }
+  // Once data ready, finish loader
+  setTimeout(() => {
+    clearInterval(pInterval);
+    loaderFill.style.width = '100%';
+    loaderNum.textContent = '100%';
 
-    /* ─── RENDER CHANGES ─── */
-    function renderChanges(changes) {
-      const el = document.getElementById('chgList');
-      if (!changes.length) {
-        el.innerHTML = `<div class="empty"><h3>Zero Detected Changes</h3><p>Stable state — no deltas across recording intervals.</p></div>`;
-        return;
-      }
-      el.innerHTML = changes.map(c => {
-        const pillMap = { ADDED:'dp-add', CHANGED:'dp-chg', REMOVED:'dp-rem' };
-        const cls = pillMap[c.change_type] || 'dp-chg';
-        const ev = (c.evidence || [])[0];
-        return `
-          <div class="scard">
-            <div class="scard-top">
-              <div>
-                <span class="dpill ${cls}">${c.change_type}</span>
-                <strong style="margin-left:0.65rem; color:var(--text);">${c.entity_type.toUpperCase()}.${c.field_name}</strong>
-              </div>
-              <span style="font-family:var(--mono); font-size:0.72rem; color:var(--muted);">${c.change_id}</span>
-            </div>
-            <div class="scard-meta">
-              <span>Detected: <strong>${c.detected_at || '—'}</strong></span>
-              ${c.effective_date ? `<span>Effective: <strong>${c.effective_date}</strong></span>` : ''}
-            </div>
-            ${ev?.evidence_text ? `<div class="scard-desc" style="font-family:var(--mono); font-size:0.83rem; color:var(--cyan);">▸ ${ev.evidence_text}</div>` : ''}
-            ${ev?.source_url ? `<a href="${ev.source_url}" target="_blank" rel="noreferrer" class="pill-link">Inspect Provenance ↗</a>` : ''}
-          </div>`;
-      }).join('');
-      staggerReveal('#chgList .scard');
-    }
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' }});
+    tl.to('#loader', { opacity: 0, duration: .6, delay: .3 })
+      .set('#loader', { display: 'none' })
+      // Hero title words slam down
+      .from('.hero-title .word', { y: '110%', duration: 1, stagger: .12, ease: 'expo.out' }, '-=.1')
+      .from('.hero-eyebrow', { opacity:0, y:20, duration:.7 }, '-=.6')
+      .from('.hero-stat', { opacity:0, y:20, duration:.6, stagger:.1 }, '-=.4')
+      .from('.hero-desc, .scroll-hint', { opacity:0, y:15, duration:.6, stagger:.1 }, '-=.4')
+      // Animate hero stats with anime.js
+      .call(() => {
+        counter(document.getElementById('statCompanies'), COMPANIES.length);
+        const totalNews = COMPANIES.reduce((s,c)=>s+(c.activities||[]).length,0);
+        const totalJobs = COMPANIES.reduce((s,c)=>s+(c.jobs||[]).length,0);
+        counter(document.getElementById('statNews'), totalNews);
+        counter(document.getElementById('statJobs'), totalJobs);
+      }, null, '-=.2');
+  }, 1200);
+}
 
-    /* ─── RENDER SOURCES ─── */
-    function renderSources(sources) {
-      const tb = document.getElementById('srcBody');
-      if (!sources.length) {
-        tb.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:3rem; color:var(--muted);">No sources attached.</td></tr>`;
-        return;
-      }
-      tb.innerHTML = sources.map(s => `
-        <tr>
-          <td><span class="mbadge mb-jobs" style="font-size:0.7rem;">${(s.source_type||'web').toUpperCase()}</span></td>
-          <td><strong style="color:var(--text);">${s.description || 'Verified observation'}</strong></td>
-          <td>${s.url ? `<a href="${s.url}" target="_blank" rel="noreferrer" style="color:var(--cyan); text-decoration:none; font-family:var(--mono); font-size:0.78rem;">${s.url.length > 48 ? s.url.slice(0,48)+'…' : s.url} ↗</a>` : 'Brreg Registry'}</td>
-          <td style="font-family:var(--mono); font-size:0.75rem;">${s.retrieved_at ? s.retrieved_at.split('T')[0] : '2026-09-20'}</td>
-          <td style="font-family:var(--mono); font-size:0.72rem; color:var(--muted);">${(s.content_sha256||'').slice(0,14)}…</td>
-        </tr>`).join('');
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+async function init() {
+  try {
+    const r = await fetch('companies.json');
+    COMPANIES = await r.json();
+  } catch(e) { console.error(e); }
 
-      // Animate rows with anime.js
-      anime({
-        targets: '#srcBody tr',
-        opacity: [0, 1],
-        translateX: [-8, 0],
-        duration: 400,
-        delay: anime.stagger(40),
-        easing: 'easeOutCubic'
-      });
-    }
+  buildMarquee(COMPANIES);
+  renderSidebar();
+  if (COMPANIES.length) {
+    ACTIVE_ORG = COMPANIES[0].organisation_number;
+    renderDossier(COMPANIES[0]);
+  }
+  runIntroSequence();
 
-    /* ─── TAB SWITCH ─── */
-    function switchTab(name, btn) {
-      ACTIVE_TAB = name;
+  document.getElementById('searchInput').addEventListener('input', renderSidebar);
+}
 
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-      if (btn) btn.classList.add('on');
-
-      document.querySelectorAll('.tview').forEach(v => v.classList.remove('on'));
-      const target = document.getElementById(`v-${name}`);
-      if (target) target.classList.add('on');
-    }
-
-    /* ─── FILTERS ─── */
-    function setFilter(f) {
-      ACTIVE_FILTER = f;
-      document.querySelectorAll('.fchip').forEach(c => {
-        const label = c.innerText.toLowerCase().replace(/\s+/g, '');
-        const fMap = { all: 'all', hasweb: 'web', hiring: 'jobs', news: 'news', abstained: 'abstained' };
-        c.classList.toggle('on', fMap[label] === f || (f === 'all' && label === 'all'));
-      });
-      renderSidebar();
-    }
-
-    /* ─── EXPORTS ─── */
-    function exportJSON() {
-      const a = Object.assign(document.createElement('a'), {
-        href: 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(COMPANIES, null, 2)),
-        download: 'signalpost_v8.json'
-      });
-      a.click();
-    }
-
-    function exportCSV() {
-      const rows = COMPANIES.map(c => [
-        c.organisation_number, `"${c.name}"`,
-        c.website||'', (c.jobs||[]).length, (c.activities||[]).length
-      ].join(','));
-      const a = Object.assign(document.createElement('a'), {
-        href: 'data:text/csv;charset=utf-8,' + encodeURIComponent(['org,name,website,jobs,activities',...rows].join('\n')),
-        download: 'signalpost_v8.csv'
-      });
-      a.click();
-    }
-
-    /* ══════════════════════════════════
-       INIT
-    ══════════════════════════════════ */
-    async function init() {
-      // 1. Start ambient Vanta
-      initVanta();
-
-      // 2. Load data
-      try {
-        const r = await fetch('companies.json');
-        COMPANIES = await r.json();
-      } catch (e) {
-        console.error('Failed to load companies.json', e);
-      }
-
-      // 3. Render sidebar
-      renderSidebar();
-
-      // 4. Select first company
-      if (COMPANIES.length > 0) {
-        ACTIVE_ORG = COMPANIES[0].organisation_number;
-        renderDossier(COMPANIES[0]);
-      }
-
-      // 5. GSAP intro
-      runIntroAnimation();
-
-      // 6. Search handler
-      document.getElementById('searchInput').addEventListener('input', renderSidebar);
-
-      // 7. Cursor glow (Three.js)
-      initCursorThree();
-    }
-
-    /* ══════════════════════════════════
-       THREE.js — Cursor Glow Orb
-    ══════════════════════════════════ */
-    function initCursorThree() {
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.domElement.style.cssText = 'position:fixed;top:0;left:0;z-index:2;pointer-events:none;';
-      document.body.appendChild(renderer.domElement);
-
-      const scene  = new THREE.Scene();
-      const camera = new THREE.OrthographicCamera(
-        -window.innerWidth / 2, window.innerWidth / 2,
-        window.innerHeight / 2, -window.innerHeight / 2,
-        0.1, 1000
-      );
-      camera.position.z = 10;
-
-      // Glowing sprite
-      const canvas2 = document.createElement('canvas');
-      canvas2.width = canvas2.height = 256;
-      const ctx = canvas2.getContext('2d');
-      const grad = ctx.createRadialGradient(128,128,0, 128,128,128);
-      grad.addColorStop(0,   'rgba(0,212,255,0.18)');
-      grad.addColorStop(0.4, 'rgba(59,130,246,0.06)');
-      grad.addColorStop(1,   'rgba(0,0,0,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0,0,256,256);
-
-      const tex = new THREE.CanvasTexture(canvas2);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
-      const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(500,500,1);
-      sprite.position.set(-9999,-9999,0);
-      scene.add(sprite);
-
-      let mx = -9999, my = -9999;
-      window.addEventListener('mousemove', e => {
-        mx = e.clientX - window.innerWidth  / 2;
-        my = window.innerHeight / 2 - e.clientY;
-      });
-
-      window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.left   = -window.innerWidth  / 2;
-        camera.right  =  window.innerWidth  / 2;
-        camera.top    =  window.innerHeight / 2;
-        camera.bottom = -window.innerHeight / 2;
-        camera.updateProjectionMatrix();
-      });
-
-      let cx = mx, cy = my;
-      (function loop() {
-        requestAnimationFrame(loop);
-        cx += (mx - cx) * 0.1;
-        cy += (my - cy) * 0.1;
-        sprite.position.set(cx, cy, 0);
-        renderer.render(scene, camera);
-      })();
-    }
-
-    window.addEventListener('DOMContentLoaded', init);
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

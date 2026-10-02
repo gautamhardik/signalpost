@@ -1,0 +1,70 @@
+{
+  "run_id": "v8_final",
+  "started_at": "2026-10-02T20:11:15.428269Z",
+  "completed_at": "2026-10-02T20:19:47.823805Z",
+  "expected_count": 100,
+  "emitted_envelopes": 100,
+  "resumed_profiles": 0,
+  "profiles_fetched_this_run": 100,
+  "modules": [
+    "registry",
+    "accounting_obligation",
+    "registry_live",
+    "financials",
+    "roles",
+    "group",
+    "locations",
+    "website",
+    "external_footprint"
+  ],
+  "registry": {
+    "identity_store": "hybrid",
+    "primary_resolved": 100,
+    "requested": 100,
+    "selected": 100
+  },
+  "discovery_funnel": {
+    "generated": 470,
+    "fetched": 171,
+    "plausible": 14,
+    "verified": 12,
+    "rejected": 458,
+    "rejection_reasons": {
+      "wrong_orgnr": 0,
+      "wrong_domain": 0,
+      "parent_entity": 0,
+      "subsidiary_entity": 0,
+      "parked_domain": 0,
+      "generic_aggregator": 0,
+      "unrelated_company": 2,
+      "no_identity_evidence": 31,
+      "blocked": 98,
+      "dead_domain": 28,
+      "invalid_url": 0,
+      "unfetched_capped": 237,
+      "unfetched_early_terminated": 62,
+      "prefilter_blocked": 0
+    },
+    "requests": 305,
+    "bytes": 16011956,
+    "verified_yield": 0.07,
+    "candidate_efficiency": 0.039
+  },
+  "operations": {
+    "requests": 1090,
+    "bytes": 34305502,
+    "p50_ms": 889,
+    "p95_ms": 2656
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "exact_expected_count": true,
+      "unique_organisation_numbers": true,
+      "all_entity_states_terminal": true,
+      "all_module_states_terminal": true,
+      "zero_silent_drops": true
+    },
+    "invalid_states": []
+  }
+}
