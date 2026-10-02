@@ -1,1128 +1,621 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIGNALPOST — Norwegian Entity Intelligence</title>
+  <title>SIGNALPOST — Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-  <!-- GSAP ecosystem -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js"></script>
-  <!-- Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <!-- Anime.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-  <!-- D3 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: '#b8ff5b',
+            bg: '#0a0a0a',
+            panel: '#121212',
+            borderline: '#262626',
+            muted: '#737373',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar for premium feel */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    
+    body { background-color: #0a0a0a; color: #ededed; }
 
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --black: #060608;
-  --white: #f5f4f0;
-  --accent: #b8ff5b;
-  --accent2: #ff5b5b;
-  --muted: rgba(245,244,240,0.35);
-  --border: rgba(245,244,240,0.1);
-  --font-display: 'Syne', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --font-body: 'Inter', sans-serif;
-  cursor: none;
-}
-
-html { overflow-x: hidden; background: var(--black); }
-body { background: var(--black); color: var(--white); font-family: var(--font-body); overflow-x: hidden; cursor: none; }
-
-/* ── CUSTOM CURSOR ── */
-#cursor {
-  position: fixed; z-index: 9999; pointer-events: none;
-  width: 12px; height: 12px; border-radius: 50%;
-  background: var(--accent); mix-blend-mode: difference;
-  transform: translate(-50%, -50%);
-  transition: width .25s, height .25s, opacity .25s;
-}
-#cursor-ring {
-  position: fixed; z-index: 9998; pointer-events: none;
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 1px solid rgba(184,255,91,0.5);
-  transform: translate(-50%, -50%);
-  transition: width .5s cubic-bezier(.16,1,.3,1), height .5s cubic-bezier(.16,1,.3,1), border-color .3s;
-}
-body:has(a:hover) #cursor, body:has(button:hover) #cursor,
-body:has(.ecard:hover) #cursor { width: 60px; height: 60px; }
-body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring,
-body:has(.ecard:hover) #cursor-ring { width: 80px; height: 80px; border-color: var(--accent); }
-
-/* ── THREE.JS CANVAS ── */
-#canvas-bg {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-}
-
-/* ── NOISE OVERLAY ── */
-.noise {
-  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ── NAV ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 2rem 3rem; mix-blend-mode: difference;
-}
-.nav-brand {
-  font-family: var(--font-display); font-size: .9rem; font-weight: 700;
-  letter-spacing: .2em; text-transform: uppercase; color: var(--white);
-}
-.nav-signal {
-  display: flex; align-items: center; gap: .5rem;
-  font-family: var(--font-mono); font-size: .72rem; color: var(--muted);
-}
-.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.5s infinite; }
-@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.2 } }
-
-/* ── HERO SECTION ── */
-#hero {
-  position: relative; z-index: 10; min-height: 100vh;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 0 3rem 6rem;
-  overflow: hidden;
-}
-
-.hero-eyebrow {
-  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .2em;
-  text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem;
-  display: flex; align-items: center; gap: 1rem;
-}
-.hero-eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--accent); }
-
-.hero-title {
-  font-family: var(--font-display); font-size: clamp(4.5rem, 10vw, 11rem);
-  font-weight: 800; line-height: .92; letter-spacing: -.04em;
-  color: var(--white); overflow: hidden; margin-bottom: 3rem;
-}
-.hero-title .line { display: block; overflow: hidden; }
-.hero-title .word { display: inline-block; }
-
-.hero-bottom {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  border-top: 1px solid var(--border); padding-top: 2rem;
-}
-.hero-stat { display: flex; flex-direction: column; gap: .25rem; }
-.hero-stat-num {
-  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: 800; color: var(--accent); line-height: 1;
-}
-.hero-stat-label { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
-
-.hero-desc {
-  max-width: 380px; font-size: .95rem; color: var(--muted); line-height: 1.7;
-}
-
-.scroll-hint {
-  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
-  display: flex; flex-direction: column; align-items: center; gap: .5rem;
-  letter-spacing: .15em; text-transform: uppercase;
-}
-.scroll-line { width: 1px; height: 80px; background: linear-gradient(to bottom, var(--accent), transparent); animation: scrollLine 2s ease-in-out infinite; }
-@keyframes scrollLine { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 50.001% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
-
-/* ── MARQUEE ── */
-.marquee-section {
-  position: relative; z-index: 10; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  overflow: hidden; padding: 1.25rem 0; background: transparent;
-}
-.marquee-track { display: flex; gap: 4rem; white-space: nowrap; animation: marqueeScroll 25s linear infinite; }
-.marquee-track:hover { animation-play-state: paused; }
-.marquee-item {
-  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
-  display: flex; align-items: center; gap: 2rem;
-}
-.marquee-item span { color: var(--accent); }
-@keyframes marqueeScroll { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-
-/* ── MAIN APP LAYOUT ── */
-#app {
-  position: relative; z-index: 10;
-  display: grid; grid-template-columns: 420px 1fr;
-  height: 100vh; border-top: 1px solid var(--border);
-}
-
-/* ── SIDEBAR ── */
-#sidebar {
-  background: rgba(6,6,8,.92); backdrop-filter: blur(30px);
-  border-right: 1px solid var(--border); display: flex; flex-direction: column;
-  height: 100vh; position: sticky; top: 0;
-}
-
-.sidebar-header {
-  padding: 1.5rem 2rem 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.search-bar {
-  position: relative; margin-bottom: 1rem;
-}
-.search-bar input {
-  width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  border-radius: 2px; padding: .75rem 1rem .75rem 2.5rem;
-  font-family: var(--font-mono); font-size: .82rem; color: var(--white); outline: none;
-  transition: all .3s;
-}
-.search-bar input:focus { border-color: var(--accent); background: rgba(184,255,91,.04); }
-.search-bar input::placeholder { color: var(--muted); }
-.search-icon {
-  position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
-  width: 16px; height: 16px; color: var(--muted);
-}
-
-.filter-pills { display: flex; gap: .4rem; flex-wrap: wrap; }
-.fpill {
-  font-family: var(--font-mono); font-size: .68rem; padding: .3rem .65rem;
-  border: 1px solid var(--border); border-radius: 1px; color: var(--muted);
-  cursor: none; transition: all .2s; text-transform: uppercase; letter-spacing: .05em;
-}
-.fpill:hover { color: var(--white); border-color: rgba(255,255,255,.3); }
-.fpill.on { color: var(--accent); border-color: var(--accent); background: rgba(184,255,91,.08); }
-
-.sidebar-stats {
-  padding: .6rem 2rem; border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
-  display: flex; justify-content: space-between;
-}
-.sidebar-stats strong { color: var(--accent); }
-
-#entityFeed {
-  flex: 1; overflow-y: auto; padding: .75rem;
-  scrollbar-width: thin; scrollbar-color: rgba(184,255,91,.15) transparent;
-}
-#entityFeed::-webkit-scrollbar { width: 3px; }
-#entityFeed::-webkit-scrollbar-thumb { background: rgba(184,255,91,.2); }
-
-/* ── ENTITY CARD ── */
-.ecard {
-  padding: 1rem 1.25rem; border: 1px solid transparent;
-  margin-bottom: .35rem; cursor: none; position: relative; overflow: hidden;
-  transition: border-color .25s, background .25s, transform .25s;
-}
-.ecard::after {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
-  background: var(--accent); transform: scaleY(0); transform-origin: bottom;
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-}
-.ecard:hover { background: rgba(184,255,91,.04); border-color: rgba(184,255,91,.2); transform: translateX(4px); }
-.ecard:hover::after { transform: scaleY(1); }
-.ecard.active { background: rgba(184,255,91,.07); border-color: rgba(184,255,91,.35); transform: translateX(4px); }
-.ecard.active::after { transform: scaleY(1); }
-
-.ecard-name { font-family: var(--font-display); font-size: .92rem; font-weight: 700; margin-bottom: .2rem; line-height: 1.2; }
-.ecard-orgnr { font-family: var(--font-mono); font-size: .68rem; color: var(--accent); margin-bottom: .4rem; }
-.ecard-meta { font-size: .75rem; color: var(--muted); margin-bottom: .5rem; }
-.ecard-tags { display: flex; gap: .3rem; flex-wrap: wrap; }
-.etag {
-  font-family: var(--font-mono); font-size: .62rem; padding: .1rem .45rem;
-  border: 1px solid; text-transform: uppercase; letter-spacing: .04em;
-}
-.t-web  { color: #b8ff5b; border-color: rgba(184,255,91,.35); }
-.t-jobs { color: #5bf5ff; border-color: rgba(91,245,255,.35); }
-.t-news { color: #ffb85b; border-color: rgba(255,184,91,.35); }
-.t-no   { color: var(--muted); border-color: var(--border); }
-
-.sidebar-foot { border-top: 1px solid var(--border); padding: .75rem; display: flex; gap: .5rem; }
-.foot-btn {
-  flex: 1; background: transparent; border: 1px solid var(--border); padding: .55rem;
-  font-family: var(--font-mono); font-size: .7rem; color: var(--muted); cursor: none;
-  transition: all .2s; text-transform: uppercase; letter-spacing: .08em;
-}
-.foot-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── DOSSIER (RIGHT PANEL) ── */
-#dossier {
-  overflow-y: auto; height: 100vh;
-  scrollbar-width: thin; scrollbar-color: rgba(184,255,91,.1) transparent;
-}
-#dossier::-webkit-scrollbar { width: 3px; }
-#dossier::-webkit-scrollbar-thumb { background: rgba(184,255,91,.15); }
-
-/* ── DOSSIER HERO ── */
-.dos-hero {
-  position: relative; padding: 4rem 3.5rem 3rem; border-bottom: 1px solid var(--border);
-  overflow: hidden; min-height: 340px; display: flex; flex-direction: column; justify-content: flex-end;
-}
-/* animated background mesh for dossier */
-.dos-canvas-wrap { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.dos-hero > *:not(.dos-canvas-wrap) { position: relative; z-index: 1; }
-
-.dos-kicker {
-  font-family: var(--font-mono); font-size: .68rem; color: var(--accent);
-  letter-spacing: .2em; text-transform: uppercase; margin-bottom: 1rem;
-  display: flex; align-items: center; gap: .75rem;
-}
-
-.dos-name {
-  font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 4.5rem);
-  font-weight: 800; line-height: .95; letter-spacing: -.03em;
-  color: var(--white); margin-bottom: 1.5rem;
-}
-
-.dos-meta-row {
-  display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;
-  font-family: var(--font-mono); font-size: .78rem; color: var(--muted);
-}
-.dos-meta-row strong { color: var(--white); }
-
-.web-pill {
-  display: inline-flex; align-items: center; gap: .5rem;
-  font-family: var(--font-mono); font-size: .78rem; padding: .5rem 1.25rem;
-  border: 1px solid; text-decoration: none; transition: all .3s; cursor: none;
-}
-.wp-on  { color: var(--accent); border-color: var(--accent); }
-.wp-on:hover  { background: var(--accent); color: var(--black); }
-.wp-off { color: var(--muted); border-color: var(--border); }
-
-/* ── METRIC STRIP ── */
-.metrics-strip {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  border-bottom: 1px solid var(--border);
-}
-.metric-box {
-  padding: 1.75rem 2rem; border-right: 1px solid var(--border);
-  position: relative; overflow: hidden; transition: background .3s;
-}
-.metric-box:last-child { border-right: none; }
-.metric-box:hover { background: rgba(184,255,91,.04); }
-.metric-box::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-  background: var(--accent); transform: scaleX(0); transform-origin: left;
-  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
-}
-.metric-box:hover::after { transform: scaleX(1); }
-.metric-label { font-family: var(--font-mono); font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
-.metric-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--white); }
-
-/* ── D3 CHART STRIP ── */
-.chart-strip { padding: 2rem 3rem; border-bottom: 1px solid var(--border); }
-.strip-label {
-  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .15em; margin-bottom: 1.25rem;
-  display: flex; align-items: center; gap: 1rem;
-}
-.strip-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-#chart-svg { overflow: visible; }
-
-/* ── TABS ── */
-.tab-bar {
-  display: flex; border-bottom: 1px solid var(--border);
-  padding: 0 3rem; gap: 0; position: sticky; top: 0; z-index: 50;
-  background: rgba(6,6,8,.95); backdrop-filter: blur(20px);
-}
-.tab-btn {
-  font-family: var(--font-mono); font-size: .75rem; text-transform: uppercase;
-  letter-spacing: .1em; padding: 1.25rem 1.5rem; background: none; border: none;
-  color: var(--muted); cursor: none; transition: color .2s; position: relative;
-  display: flex; align-items: center; gap: .5rem;
-}
-.tab-btn::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: var(--accent); transform: scaleX(0); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-}
-.tab-btn:hover { color: var(--white); }
-.tab-btn.on { color: var(--accent); }
-.tab-btn.on::after { transform: scaleX(1); }
-.tab-count {
-  font-size: .6rem; padding: .1rem .4rem; border: 1px solid var(--border); color: var(--muted);
-}
-.tab-btn.on .tab-count { border-color: rgba(184,255,91,.4); color: var(--accent); }
-
-/* ── TAB VIEWS ── */
-.tview { display: none; padding: 2.5rem 3rem 5rem; }
-.tview.on {
-  display: block;
-  animation: viewFadeUp .4s cubic-bezier(.16,1,.3,1) both;
-}
-@keyframes viewFadeUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
-
-/* ── OVERVIEW ── */
-.intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin-bottom: 1px; }
-.intel-cell {
-  background: var(--black); padding: 2rem 2.25rem; transition: background .3s;
-}
-.intel-cell:hover { background: rgba(184,255,91,.04); }
-.intel-cell-head {
-  display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem;
-}
-.ic-icon { font-size: 1.3rem; }
-.ic-label {
-  font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--muted);
-}
-.intel-items { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
-.intel-item { display: flex; gap: .75rem; align-items: flex-start; }
-.intel-item-bullet { color: var(--accent); font-size: .7rem; margin-top: .3rem; flex-shrink: 0; }
-.intel-item-text { font-size: .88rem; color: rgba(245,244,240,.7); line-height: 1.6; }
-
-/* ── STREAM ITEMS ── */
-.stream-item {
-  border-bottom: 1px solid var(--border); padding: 2rem 0;
-  transition: all .3s; position: relative;
-}
-.stream-item::before {
-  content: ''; position: absolute; left: -3rem; top: 0; bottom: 0; width: 3rem;
-  background: linear-gradient(to right, transparent, rgba(184,255,91,.03));
-  opacity: 0; transition: opacity .3s;
-}
-.stream-item:hover::before { opacity: 1; }
-.stream-item:hover { transform: translateX(6px); }
-.si-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .75rem; }
-.si-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
-.si-badge {
-  font-family: var(--font-mono); font-size: .65rem; padding: .2rem .6rem;
-  border: 1px solid; text-transform: uppercase; white-space: nowrap;
-}
-.si-badge-jobs { color: #5bf5ff; border-color: rgba(91,245,255,.35); }
-.si-badge-news { color: #ffb85b; border-color: rgba(255,184,91,.35); }
-.si-badge-chg-add { color: var(--accent); border-color: rgba(184,255,91,.35); }
-.si-badge-chg-rem { color: var(--accent2); border-color: rgba(255,91,91,.35); }
-.si-badge-chg-mod { color: #ffb85b; border-color: rgba(255,184,91,.35); }
-.si-meta { display: flex; gap: 2rem; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); margin-bottom: .75rem; }
-.si-meta strong { color: var(--white); }
-.si-body { font-size: .88rem; color: rgba(245,244,240,.6); line-height: 1.7; margin-bottom: 1rem; }
-.si-link {
-  display: inline-flex; align-items: center; gap: .4rem;
-  font-family: var(--font-mono); font-size: .72rem; color: var(--accent); text-decoration: none;
-  border-bottom: 1px solid rgba(184,255,91,.3); padding-bottom: 1px; transition: all .2s;
-}
-.si-link:hover { border-color: var(--accent); }
-
-/* ── SOURCE TABLE ── */
-.src-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-.src-table th {
-  font-family: var(--font-mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .1em;
-  color: var(--muted); padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); text-align: left; font-weight: 500;
-}
-.src-table td { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(245,244,240,.04); color: rgba(245,244,240,.65); vertical-align: middle; }
-.src-table tr:hover td { background: rgba(184,255,91,.03); }
-.src-table tr:last-child td { border-bottom: none; }
-
-/* ── EMPTY STATE ── */
-.empty-state { padding: 5rem 2rem; text-align: center; }
-.empty-state h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; color: var(--muted); }
-.empty-state p { font-family: var(--font-mono); font-size: .8rem; color: rgba(245,244,240,.3); }
-
-/* ── LOADING SCREEN ── */
-#loader {
-  position: fixed; inset: 0; z-index: 9000; background: var(--black);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3rem;
-}
-.loader-brand {
-  font-family: var(--font-display); font-size: clamp(3rem, 8vw, 7rem);
-  font-weight: 800; letter-spacing: -.04em; color: var(--white); text-align: center;
-  overflow: hidden;
-}
-.loader-num {
-  font-family: var(--font-mono); font-size: 1rem; color: var(--accent); letter-spacing: .1em;
-}
-.loader-bar { width: 200px; height: 1px; background: rgba(255,255,255,.1); position: relative; }
-.loader-bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .05s; }
-</style>
+    /* Subtle grid background for the center panel */
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+  </style>
 </head>
-<body>
+<body class="h-screen flex flex-col overflow-hidden text-sm antialiased">
 
-<!-- CUSTOM CURSOR -->
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-
-<!-- NOISE -->
-<div class="noise"></div>
-
-<!-- THREE.JS CANVAS -->
-<canvas id="canvas-bg"></canvas>
-
-<!-- LOADER -->
-<div id="loader">
-  <div class="loader-brand" id="loaderBrand">SIGNALPOST</div>
-  <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
-  <div class="loader-num" id="loaderNum">0%</div>
-</div>
-
-<!-- HERO SECTION (visible before you scroll to app) -->
-<section id="hero">
-  <nav>
-    <div class="nav-brand">SIGNALPOST</div>
-    <div class="nav-signal">
-      <div class="nav-dot"></div>
-      <span>LIVE · V8 VERIFIED</span>
+  <!-- TOP NAV -->
+  <nav class="h-16 border-b border-borderline bg-panel flex items-center justify-between px-6 shrink-0 z-20">
+    <div class="flex items-center gap-8 flex-1">
+      <div class="font-bold tracking-widest flex items-center gap-2 text-white">
+        <div class="w-2 h-2 rounded-full bg-brand shadow-[0_0_8px_#b8ff5b]"></div>
+        SIGNALPOST
+      </div>
+      <div class="relative w-full max-w-md">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input type="text" id="searchInput" placeholder="Search companies, organisation numbers..." 
+               class="w-full bg-bg border border-borderline rounded-md py-1.5 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors">
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="font-mono text-[10px] text-muted tracking-wider" id="navMeta">LOADING WORKSPACE...</div>
+      <div class="flex items-center gap-2">
+        <button id="compareBtn" class="px-3 py-1.5 rounded bg-bg border border-borderline hover:border-gray-500 hover:text-white transition-colors" onclick="toggleCompareMode()">Compare</button>
+        <button class="px-3 py-1.5 rounded bg-bg border border-borderline hover:border-gray-500 hover:text-white transition-colors" onclick="exportData()">Export ⬇</button>
+      </div>
     </div>
   </nav>
 
-  <div class="hero-eyebrow">Norwegian Corporate Intelligence Engine</div>
+  <!-- WORKSPACE -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- LEFT: EXPLORER -->
+    <aside class="w-[320px] flex flex-col border-r border-borderline bg-panel shrink-0 z-10">
+      <div class="p-4 border-b border-borderline">
+        <div class="text-[10px] font-mono text-muted uppercase tracking-widest mb-3">Filters</div>
+        <div class="flex flex-col gap-1">
+          <button class="filter-btn active flex justify-between items-center px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors text-brand bg-brand/10" onclick="setFilter('all', this)">
+            <span class="font-medium text-xs">ALL</span> <span class="font-mono text-[10px]" id="f-all">0</span>
+          </button>
+          <button class="filter-btn flex justify-between items-center px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors text-muted" onclick="setFilter('web', this)">
+            <span class="font-medium text-xs text-gray-300">WEBSITE</span> <span class="font-mono text-[10px]" id="f-web">0</span>
+          </button>
+          <button class="filter-btn flex justify-between items-center px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors text-muted" onclick="setFilter('news', this)">
+            <span class="font-medium text-xs text-gray-300">NEWS</span> <span class="font-mono text-[10px]" id="f-news">0</span>
+          </button>
+          <button class="filter-btn flex justify-between items-center px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors text-muted" onclick="setFilter('jobs', this)">
+            <span class="font-medium text-xs text-gray-300">HIRING</span> <span class="font-mono text-[10px]" id="f-jobs">0</span>
+          </button>
+          <button class="filter-btn flex justify-between items-center px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors text-muted" onclick="setFilter('none', this)">
+            <span class="font-medium text-xs text-gray-300">ABSTAINED</span> <span class="font-mono text-[10px]" id="f-none">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto" id="companyList">
+        <!-- Rendered via JS -->
+      </div>
+    </aside>
 
-  <div class="hero-title">
-    <span class="line"><span class="word">EVERY</span></span>
-    <span class="line"><span class="word">SIGNAL.</span></span>
-    <span class="line"><span class="word">VERIFIED.</span></span>
+    <!-- CENTER: INTELLIGENCE -->
+    <main class="flex-1 overflow-y-auto bg-bg bg-grid relative" id="intelPanel">
+      <div class="absolute inset-0 flex items-center justify-center text-muted italic">
+        Select a company from the explorer to view intelligence.
+      </div>
+    </main>
+
+    <!-- RIGHT: INSPECTOR -->
+    <aside id="evidencePanel" class="w-[380px] flex flex-col border-l border-borderline bg-panel shrink-0 z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
+      <div class="p-4 border-b border-borderline text-[11px] font-mono tracking-widest text-muted uppercase flex items-center gap-2">
+        <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Evidence Inspector
+      </div>
+      <div class="flex-1 overflow-y-auto p-6" id="inspectorBody">
+        <div class="flex flex-col items-center justify-center h-full text-center opacity-50">
+          <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+          <p class="text-sm">Select an evidence item<br>to inspect claims.</p>
+        </div>
+      </div>
+    </aside>
+
   </div>
 
-  <div class="hero-bottom">
-    <div class="hero-stat">
-      <div class="hero-stat-num" id="statCompanies">0</div>
-      <div class="hero-stat-label">Entities Audited</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num" id="statNews">0</div>
-      <div class="hero-stat-label">Dated News Signals</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num" id="statJobs">0</div>
-      <div class="hero-stat-label">Hiring Observations</div>
-    </div>
-    <div class="hero-desc">
-      Autonomous intelligence surface for 100 Norwegian companies.
-      Every observation source-tagged, timestamped, and provenance-verified.
-    </div>
-    <div class="scroll-hint">
-      <span>Explore</span>
-      <div class="scroll-line"></div>
-    </div>
-  </div>
-</section>
+  <script>
+    let COMPARE_MODE = false;
+    let COMPARE_LIST = [];
+    let COMPANIES = [];
+    let ACTIVE_FILTER = 'all';
+    let ACTIVE_COMPANY = null;
+    let TOTAL_EVIDENCE = 0;
 
-<!-- MARQUEE -->
-<div class="marquee-section">
-  <div class="marquee-track" id="marqueeTrack"></div>
-</div>
+    async function initApp() {
+      try {
+        const res = await fetch('companies.json');
+        COMPANIES = await res.json();
+        
+        TOTAL_EVIDENCE = COMPANIES.reduce((acc, c) => {
+          let count = 0;
+          if (c.website) count++;
+          if (c.jobs) count += c.jobs.length;
+          if (c.activities) count += c.activities.length;
+          if (c.changes) count += c.changes.length;
+          return acc + count;
+        }, 0);
 
-<!-- MAIN APP -->
-<div id="app">
-  <!-- SIDEBAR -->
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <div class="search-bar">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input id="searchInput" type="text" placeholder="Entity / org no / municipality..." autocomplete="off">
-      </div>
-      <div class="filter-pills">
-        <div class="fpill on" onclick="setFilter('all')">All</div>
-        <div class="fpill"    onclick="setFilter('web')">Web</div>
-        <div class="fpill"    onclick="setFilter('jobs')">Hiring</div>
-        <div class="fpill"    onclick="setFilter('news')">News</div>
-        <div class="fpill"    onclick="setFilter('abstained')">No Web</div>
-      </div>
-    </div>
-    <div class="sidebar-stats">
-      <span id="statsLabel"><strong>100</strong> entities</span>
-      <span>BENCHMARK-100</span>
-    </div>
-    <div id="entityFeed"></div>
-    <div class="sidebar-foot">
-      <button class="foot-btn" onclick="exportCSV()">↓ CSV</button>
-      <button class="foot-btn" onclick="exportJSON()">↓ JSON</button>
-    </div>
-  </aside>
-
-  <!-- DOSSIER -->
-  <main id="dossier">
-    <!-- HERO -->
-    <div class="dos-hero">
-      <canvas class="dos-canvas-wrap" id="dosCanvas"></canvas>
-      <div class="dos-kicker">
-        <span id="dosOrgnr">—</span>
-        <span id="dosForm">—</span>
-        <span id="dosCohort">—</span>
-      </div>
-      <div class="dos-name" id="dosName">Select an entity</div>
-      <div class="dos-meta-row">
-        <span><strong id="dosMuni">—</strong> MUNICIPALITY</span>
-        <span><strong id="dosEmp">—</strong> EMPLOYEES</span>
-        <span><strong id="dosInd">—</strong> NACE CODE</span>
-      </div>
-      <div id="dosWebBtn"></div>
-    </div>
-
-    <!-- METRICS -->
-    <div class="metrics-strip">
-      <div class="metric-box">
-        <div class="metric-label">Headcount</div>
-        <div class="metric-val" id="mEmp">—</div>
-      </div>
-      <div class="metric-box">
-        <div class="metric-label">CEO</div>
-        <div class="metric-val" id="mCeo" style="font-size:1rem; padding-top:.3rem; line-height:1.4">—</div>
-      </div>
-      <div class="metric-box">
-        <div class="metric-label">Board Chair</div>
-        <div class="metric-val" id="mChair" style="font-size:1rem; padding-top:.3rem; line-height:1.4">—</div>
-      </div>
-      <div class="metric-box">
-        <div class="metric-label">Sources</div>
-        <div class="metric-val" id="mSrc">0</div>
-      </div>
-    </div>
-
-    <!-- SIGNAL CHART -->
-    <div class="chart-strip">
-      <div class="strip-label">Signal Fingerprint</div>
-      <div id="chart-svg"></div>
-    </div>
-
-    <!-- TABS -->
-    <div class="tab-bar">
-      <button class="tab-btn on" onclick="switchTab('overview',this)">Overview</button>
-      <button class="tab-btn" onclick="switchTab('jobs',this)">Careers <span class="tab-count" id="tc-jobs">0</span></button>
-      <button class="tab-btn" onclick="switchTab('activity',this)">Activity <span class="tab-count" id="tc-act">0</span></button>
-      <button class="tab-btn" onclick="switchTab('changes',this)">Deltas <span class="tab-count" id="tc-chg">0</span></button>
-      <button class="tab-btn" onclick="switchTab('sources',this)">Provenance <span class="tab-count" id="tc-src">0</span></button>
-    </div>
-
-    <div id="v-overview" class="tview on"><div class="intel-grid" id="overviewGrid"></div></div>
-    <div id="v-jobs"     class="tview"><div id="jobsStream"></div></div>
-    <div id="v-activity" class="tview"><div id="actStream"></div></div>
-    <div id="v-changes"  class="tview"><div id="chgStream"></div></div>
-    <div id="v-sources"  class="tview"><table class="src-table"><thead><tr><th>Type</th><th>Description</th><th>URL</th><th>Date</th><th>Hash</th></tr></thead><tbody id="srcBody"></tbody></table></div>
-  </main>
-</div>
-
-<script>
-/* ═══════════════════════════════════════
-   THREE.JS — Plasma / Fluid Background
-═══════════════════════════════════════ */
-(function() {
-  const canvas = document.getElementById('canvas-bg');
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-
-  const scene  = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, .1, 100);
-  camera.position.z = 3;
-
-  // Shader material for animated plasma
-  const vertSrc = `
-    varying vec2 vUv;
-    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }
-  `;
-  const fragSrc = `
-    uniform float uTime;
-    uniform vec2  uResolution;
-    uniform vec2  uMouse;
-    varying vec2  vUv;
-
-    float noise(vec2 p) {
-      return sin(p.x*6.28 + uTime*.6) * sin(p.y*6.28 + uTime*.4) * .5 + .5;
+        document.getElementById('navMeta').innerText = `${COMPANIES.length} COMPANIES · ${TOTAL_EVIDENCE} EVIDENCE · RUN: SUBMISSION-001`;
+        
+        updateFilters();
+        renderExplorer();
+      } catch(e) {
+        console.error(e);
+        document.getElementById('companyList').innerHTML = '<div class="p-4 text-red-400">Failed to load data. Is server running?</div>';
+      }
     }
 
-    void main() {
-      vec2 uv  = vUv;
-      vec2 m   = uMouse / uResolution;
-      float d  = length(uv - m);
-      float n  = noise(uv * 3. + uTime * .2);
-      float n2 = noise(uv * 5. - uTime * .15);
-      float c  = n * n2 * .4;
-      c += smoothstep(.35, 0., d) * .12;
-
-      // Lime accent color
-      vec3 col = mix(
-        vec3(0.023, 0.023, 0.031),
-        vec3(0.72,  1.0,   0.357),
-        c * .25
-      );
-      gl_FragColor = vec4(col, c * .6);
+    function updateFilters() {
+      document.getElementById('f-all').innerText = COMPANIES.length;
+      document.getElementById('f-web').innerText = COMPANIES.filter(c => c.website).length;
+      document.getElementById('f-news').innerText = COMPANIES.filter(c => c.activities && c.activities.length).length;
+      document.getElementById('f-jobs').innerText = COMPANIES.filter(c => c.jobs && c.jobs.length).length;
+      document.getElementById('f-none').innerText = COMPANIES.filter(c => !c.website && (!c.activities || !c.activities.length) && (!c.jobs || !c.jobs.length)).length;
     }
-  `;
 
-  const geo = new THREE.PlaneGeometry(10, 10);
-  const mat = new THREE.ShaderMaterial({
-    vertexShader: vertSrc, fragmentShader: fragSrc,
-    transparent: true,
-    uniforms: {
-      uTime:       { value: 0 },
-      uResolution: { value: new THREE.Vector2(innerWidth, innerHeight) },
-      uMouse:      { value: new THREE.Vector2(innerWidth/2, innerHeight/2) },
+    function renderExplorer() {
+      const list = document.getElementById('companyList');
+      list.innerHTML = '';
+
+      const search = document.getElementById('searchInput').value.toLowerCase();
+
+      COMPANIES.forEach(c => {
+        if (search && !c.name.toLowerCase().includes(search) && !c.organisation_number.includes(search)) return;
+        if (ACTIVE_FILTER === 'web' && !c.website) return;
+        if (ACTIVE_FILTER === 'news' && (!c.activities || !c.activities.length)) return;
+        if (ACTIVE_FILTER === 'jobs' && (!c.jobs || !c.jobs.length)) return;
+        if (ACTIVE_FILTER === 'none' && (c.website || (c.activities && c.activities.length) || (c.jobs && c.jobs.length))) return;
+
+        let evCount = (c.website ? 1 : 0) + (c.jobs ? c.jobs.length : 0) + (c.activities ? c.activities.length : 0) + (c.changes ? c.changes.length : 0);
+        let isActive = COMPARE_MODE ? COMPARE_LIST.includes(c) : ACTIVE_COMPANY === c;
+
+        const div = document.createElement('div');
+        div.className = `p-4 border-b border-borderline cursor-pointer transition-colors ${isActive ? 'bg-white/5 border-l-2 border-l-brand pl-3' : 'hover:bg-white/[0.02] border-l-2 border-l-transparent'}`;
+        div.onclick = () => {
+          if (COMPARE_MODE) {
+            if (COMPARE_LIST.includes(c)) COMPARE_LIST = COMPARE_LIST.filter(x => x !== c);
+            else if (COMPARE_LIST.length < 4) COMPARE_LIST.push(c);
+            else alert('You can compare up to 4 companies at a time.');
+            renderExplorer();
+            renderComparison();
+          } else {
+            selectCompany(c);
+          }
+        };
+
+        let tags = '';
+        if (c.website) tags += `<span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>Web</span>`;
+        if (c.activities && c.activities.length) tags += `<span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>News</span>`;
+        if (c.jobs && c.jobs.length) tags += `<span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div>Hiring</span>`;
+        if (!tags) tags = '<span class="text-gray-500">No Footprint</span>';
+
+        div.innerHTML = `
+          <div class="font-semibold text-gray-100 truncate">${c.name}</div>
+          <div class="text-xs text-muted mt-1 truncate">${c.municipality || 'Unknown'}, Norway</div>
+          <div class="flex gap-3 text-[10px] font-mono mt-3 text-gray-300">${tags}</div>
+          <div class="text-[10px] text-muted mt-2">${evCount} evidence</div>
+        `;
+        list.appendChild(div);
+      });
     }
-  });
-  scene.add(new THREE.Mesh(geo, mat));
 
-  function resize() {
-    renderer.setSize(innerWidth, innerHeight);
-    camera.aspect = innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    mat.uniforms.uResolution.value.set(innerWidth, innerHeight);
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  window.addEventListener('mousemove', e => {
-    mat.uniforms.uMouse.value.set(e.clientX, innerHeight - e.clientY);
-  });
-
-  const clock = new THREE.Clock();
-  (function loop() {
-    mat.uniforms.uTime.value = clock.getElapsedTime();
-    renderer.render(scene, camera);
-    requestAnimationFrame(loop);
-  })();
-})();
-
-/* ═══════════════════════════════════════
-   DOSSIER MINI THREE.JS CANVAS
-═══════════════════════════════════════ */
-let dosRenderer, dosMat;
-(function() {
-  const c = document.getElementById('dosCanvas');
-  dosRenderer = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
-  dosRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  const scene2  = new THREE.Scene();
-  const camera2 = new THREE.PerspectiveCamera(60, 1, .1, 100);
-  camera2.position.z = 3;
-
-  const fragSrc2 = `
-    uniform float uTime; uniform float uSeed;
-    varying vec2 vUv;
-    void main() {
-      vec2 p = vUv * 4. + uSeed;
-      float n = sin(p.x + uTime*.5) * sin(p.y + uTime*.3);
-      float n2 = sin(p.x*2. - uTime*.4) * .5;
-      float c = (n + n2) * .25 + .25;
-      vec3 col = mix(vec3(.04,.04,.06), vec3(.72,1.,.35), c * .18);
-      gl_FragColor = vec4(col, .55);
+    function selectCompany(c) {
+      ACTIVE_COMPANY = c;
+      renderExplorer();
+      renderIntelligence(c);
+      clearInspector();
     }
-  `;
-  const vertSrc2 = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
-  dosMat = new THREE.ShaderMaterial({
-    vertexShader: vertSrc2, fragmentShader: fragSrc2, transparent: true,
-    uniforms: { uTime: { value: 0 }, uSeed: { value: 0 } }
-  });
-  scene2.add(new THREE.Mesh(new THREE.PlaneGeometry(10,10), dosMat));
 
-  function rszDos() {
-    const w = c.parentElement.offsetWidth, h = c.parentElement.offsetHeight || 340;
-    dosRenderer.setSize(w, h);
-    camera2.aspect = w / h; camera2.updateProjectionMatrix();
-  }
-  window.addEventListener('resize', rszDos);
-  rszDos();
+    function setFilter(f, el) {
+      ACTIVE_FILTER = f;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('text-brand', 'bg-brand/10', 'active');
+        b.classList.add('text-muted');
+        b.querySelector('span').classList.remove('text-brand');
+        b.querySelector('span').classList.add('text-gray-300');
+      });
+      el.classList.remove('text-muted');
+      el.classList.add('text-brand', 'bg-brand/10', 'active');
+      el.querySelector('span').classList.remove('text-gray-300');
+      el.querySelector('span').classList.add('text-brand');
+      renderExplorer();
+    }
 
-  const clk2 = new THREE.Clock();
-  (function loop2() {
-    dosMat.uniforms.uTime.value = clk2.getElapsedTime();
-    dosRenderer.render(scene2, camera2);
-    requestAnimationFrame(loop2);
-  })();
-})();
+    function generateExecSummary(c) {
+      let sum = `${c.name} is a Norwegian ${c.legal_form === 'AS' ? 'limited company' : 'entity'} `;
+      sum += c.industry_label ? `operating in the "${c.industry_label}" sector.` : 'with no verified industry classification.';
+      sum += `\n\nThe company is headquartered in ${c.municipality || 'Norway'}`;
+      if (c.employees) sum += ` and has ${c.employees} registered employees.`;
+      else sum += `. Scale cannot be verified via public sources.`;
+      const ceo = (c.roles || []).find(r => r.type === 'daglig_leder');
+      if (ceo) sum += ` Executive leadership includes ${ceo.name} acting as CEO.`;
+      if (c.activities && c.activities.length) {
+        sum += `\n\nRecent activity indicates active operations, including an event on ${c.activities[0].activity_date}.`;
+      }
+      if (c.jobs && c.jobs.length) {
+        sum += ` Digital footprint confirms current hiring intent with ${c.jobs.length} active position(s).`;
+      }
+      return sum;
+    }
 
-/* ═══════════════════════════════════════
-   MAGNETIC CURSOR
-═══════════════════════════════════════ */
-(function() {
-  const dot  = document.getElementById('cursor');
-  const ring = document.getElementById('cursor-ring');
-  let cx = -100, cy = -100, rx = -100, ry = -100;
-  let tx = -100, ty = -100;
+    function renderIntelligence(c) {
+      const p = document.getElementById('intelPanel');
 
-  window.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+      const hasWeb = c.website ? {v:'✓', c:'text-emerald-400'} : {v:'—', c:'text-muted'};
+      const hasReg = c.organisation_number ? {v:'✓', c:'text-emerald-400'} : {v:'—', c:'text-muted'};
+      const hasNews = (c.activities && c.activities.length) ? {v:'✓', c:'text-emerald-400'} : {v:'—', c:'text-muted'};
+      const hasJobs = (c.jobs && c.jobs.length) ? {v:'✓', c:'text-emerald-400'} : {v:'—', c:'text-muted'};
+      const hasPpl = (c.roles && c.roles.length) ? {v:'✓', c:'text-emerald-400'} : {v:'—', c:'text-muted'};
 
-  (function animCursor() {
-    cx += (tx - cx) * .25;
-    cy += (ty - cy) * .25;
-    rx += (tx - rx) * .1;
-    ry += (ty - ry) * .1;
-    dot.style.left  = cx + 'px'; dot.style.top  = cy + 'px';
-    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-    requestAnimationFrame(animCursor);
-  })();
-})();
+      const ceo = (c.roles || []).find(r => r.type === 'daglig_leder');
+      
+      let html = `
+        <div class="max-w-5xl mx-auto py-12 px-8">
+          
+          <!-- HEADER -->
+          <div class="mb-10">
+            <h1 class="text-4xl font-bold tracking-tight text-white mb-2">${c.name}</h1>
+            <div class="text-sm text-gray-400 mb-8">${c.municipality || 'Unknown'}, Norway &middot; Org No. ${c.organisation_number}</div>
+            
+            <div class="flex border border-borderline rounded-lg overflow-hidden bg-white/[0.02] backdrop-blur-sm shadow-sm font-mono text-xs">
+              <div class="flex-1 text-center py-3 border-r border-borderline"><div class="text-muted mb-1 uppercase tracking-wider text-[10px]">Website</div><div class="font-bold ${hasWeb.c}">${hasWeb.v}</div></div>
+              <div class="flex-1 text-center py-3 border-r border-borderline"><div class="text-muted mb-1 uppercase tracking-wider text-[10px]">Registry</div><div class="font-bold ${hasReg.c}">${hasReg.v}</div></div>
+              <div class="flex-1 text-center py-3 border-r border-borderline"><div class="text-muted mb-1 uppercase tracking-wider text-[10px]">News</div><div class="font-bold ${hasNews.c}">${hasNews.v}</div></div>
+              <div class="flex-1 text-center py-3 border-r border-borderline"><div class="text-muted mb-1 uppercase tracking-wider text-[10px]">Hiring</div><div class="font-bold ${hasJobs.c}">${hasJobs.v}</div></div>
+              <div class="flex-1 text-center py-3"><div class="text-muted mb-1 uppercase tracking-wider text-[10px]">People</div><div class="font-bold ${hasPpl.c}">${hasPpl.v}</div></div>
+            </div>
+          </div>
 
-/* ═══════════════════════════════════════
-   STATE
-═══════════════════════════════════════ */
-let COMPANIES = [];
-let ACTIVE_ORG = null;
-let ACTIVE_FILTER = 'all';
+          <!-- EXECUTIVE SUMMARY -->
+          <div class="mb-12">
+            <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">Executive Summary</h2>
+            <div class="text-[15px] leading-relaxed text-gray-200">${generateExecSummary(c).replace(/\n/g, '<br>')}</div>
+          </div>
 
-/* ═══════════════════════════════════════
-   ANIME.JS COUNTER
-═══════════════════════════════════════ */
-function counter(el, target, decimals) {
-  if (!el || target == null || isNaN(+target)) { if(el) el.textContent = target || '—'; return; }
-  anime({ targets: {v:0}, v: +target, round: decimals ? 0 : 1, duration: 1200, easing: 'easeOutExpo',
-    update(a) { el.textContent = Math.round(a.animations[0].currentValue).toLocaleString(); }
-  });
-}
+          <!-- AT A GLANCE -->
+          <div class="mb-12">
+            <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">At a Glance</h2>
+            <div class="grid grid-cols-4 gap-4">
+              <div class="p-4 rounded-lg bg-white/[0.02] border border-borderline">
+                <div class="text-[10px] uppercase text-muted tracking-wider mb-2">Business</div>
+                <div class="font-medium text-sm text-gray-100">${c.industry_label || 'Unknown'}</div>
+              </div>
+              <div class="p-4 rounded-lg bg-white/[0.02] border border-borderline">
+                <div class="text-[10px] uppercase text-muted tracking-wider mb-2">Scale</div>
+                <div class="font-medium text-sm text-gray-100">${c.employees ? c.employees + ' employees' : 'Not available'}</div>
+              </div>
+              <div class="p-4 rounded-lg bg-white/[0.02] border border-borderline">
+                <div class="text-[10px] uppercase text-muted tracking-wider mb-2">Leadership</div>
+                <div class="font-medium text-sm text-gray-100">${ceo ? ceo.name : 'No verified figure'}</div>
+              </div>
+              <div class="p-4 rounded-lg bg-white/[0.02] border border-borderline">
+                <div class="text-[10px] uppercase text-muted tracking-wider mb-2">Activity</div>
+                <div class="font-medium text-sm text-gray-100">${(c.activities || []).length} recent events</div>
+              </div>
+            </div>
+          </div>
 
-/* ═══════════════════════════════════════
-   D3 SIGNAL CHART
-═══════════════════════════════════════ */
-function renderChart(comp) {
-  const wrap = document.getElementById('chart-svg');
-  wrap.innerHTML = '';
-  const W = wrap.offsetWidth || 600;
-  const H = 90, ml = 10, mr = 10, mt = 10, mb = 28;
-  const data = [
-    { k: 'Jobs',    v: (comp.jobs||[]).length,       c: '#5bf5ff' },
-    { k: 'News',    v: (comp.activities||[]).length,  c: '#ffb85b' },
-    { k: 'Changes', v: (comp.changes||[]).length,     c: '#b8ff5b' },
-    { k: 'Sources', v: (comp.sources||[]).length,     c: 'rgba(245,244,240,.4)' },
-  ];
-  const maxV = Math.max(d3.max(data, d=>d.v), 1);
-  const x = d3.scaleBand().domain(data.map(d=>d.k)).range([ml, W-mr]).padding(.5);
-  const y = d3.scaleLinear().domain([0, maxV]).range([H-mb, mt]);
+          <!-- WHAT CHANGED -->
+          <div class="mb-12">
+            <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-6">What Changed</h2>
+      `;
 
-  const svg = d3.select('#chart-svg').append('svg').attr('width', W).attr('height', H);
+      window.CURRENT_EVIDENCE = [];
 
-  // Horizontal reference lines
-  [.5, 1].forEach(t => {
-    svg.append('line').attr('x1', ml).attr('x2', W-mr)
-      .attr('y1', y(maxV*t)).attr('y2', y(maxV*t))
-      .style('stroke', 'rgba(245,244,240,.06)').style('stroke-dasharray', '4,4');
-  });
+      if (c.activities && c.activities.length) {
+        html += `<div class="ml-2 border-l-2 border-borderline pl-6 space-y-8 relative">`;
+        c.activities.forEach((act, idx) => {
+          const evIdx = window.CURRENT_EVIDENCE.length;
+          window.CURRENT_EVIDENCE.push({
+            type: 'NEWS', date: act.activity_date, title: act.title, 
+            source: act.source_url, retrieved: act.retrieved_at, ext: act.description, matched: true
+          });
+          html += `
+            <div class="relative">
+              <div class="absolute -left-[31px] top-1.5 w-2.5 h-2.5 rounded-full bg-bg border-[2px] border-brand shadow-[0_0_8px_rgba(184,255,91,0.5)]"></div>
+              <div class="text-[11px] font-mono text-muted mb-1">${act.activity_date} &middot; News Event</div>
+              <div class="text-sm font-semibold text-gray-100 mb-1">${act.title}</div>
+              <div class="text-sm text-gray-400 mb-3">${act.description}</div>
+              <button class="text-[11px] font-medium text-brand hover:text-white cursor-pointer inline-flex items-center gap-1 transition-colors" onclick="inspectEvidence(${evIdx})">
+                View evidence &rarr;
+              </button>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="text-muted text-sm italic">No dated news discovered in the searched public sources.</div>`;
+      }
+      
+      // DIGITAL FOOTPRINT & HIRING side-by-side
+      html += `
+          </div>
+          
+          <div class="grid grid-cols-2 gap-12 mb-12">
+            <!-- Digital Footprint -->
+            <div>
+              <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">Digital Footprint</h2>
+      `;
+      if (c.website) {
+        const evIdx = window.CURRENT_EVIDENCE.length;
+        window.CURRENT_EVIDENCE.push({
+          type: 'WEBSITE', date: 'Current', title: 'Official Domain', source: c.website, retrieved: 'Run time', ext: 'Domain verified via structured extraction.', matched: true
+        });
+        html += `
+          <div class="bg-white/[0.02] border border-borderline rounded-lg p-5">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2">Official Website</div>
+            <div class="font-mono text-[13px] text-blue-400 mb-4 hover:underline break-all"><a href="${c.website}" target="_blank">${c.website}</a></div>
+            <div class="flex items-center gap-2 text-xs text-emerald-400 mb-4">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Company identity verified
+            </div>
+            <button class="text-[11px] font-medium text-brand hover:text-white cursor-pointer inline-flex items-center gap-1 transition-colors" onclick="inspectEvidence(${evIdx})">Inspect evidence &rarr;</button>
+          </div>
+        `;
+      } else {
+        html += `<div class="text-muted text-sm italic">No official website verified.</div>`;
+      }
+      
+      html += `
+            </div>
+            <!-- Hiring Signals -->
+            <div>
+              <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">Hiring Signals</h2>
+      `;
+      
+      if (c.jobs && c.jobs.length) {
+        html += `<div class="font-bold text-gray-100 mb-4">${c.jobs.length} VERIFIED</div><div class="space-y-4">`;
+        c.jobs.forEach((j, idx) => {
+          const evIdx = window.CURRENT_EVIDENCE.length;
+          window.CURRENT_EVIDENCE.push({
+            type: 'HIRING', date: j.posted_date, title: j.title, 
+            source: j.source_url, retrieved: 'Run time', ext: `Department: ${j.department}\nLocation: ${j.location}`, matched: j.identity_assessment?.verified
+          });
+          html += `
+            <div class="bg-white/[0.02] border border-borderline rounded-lg p-4">
+              <div class="text-[10px] font-mono text-muted mb-1">Posted ${j.posted_date}</div>
+              <div class="text-sm font-semibold text-gray-100 mb-1">${j.title}</div>
+              <div class="text-xs text-gray-400 mb-3">${j.location} &middot; ${j.department}</div>
+              <div class="flex items-center gap-1.5 text-[11px] text-emerald-400 mb-3">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Identity verified
+              </div>
+              <button class="text-[11px] font-medium text-brand hover:text-white cursor-pointer inline-flex items-center gap-1 transition-colors" onclick="inspectEvidence(${evIdx})">Inspect &rarr;</button>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else {
+        html += `
+          <div class="text-muted text-sm italic mb-2">No verified hiring signal found.</div>
+          <div class="text-[11px] text-gray-500 leading-relaxed">Official career pages checked.<br>Verified ATS sources checked.<br><br>No company-matched posting was accepted.</div>
+        `;
+      }
+      
+      html += `</div></div>`;
 
-  data.forEach((d,i) => {
-    const bx = x(d.k), bw = x.bandwidth();
+      // EVIDENCE TABLE
+      html += `
+        <div class="mb-12">
+          <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">Evidence Explorer</h2>
+          <div class="rounded-lg border border-borderline overflow-hidden bg-white/[0.02]">
+            <table class="w-full text-left text-[13px]">
+              <thead class="bg-black/20 text-[10px] font-mono uppercase text-muted">
+                <tr>
+                  <th class="py-3 px-4 font-medium border-b border-borderline">Type</th>
+                  <th class="py-3 px-4 font-medium border-b border-borderline">Date</th>
+                  <th class="py-3 px-4 font-medium border-b border-borderline">Finding</th>
+                  <th class="py-3 px-4 font-medium border-b border-borderline">Source</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-borderline">
+      `;
+      
+      if (c.website) {
+        const evIdx = window.CURRENT_EVIDENCE.findIndex(e => e.type === 'WEBSITE');
+        html += `<tr class="hover:bg-white/[0.04] cursor-pointer transition-colors" onclick="inspectEvidence(${evIdx})">
+          <td class="py-3 px-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-[10px] font-mono">WEBSITE</span></td>
+          <td class="py-3 px-4 text-gray-400">Current</td>
+          <td class="py-3 px-4 text-gray-200">Official company site</td>
+          <td class="py-3 px-4 text-muted">${new URL(c.website).hostname}</td>
+        </tr>`;
+      }
+      
+      (c.activities || []).forEach((act, idx) => {
+        const evIdx = window.CURRENT_EVIDENCE.findIndex(e => e.type === 'NEWS' && e.title === act.title);
+        html += `<tr class="hover:bg-white/[0.04] cursor-pointer transition-colors" onclick="inspectEvidence(${evIdx})">
+          <td class="py-3 px-4"><span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">NEWS</span></td>
+          <td class="py-3 px-4 text-gray-400">${act.activity_date}</td>
+          <td class="py-3 px-4 text-gray-200">${act.title}</td>
+          <td class="py-3 px-4 text-muted">${new URL(act.source_url).hostname}</td>
+        </tr>`;
+      });
+      (c.jobs || []).forEach((j, idx) => {
+        const evIdx = window.CURRENT_EVIDENCE.findIndex(e => e.type === 'HIRING' && e.title === j.title);
+        html += `<tr class="hover:bg-white/[0.04] cursor-pointer transition-colors" onclick="inspectEvidence(${evIdx})">
+          <td class="py-3 px-4"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 text-[10px] font-mono">HIRING</span></td>
+          <td class="py-3 px-4 text-gray-400">${j.posted_date}</td>
+          <td class="py-3 px-4 text-gray-200">${j.title}</td>
+          <td class="py-3 px-4 text-muted">${new URL(j.source_url).hostname}</td>
+        </tr>`;
+      });
+      
+      html += `</tbody></table></div></div>`;
 
-    // Glow background
-    svg.append('rect').attr('x', bx).attr('y', mt).attr('width', bw).attr('height', H-mb-mt)
-      .attr('rx', 2).style('fill', d.c).style('opacity', .04);
+      // GAPS
+      let gaps = [];
+      if (!c.employees) gaps.push('No verified employee count found. (NOT FOUND)');
+      if (!c.website) gaps.push('No verified official domain discovered. (NOT FOUND)');
+      if (!c.jobs || !c.jobs.length) gaps.push('No verified hiring signal found. (NOT APPLICABLE/NOT FOUND)');
+      if (!c.activities || !c.activities.length) gaps.push('No dated news discovered in the searched public sources. (NOT FOUND)');
 
-    // Animated bar
-    svg.append('rect').attr('x', bx).attr('y', H-mb).attr('width', bw).attr('height', 0)
-      .attr('rx', 2).style('fill', d.c).style('opacity', .85)
-      .transition().delay(i*80).duration(800).ease(d3.easeCubicOut)
-      .attr('y', y(d.v)).attr('height', Math.max(0, H-mb - y(d.v)));
+      if (gaps.length) {
+        html += `<div class="mb-12">
+          <h2 class="text-xs font-semibold text-muted uppercase tracking-widest border-b border-borderline pb-2 mb-4">Evidence Gaps</h2>
+          <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-5">
+            <ul class="space-y-2">
+        `;
+        gaps.forEach(g => html += `<li class="flex items-start gap-2 text-[13px] text-red-200/80"><svg class="w-4 h-4 text-red-400/60 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> ${g}</li>`);
+        html += `</ul></div></div>`;
+      }
 
-    // Value
-    svg.append('text').attr('x', bx+bw/2).attr('y', y(d.v)-6)
-      .attr('text-anchor','middle').style('fill', d.c)
-      .style('font-family', 'DM Mono, monospace').style('font-size','11px').style('font-weight','500')
-      .style('opacity', 0).text(d.v)
-      .transition().delay(i*80+500).duration(300).style('opacity',1);
+      html += `</div>`; // End max-w container
+      p.innerHTML = html;
+    }
 
-    // Label
-    svg.append('text').attr('x', bx+bw/2).attr('y', H-mb+14)
-      .attr('text-anchor','middle').style('fill','rgba(245,244,240,.4)')
-      .style('font-family','DM Mono, monospace').style('font-size','10px').text(d.k);
-  });
-}
+    function inspectEvidence(idx) {
+      const ev = window.CURRENT_EVIDENCE[idx];
+      if (!ev) return;
+      
+      // Add slight highlight to inspector column
+      const inspector = document.getElementById('evidencePanel');
+      inspector.classList.add('bg-white/[0.02]');
+      setTimeout(() => inspector.classList.remove('bg-white/[0.02]'), 300);
 
-/* ═══════════════════════════════════════
-   SIDEBAR RENDER
-═══════════════════════════════════════ */
-function renderSidebar() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const filtered = COMPANIES.filter(c => {
-    if (q && !c.name.toLowerCase().includes(q) && !c.organisation_number.includes(q)
-          && !(c.municipality||'').toLowerCase().includes(q)) return false;
-    if (ACTIVE_FILTER === 'web')       return !!c.website;
-    if (ACTIVE_FILTER === 'jobs')      return !!(c.jobs||[]).length;
-    if (ACTIVE_FILTER === 'news')      return !!(c.activities||[]).length;
-    if (ACTIVE_FILTER === 'abstained') return !c.website;
-    return true;
-  });
-  document.getElementById('statsLabel').innerHTML = `<strong>${filtered.length}</strong> entities`;
-  const feed = document.getElementById('entityFeed');
-  feed.innerHTML = filtered.map(c => {
-    const active = c.organisation_number === ACTIVE_ORG ? 'active' : '';
-    return `<div class="ecard ${active}" onclick="select('${c.organisation_number}')" data-org="${c.organisation_number}">
-      <div class="ecard-name">${c.name}</div>
-      <div class="ecard-orgnr">${c.organisation_number}</div>
-      <div class="ecard-meta">${c.legal_form||'AS'} · ${c.municipality||'NO'} · ${c.employees!=null ? c.employees+' emp' : 'Unlisted'}</div>
-      <div class="ecard-tags">
-        ${c.website ? '<span class="etag t-web">Web</span>' : '<span class="etag t-no">No Web</span>'}
-        ${(c.jobs||[]).length ? `<span class="etag t-jobs">${c.jobs.length} Jobs</span>` : ''}
-        ${(c.activities||[]).length ? `<span class="etag t-news">${c.activities.length} News</span>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+      const b = document.getElementById('inspectorBody');
+      b.innerHTML = `
+        <div class="pb-6 border-b border-borderline mb-6">
+          <div class="text-[10px] font-mono text-brand mb-2 px-2 py-1 bg-brand/10 inline-block rounded">${ev.type}</div>
+          <div class="text-xl font-bold text-gray-100 mb-2 leading-tight">${ev.date}</div>
+          <div class="text-sm text-gray-300 leading-snug">${ev.title}</div>
+        </div>
 
-  anime({ targets: '#entityFeed .ecard', opacity: [0,1], translateX: [-12,0],
-    duration: 400, delay: anime.stagger(20), easing: 'easeOutCubic' });
-}
+        <div class="space-y-6">
+          <div>
+            <div class="text-[10px] font-mono text-muted uppercase mb-1">Source</div>
+            <div class="text-[13px] text-blue-400 font-mono break-all leading-tight"><a href="${ev.source}" target="_blank" class="hover:underline">${ev.source}</a></div>
+          </div>
 
-/* ═══════════════════════════════════════
-   SELECT COMPANY
-═══════════════════════════════════════ */
-function select(orgnr) {
-  ACTIVE_ORG = orgnr;
-  document.querySelectorAll('.ecard').forEach(el =>
-    el.classList.toggle('active', el.dataset.org === orgnr));
-  const comp = COMPANIES.find(c => c.organisation_number === orgnr);
-  if (!comp) return;
-  renderDossier(comp);
-  gsap.to('#dossier', { scrollTop: 0, duration: .6, ease: 'power3.out' });
-}
+          <div>
+            <div class="text-[10px] font-mono text-muted uppercase mb-1">Publication</div>
+            <div class="text-sm text-gray-200">${ev.date}</div>
+          </div>
 
-/* ═══════════════════════════════════════
-   RENDER DOSSIER
-═══════════════════════════════════════ */
-function renderDossier(comp) {
-  // Seed the dossier mini-canvas with company index for variety
-  if (dosMat) {
-    const idx = COMPANIES.findIndex(c => c.organisation_number === comp.organisation_number);
-    dosMat.uniforms.uSeed.value = idx * 1.7;
-  }
-  // Update DOM elements
-  document.getElementById('dosOrgnr').textContent = comp.organisation_number;
-  document.getElementById('dosForm').textContent  = comp.legal_form || 'AS';
-  document.getElementById('dosCohort').textContent = (comp.cohort||'').replace(/_/g,' ').toUpperCase();
-  document.getElementById('dosMuni').textContent   = comp.municipality || 'NORWAY';
-  document.getElementById('dosEmp').textContent    = comp.employees != null ? comp.employees : 'UNLISTED';
-  document.getElementById('dosInd').textContent    = comp.industry_code || '—';
+          <div>
+            <div class="text-[10px] font-mono text-muted uppercase mb-1">Retrieved</div>
+            <div class="text-sm text-gray-200">${ev.retrieved}</div>
+          </div>
 
-  // Big animated name
-  const nameEl = document.getElementById('dosName');
-  gsap.fromTo(nameEl, { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power3.out' });
-  nameEl.textContent = comp.name;
+          <div>
+            <div class="text-[10px] font-mono text-muted uppercase mb-2">Identity</div>
+            <div class="flex items-center gap-2 text-sm ${ev.matched ? 'text-emerald-400 bg-emerald-400/10' : 'text-gray-400 bg-white/5'} px-3 py-2 rounded-md break-words">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ev.matched ? 'M5 13l4 4L19 7' : 'M20 12H4'}"></path></svg>
+              ${ev.matched ? 'Exact company match' : 'Unverified match'}
+            </div>
+          </div>
 
-  // Website button
-  const wb = document.getElementById('dosWebBtn');
-  wb.innerHTML = comp.website
-    ? `<a href="${comp.website}" target="_blank" class="web-pill wp-on">${new URL(comp.website).hostname} ↗</a>`
-    : `<span class="web-pill wp-off">No registered website</span>`;
+          <div>
+            <div class="text-[10px] font-mono text-muted uppercase mb-1">Extract</div>
+            <div class="bg-black/30 border border-borderline rounded-md p-3 text-xs text-gray-400 italic whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed shadow-inner">${ev.ext}</div>
+          </div>
+        </div>
 
-  // Metrics
-  counter(document.getElementById('mEmp'), comp.employees);
-  const ceo   = (comp.roles||[]).find(r=>r.type==='daglig_leder');
-  const chair = (comp.roles||[]).find(r=>r.type==='styreleder');
-  document.getElementById('mCeo').textContent   = ceo   ? ceo.name   : 'Not reported';
-  document.getElementById('mChair').textContent = chair ? chair.name : 'Not reported';
-  counter(document.getElementById('mSrc'), (comp.sources||[]).length);
+        <a href="${ev.source}" target="_blank" class="mt-8 flex items-center justify-center gap-2 w-full bg-white text-black hover:bg-gray-200 py-2.5 rounded-md text-sm font-semibold transition-colors break-words text-center">
+          OPEN ORIGINAL SOURCE 
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      `;
+    }
 
-  // Tab counts
-  document.getElementById('tc-jobs').textContent = (comp.jobs||[]).length;
-  document.getElementById('tc-act').textContent  = (comp.activities||[]).length;
-  document.getElementById('tc-chg').textContent  = (comp.changes||[]).length;
-  document.getElementById('tc-src').textContent  = (comp.sources||[]).length;
+    function clearInspector() {
+      document.getElementById('inspectorBody').innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-center opacity-50">
+          <svg class="w-12 h-12 mb-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+          <p class="text-sm text-muted">Select an evidence item<br>to inspect claims.</p>
+        </div>
+      `;
+    }
 
-  renderChart(comp);
-  renderOverview(comp);
-  renderJobs(comp.jobs||[]);
-  renderActivity(comp.activities||[]);
-  renderChanges(comp.changes||[]);
-  renderSources(comp.sources||[]);
+    function toggleCompareMode() {
+      COMPARE_MODE = !COMPARE_MODE;
+      COMPARE_LIST = [];
+      const btn = document.getElementById('compareBtn');
+      if (COMPARE_MODE) {
+        btn.classList.add('bg-brand', 'text-black', 'border-brand');
+        btn.classList.remove('bg-bg', 'text-white');
+        renderComparison();
+        clearInspector();
+      } else {
+        btn.classList.remove('bg-brand', 'text-black', 'border-brand');
+        btn.classList.add('bg-bg', 'text-white');
+        renderIntelligence(ACTIVE_COMPANY);
+      }
+      renderExplorer();
+    }
 
-  // Animate metric boxes
-  gsap.fromTo('.metric-box', { opacity:0, y:12 }, { opacity:1, y:0, duration:.5, stagger:.06, ease:'power2.out' });
-}
+    function renderComparison() {
+      const p = document.getElementById('intelPanel');
+      if (COMPARE_LIST.length === 0) {
+        p.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center text-muted italic"><svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Select companies from the sidebar to compare their evidence.</div>`;
+        return;
+      }
 
-/* ─── OVERVIEW ─── */
-function renderOverview(comp) {
-  const g = document.getElementById('overviewGrid');
-  const s = comp.structured_summary || {};
-  const cells = [
-    { icon:'🏛', label:'Operational Profile', items: s.operational_profile },
-    { icon:'📡', label:'Current Signals',     items: s.current_signals     },
-    { icon:'⚡', label:'Recent Changes',      items: s.recent_changes      },
-    { icon:'🛡', label:'Evidence Provenance', items: s.evidence            },
-  ];
-  g.innerHTML = cells.map(cell => `
-    <div class="intel-cell">
-      <div class="intel-cell-head">
-        <span class="ic-icon">${cell.icon}</span>
-        <span class="ic-label">${cell.label}</span>
-      </div>
-      <ul class="intel-items">
-        ${(cell.items||['No data collected.']).map(it=>`
-          <li class="intel-item">
-            <span class="intel-item-bullet">▸</span>
-            <span class="intel-item-text">${it}</span>
-          </li>`).join('')}
-      </ul>
-    </div>`).join('');
-  anime({ targets: '.intel-cell', opacity:[0,1], translateY:[10,0], duration:500, delay:anime.stagger(80), easing:'easeOutCubic' });
-}
+      let html = `
+        <div class="max-w-7xl mx-auto py-12 px-8">
+          <h1 class="text-3xl font-bold tracking-tight text-white mb-2">Compare Evidence</h1>
+          <p class="text-sm text-gray-400 mb-8">Side-by-side verification signals</p>
+          <div class="flex gap-6 overflow-x-auto pb-4">
+      `;
 
-/* ─── JOBS ─── */
-function renderJobs(jobs) {
-  const el = document.getElementById('jobsStream');
-  if (!jobs.length) { el.innerHTML = `<div class="empty-state"><h3>No Openings Verified</h3><p>Zero active postings at crawl time.</p></div>`; return; }
-  el.innerHTML = jobs.map(j=>`
-    <div class="stream-item">
-      <div class="si-head">
-        <span class="si-title">${j.title}</span>
-        <span class="si-badge si-badge-jobs">JOB</span>
-      </div>
-      <div class="si-meta">
-        <span><strong>${j.location||'Norway'}</strong> Location</span>
-        <span><strong>${j.posted_date||'Undated'}</strong> Posted</span>
-        <span><strong>${j.department||'—'}</strong> Department</span>
-      </div>
-      ${j.source_url ? `<a href="${j.source_url}" target="_blank" class="si-link">Apply URL ↗</a>` : ''}
-    </div>`).join('');
-  anime({ targets: '#jobsStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
-}
+      COMPARE_LIST.forEach(c => {
+        const hasWeb = c.website ? '✓ Verified Domain' : '— Missing';
+        const hasJobs = (c.jobs && c.jobs.length) ? `${c.jobs.length} verified roles` : '— No signals';
+        const hasNews = (c.activities && c.activities.length) ? `${c.activities.length} news events` : '— No signals';
+        const emp = c.employees ? `${c.employees} employees` : 'N/A';
+        
+        html += `
+          <div class="flex-1 min-w-[280px] bg-white/[0.02] border border-borderline rounded-xl p-6">
+            <div class="font-bold text-lg text-white truncate mb-1">${c.name}</div>
+            <div class="text-[11px] text-muted font-mono mb-8 border-b border-borderline pb-4">${c.organisation_number} &middot; ${c.industry_label || 'Unknown'}</div>
+            
+            <div class="space-y-6 text-sm">
+              <div>
+                <div class="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Web Footprint</div>
+                <div class="${c.website ? 'text-emerald-400' : 'text-gray-500'} font-medium flex items-center gap-1.5"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${c.website ? 'M5 13l4 4L19 7' : 'M20 12H4'}"></path></svg>${hasWeb}</div>
+              </div>
+              <div>
+                <div class="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Hiring Intent</div>
+                <div class="${c.jobs?.length ? 'text-amber-400' : 'text-gray-500'} font-medium">${hasJobs}</div>
+              </div>
+              <div>
+                <div class="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Recent Activity</div>
+                <div class="${c.activities?.length ? 'text-blue-400' : 'text-gray-500'} font-medium">${hasNews}</div>
+              </div>
+              <div>
+                <div class="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Reported Scale</div>
+                <div class="text-gray-200 font-medium">${emp}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
 
-/* ─── ACTIVITY ─── */
-function renderActivity(acts) {
-  const el = document.getElementById('actStream');
-  if (!acts.length) { el.innerHTML = `<div class="empty-state"><h3>No Dated Activity</h3><p>No press releases or announcements located.</p></div>`; return; }
-  el.innerHTML = acts.map(a=>`
-    <div class="stream-item">
-      <div class="si-head">
-        <span class="si-title">${a.title||'Untitled'}</span>
-        <span class="si-badge si-badge-news">${(a.activity_type||'NEWS').toUpperCase()}</span>
-      </div>
-      <div class="si-meta">
-        <span><strong>${a.activity_date||'Undated'}</strong> Date</span>
-        <span><strong>${a.retrieved_at ? a.retrieved_at.split('T')[0] : '—'}</strong> Retrieved</span>
-      </div>
-      <div class="si-body">${a.description||''}</div>
-      ${a.source_url ? `<a href="${a.source_url}" target="_blank" class="si-link">Source Article ↗</a>` : ''}
-    </div>`).join('');
-  anime({ targets: '#actStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
-}
+      html += `</div></div>`;
+      p.innerHTML = html;
+    }
 
-/* ─── CHANGES ─── */
-function renderChanges(changes) {
-  const el = document.getElementById('chgStream');
-  if (!changes.length) { el.innerHTML = `<div class="empty-state"><h3>No State Deltas</h3><p>Stable entity — no changes detected.</p></div>`; return; }
-  const cls = { ADDED:'si-badge-chg-add', REMOVED:'si-badge-chg-rem', CHANGED:'si-badge-chg-mod' };
-  el.innerHTML = changes.map(c=>{
-    const ev = (c.evidence||[])[0];
-    return `<div class="stream-item">
-      <div class="si-head">
-        <span class="si-title">${c.entity_type.toUpperCase()}.${c.field_name}</span>
-        <span class="si-badge ${cls[c.change_type]||'si-badge-chg-mod'}">${c.change_type}</span>
-      </div>
-      <div class="si-meta">
-        <span><strong>${c.detected_at||'—'}</strong> Detected</span>
-        ${c.effective_date ? `<span><strong>${c.effective_date}</strong> Effective</span>` : ''}
-        <span style="font-family:var(--font-mono); font-size:.65rem; color:var(--muted)">${c.change_id}</span>
-      </div>
-      ${ev?.evidence_text ? `<div class="si-body" style="font-family:var(--font-mono); font-size:.8rem; color:var(--accent)">▸ ${ev.evidence_text}</div>` : ''}
-      ${ev?.source_url ? `<a href="${ev.source_url}" target="_blank" class="si-link">Provenance ↗</a>` : ''}
-    </div>`;
-  }).join('');
-  anime({ targets: '#chgStream .stream-item', opacity:[0,1], translateX:[-10,0], duration:450, delay:anime.stagger(60), easing:'easeOutCubic' });
-}
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(COMPANIES, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href",     dataStr);
+      downloadAnchorNode.setAttribute("download", "signalpost_export.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
 
-/* ─── SOURCES ─── */
-function renderSources(srcs) {
-  const tb = document.getElementById('srcBody');
-  if (!srcs.length) { tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:4rem;color:var(--muted)">No source records attached.</td></tr>`; return; }
-  tb.innerHTML = srcs.map(s=>`
-    <tr>
-      <td><span class="etag t-jobs" style="font-size:.65rem">${(s.source_type||'web').toUpperCase()}</span></td>
-      <td style="color:var(--white)">${s.description||'Verified observation'}</td>
-      <td>${s.url ? `<a href="${s.url}" target="_blank" style="color:var(--accent);font-family:var(--font-mono);font-size:.75rem">${s.url.length>45?s.url.slice(0,45)+'…':s.url}</a>` : 'Brreg'}</td>
-      <td style="font-family:var(--font-mono);font-size:.72rem">${s.retrieved_at?s.retrieved_at.split('T')[0]:'2026-09-20'}</td>
-      <td style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted)">${(s.content_sha256||'').slice(0,14)}…</td>
-    </tr>`).join('');
-  anime({ targets: '#srcBody tr', opacity:[0,1], translateY:[4,0], duration:400, delay:anime.stagger(30), easing:'easeOutCubic' });
-}
+    document.getElementById('searchInput').addEventListener('input', renderExplorer);
 
-/* ═══════════════════════════════════════
-   TAB SWITCH
-═══════════════════════════════════════ */
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
-  if(btn) btn.classList.add('on');
-  document.querySelectorAll('.tview').forEach(v=>v.classList.remove('on'));
-  document.getElementById('v-'+name).classList.add('on');
-}
-
-/* ═══════════════════════════════════════
-   FILTER / SEARCH
-═══════════════════════════════════════ */
-function setFilter(f) {
-  ACTIVE_FILTER = f;
-  document.querySelectorAll('.fpill').forEach(p=>{
-    const map = { all:'all', web:'web', hiring:'jobs', news:'news', 'no web':'abstained' };
-    p.classList.toggle('on', map[p.textContent.trim().toLowerCase()]===f || (f==='all' && p.textContent.trim().toLowerCase()==='all'));
-  });
-  renderSidebar();
-}
-
-/* ═══════════════════════════════════════
-   EXPORTS
-═══════════════════════════════════════ */
-function exportCSV() {
-  const rows = COMPANIES.map(c=>[c.organisation_number,`"${c.name}"`,c.website||'',(c.jobs||[]).length,(c.activities||[]).length].join(','));
-  const a = Object.assign(document.createElement('a'), { href:'data:text/csv;charset=utf-8,'+encodeURIComponent(['org,name,website,jobs,activities',...rows].join('\n')), download:'signalpost_v8.csv' });
-  a.click();
-}
-function exportJSON() {
-  const a = Object.assign(document.createElement('a'), { href:'data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(COMPANIES,null,2)), download:'signalpost_v8.json' });
-  a.click();
-}
-
-/* ═══════════════════════════════════════
-   MARQUEE BUILD
-═══════════════════════════════════════ */
-function buildMarquee(companies) {
-  const items = companies.slice(0, 20).map(c =>
-    `<span class="marquee-item">${c.name} <span>·</span></span>`
-  ).join('');
-  document.getElementById('marqueeTrack').innerHTML = items + items; // duplicate for seamless
-}
-
-/* ═══════════════════════════════════════
-   LOADER + GSAP HERO INTRO
-═══════════════════════════════════════ */
-function runIntroSequence() {
-  gsap.registerPlugin(ScrollTrigger);
-
-  const loaderFill = document.getElementById('loaderFill');
-  const loaderNum  = document.getElementById('loaderNum');
-
-  // Fake progress bar
-  let pct = 0;
-  const pInterval = setInterval(() => {
-    pct = Math.min(pct + Math.random() * 15, 95);
-    loaderFill.style.width = pct + '%';
-    loaderNum.textContent  = Math.round(pct) + '%';
-  }, 80);
-
-  // Once data ready, finish loader
-  setTimeout(() => {
-    clearInterval(pInterval);
-    loaderFill.style.width = '100%';
-    loaderNum.textContent = '100%';
-
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' }});
-    tl.to('#loader', { opacity: 0, duration: .6, delay: .3 })
-      .set('#loader', { display: 'none' })
-      // Hero title words slam down
-      .from('.hero-title .word', { y: '110%', duration: 1, stagger: .12, ease: 'expo.out' }, '-=.1')
-      .from('.hero-eyebrow', { opacity:0, y:20, duration:.7 }, '-=.6')
-      .from('.hero-stat', { opacity:0, y:20, duration:.6, stagger:.1 }, '-=.4')
-      .from('.hero-desc, .scroll-hint', { opacity:0, y:15, duration:.6, stagger:.1 }, '-=.4')
-      // Animate hero stats with anime.js
-      .call(() => {
-        counter(document.getElementById('statCompanies'), COMPANIES.length);
-        const totalNews = COMPANIES.reduce((s,c)=>s+(c.activities||[]).length,0);
-        const totalJobs = COMPANIES.reduce((s,c)=>s+(c.jobs||[]).length,0);
-        counter(document.getElementById('statNews'), totalNews);
-        counter(document.getElementById('statJobs'), totalJobs);
-      }, null, '-=.2');
-  }, 1200);
-}
-
-/* ═══════════════════════════════════════
-   INIT
-═══════════════════════════════════════ */
-async function init() {
-  try {
-    const r = await fetch('companies.json');
-    COMPANIES = await r.json();
-  } catch(e) { console.error(e); }
-
-  buildMarquee(COMPANIES);
-  renderSidebar();
-  if (COMPANIES.length) {
-    ACTIVE_ORG = COMPANIES[0].organisation_number;
-    renderDossier(COMPANIES[0]);
-  }
-  runIntroSequence();
-
-  document.getElementById('searchInput').addEventListener('input', renderSidebar);
-}
-
-window.addEventListener('DOMContentLoaded', init);
-</script>
+    window.onload = initApp;
+  </script>
 </body>
 </html>
