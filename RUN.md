@@ -12,18 +12,19 @@ uv sync
 
 ---
 
-## 🚀 Running the Production Pipeline (Run 10A / v10a-freeze)
+## 🚀 Running the Production Pipeline (V8 Final)
 The unified command executes the deterministic crawler, applies streaming HTTP decompression (gzip/deflate), validates identity gates, corroborates subpages, and emits terminal execution envelopes:
 
 ```bash
-uv run python scripts/run_competition_batch_v2.py \
+uv run python scripts/run_competition_batch.py \
   --organisations data/ground-truth-100.jsonl \
   --bulk data/signalpost-company-universe-2025.jsonl.gz \
-  --profiles-output out/v7_run10_profiles.jsonl \
-  --output out/v7_run10_envelopes.jsonl \
-  --report out/v7_run10_batch_report.json \
-  --run-id run10-decompression-subpages \
+  --profiles-output out/v8_final_profiles.jsonl \
+  --output out/v8_final_envelopes.jsonl \
+  --report out/v8_final_batch_report.json \
+  --run-id v8_final \
   --budget 2000 \
+  --expected-count 100 \
   --workers 4
 ```
 
@@ -36,31 +37,32 @@ Audits against the stratified benchmark cohorts (operating large, operating smal
 
 ```bash
 uv run python scripts/evaluate_independent_ground_truth.py \
-  --profiles out/v7_run10_profiles.jsonl \
-  --envelopes out/v7_run10_envelopes.jsonl \
+  --profiles out/v8_final_profiles.jsonl \
+  --envelopes out/v8_final_envelopes.jsonl \
   --ground-truth data/ground-truth-100.jsonl \
-  --output out/v7_run10_evaluation_report.json
+  --output out/v8_final_evaluation_report.json
 ```
 
 ### 2. Official Competition Rubric Evaluation (35/30/20/10/5)
 ```bash
 uv run python scripts/evaluate_competition.py \
-  --profiles out/v7_run10_profiles.jsonl \
-  --envelopes out/v7_run10_envelopes.jsonl \
+  --profiles out/v8_final_profiles.jsonl \
+  --envelopes out/v8_final_envelopes.jsonl \
   --ground-truth data/discovery-ground-truth.jsonl \
-  --report out/v7_run10_batch_report.json \
+  --report out/v8_final_batch_report.json \
   --output out/score.json
 ```
 
 ### 3. External Recall & Precision Evaluation
 ```bash
 uv run python scripts/evaluate_external_recall.py \
-  --profiles out/v7_run10_profiles.jsonl \
+  --profiles out/v8_final_profiles.jsonl \
   --ground-truth data/discovery-ground-truth.jsonl \
   --output out/recall.json
 ```
 
 ### 4. Adversarial Identity & Stress Test Suite
+
 Verifies 10/10 adversarial defenses against name collisions, corporate shell hierarchies, sports clubs, and brand boundary leaks:
 
 ```bash
