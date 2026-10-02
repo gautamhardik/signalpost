@@ -177,41 +177,53 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
         return []
 
     raw_candidates: list[str] = []
+    
+    t1 = tokens[0] if len(tokens) > 0 else ""
+    t2 = tokens[1] if len(tokens) > 1 else ""
+    t3 = tokens[2] if len(tokens) > 2 else ""
+    t4 = tokens[3] if len(tokens) > 3 else ""
+
     if len(tokens) == 1:
-        t = tokens[0]
-        if len(t) >= 3:
+        if len(t1) >= 3:
             raw_candidates.extend([
-                f"https://{t}.no/",
-                f"https://{t}-as.no/",
-                f"https://{t}.com/",
+                f"https://{t1}.no/",
+                f"https://{t1}.com/",
+                f"https://{t1}-as.no/",
+                f"https://{t1}group.no/",
+                f"https://{t1}group.com/",
             ])
     elif len(tokens) == 2:
-        t1, t2 = tokens[0], tokens[1]
         raw_candidates.extend([
+            f"https://{t1}.no/",
+            f"https://{t1}.com/",
             f"https://{t1}{t2}.no/",
-            f"https://{t1}-{t2}.no/",
-            f"https://{t1}{t2}-as.no/",
-            f"https://{t1}-{t2}-as.no/",
             f"https://{t1}{t2}.com/",
-            f"https://{t1}-{t2}.com/",
+            f"https://{t1}-{t2}.no/",
+            f"https://{t1}group.no/",
+            f"https://{t1}gruppen.no/",
+            f"https://{t1}group.com/",
         ])
     elif len(tokens) == 3:
-        t1, t2, t3 = tokens[0], tokens[1], tokens[2]
         raw_candidates.extend([
-            f"https://{t1}{t2}{t3}.no/",
-            f"https://{t1}-{t2}-{t3}.no/",
+            f"https://{t1}.no/",
+            f"https://{t1}.com/",
             f"https://{t1}{t2}.no/",
-            f"https://{t1}-{t2}.no/",
+            f"https://{t1}{t2}.com/",
+            f"https://{t1}{t2}{t3}.no/",
             f"https://{t1}{t2}{t3}.com/",
+            f"https://{t1}-{t2}-{t3}.no/",
+            f"https://{t1}group.no/",
+            f"https://{t1}gruppen.no/",
         ])
     elif len(tokens) >= 4:
-        t1, t2, t3, t4 = tokens[0], tokens[1], tokens[2], tokens[3]
         raw_candidates.extend([
+            f"https://{t1}.no/",
+            f"https://{t1}.com/",
+            f"https://{t1}{t2}.no/",
+            f"https://{t1}{t2}{t3}.no/",
             f"https://{t1}{t2}{t3}{t4}.no/",
             f"https://{t1}-{t2}-{t3}-{t4}.no/",
-            f"https://{t1}{t2}{t3}.no/",
-            f"https://{t1}-{t2}-{t3}.no/",
-            f"https://{t1}{t2}.no/",
+            f"https://{t1}group.no/",
         ])
 
     deduped: list[str] = []

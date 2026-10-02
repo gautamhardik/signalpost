@@ -191,23 +191,63 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
     return {"platform": platform, "url": f"https://{canonical_host}/{'/'.join(parts)}"}
 
 
-def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 4) -> list[str]:
+def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[str]:
     base = urllib.parse.urlparse(base_url)
+    base_ext = tldextract.extract(base.netloc)
+    base_reg_domain = base_ext.registered_domain.lower()
+
     candidates: dict[str, int] = {}
+    
+    t1_paths = {"om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
+                "team", "people", "karriere", "stillinger", "jobb", "jobs", "career",
+                "nyheter", "aktuelt", "presse", "news", "artikler", "blogg", "blog"}
+    
+    t2_sub_keywords = {"karriere", "jobb", "careers", "jobs", "stillinger"}
+    
+    ats_domains = {"finn.no", "jobbnorge.no", "webcruiter.com", "karrierestart.no", 
+                   "manpower.no", "adecco.no", "nav.no", "linkedin.com"}
+
     for anchor in soup.select("a[href]"):
         href = str(anchor.get("href") or "").strip()
+        if not href or href.startswith(("javascript:", "mailto:", "tel:")):
+            continue
+            
         url = urllib.parse.urljoin(base_url, href)
         parsed = urllib.parse.urlparse(url)
-        if parsed.scheme not in {"http", "https"} or parsed.netloc.lower() != base.netloc.lower():
+        if parsed.scheme not in {"http", "https"}:
             continue
-        haystack = (parsed.path + " " + anchor.get_text(" ", strip=True)).casefold()
-        rank = next((index for index, term in enumerate(PRIORITY_TERMS) if term in haystack), None)
-        if rank is None:
-            continue
+            
         clean = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path or "/", "", "", ""))
         if clean.rstrip("/") == base_url.rstrip("/"):
             continue
-        candidates[clean] = min(rank, candidates.get(clean, rank))
+            
+        target_netloc = parsed.netloc.lower()
+        target_ext = tldextract.extract(target_netloc)
+        target_reg_domain = target_ext.registered_domain.lower()
+        
+        haystack = (parsed.path + " " + anchor.get_text(" ", strip=True)).casefold()
+        rank = None
+        
+        # Tier 1: Same domain, high-value keyword match
+        if target_netloc == base.netloc.lower():
+            t1_rank = next((index for index, term in enumerate(PRIORITY_TERMS) if term in haystack), None)
+            if t1_rank is not None:
+                rank = t1_rank # 0 to len(PRIORITY_TERMS)
+                
+        # Tier 2: Same registered-domain, specific subdomains
+        elif target_reg_domain == base_reg_domain:
+            subdomain = target_ext.subdomain.lower()
+            if any(k in subdomain for k in t2_sub_keywords) or any(k in haystack for k in t2_sub_keywords):
+                rank = 100
+                
+        # Tier 3: ATS domains
+        elif target_reg_domain in ats_domains:
+            # ATS links are ranked slightly lower than internal subdomains to prefer 1st party, but high enough to be fetched
+            rank = 150
+            
+        if rank is not None:
+            candidates[clean] = min(rank, candidates.get(clean, rank))
+            
     return [url for url, _ in sorted(candidates.items(), key=lambda item: (item[1], item[0]))[:limit]]
 
 
