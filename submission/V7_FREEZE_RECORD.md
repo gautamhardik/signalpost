@@ -1,7 +1,7 @@
 # Signalpost V7 — Submission Freeze Record
 
 > **Branch**: `v7-signalpost-evidence-product`
-> **Freeze Date**: 2026-09-26T05:46:44Z
+> **Freeze Date**: 2026-10-02T23:28:07Z
 > **Status**: PROMOTED — PENDING FINAL TAG (`v7-final`)
 
 ---
@@ -20,8 +20,8 @@
 ## 2. V6 Backup
 
 Original V6 artifacts preserved in `submission/v6-backup/`:
-- `submission/v6-backup/profiles.jsonl`   sha256=`e361832dfd1e78010ea36274170fd518c265ce8ee159b048403337cffcbdc6d5`
-- `submission/v6-backup/envelopes.jsonl`  sha256=`090fb933b9165288426f76b1ebb3fbbc051b7ba29ac3fc80c98cffa5db3c9eca`
+- `submission/v6-backup/profiles.jsonl`   sha256=`81822a25dc2e4464378874324d970e95b85d55623153cd0423a5d16ac660685b`
+- `submission/v6-backup/envelopes.jsonl`  sha256=`a9df4e8fff4220a349711bc9a3c45c83efcd5bbc84fb7977b76bdec882cd40b1`
 
 ---
 

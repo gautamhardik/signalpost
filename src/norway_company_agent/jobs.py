@@ -149,7 +149,11 @@ def verify_job_identity(
 
     recruiter_domains = {
         "finn.no", "jobbnorge.no", "webcruiter.com", "karrierestart.no",
-        "manpower.no", "adecco.no", "nav.no", "linkedin.com"
+        "manpower.no", "adecco.no", "nav.no", "linkedin.com",
+        "recman.no", "cruit.no", "easycruit.com", "hr-manager.net", 
+        "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no", 
+        "meyerhaugen.no", "cruitive.com", "smartrecruiters.com", 
+        "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com"
     }
     is_external_ats = job_reg_domain in recruiter_domains
 
@@ -325,7 +329,7 @@ def extract_jobs_from_html_cards(
     cards = soup.select(", ".join(selectors))
 
     if not cards:
-        links = soup.select("a[href*='/stilling/'], a[href*='/jobb/'], a[href*='/job/'], a[href*='/careers/'], a[href*='/karriere/']")
+        links = soup.select("a[href*='/stilling/'], a[href*='/jobb/'], a[href*='/job/'], a[href*='/careers/'], a[href*='/karriere/'], a[href*='/vacancies/'], a[href*='/ledige-stillinger/']")
         seen_links = set()
         for link in links:
             href = link.get("href")

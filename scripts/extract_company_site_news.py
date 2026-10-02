@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-NEWS_PATH = re.compile(r"/(?:news|press|aktuelt|nyheter|artikler|blog)(?:/|$)", re.I)
+NEWS_PATH = re.compile(r"/(?:news|press|aktuelt|nyheter|artikler|blog|media|newsroom|pressroom|press-releases|investors|events|arrangementer|kunngjoringer)(?:/|$)", re.I)
 
 
 def observation(profile: dict) -> dict | None:

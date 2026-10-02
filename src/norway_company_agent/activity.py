@@ -304,13 +304,14 @@ def extract_activity_from_html_articles(
     selectors = [
         "article", ".news-item", ".nyhet-item", ".post-item",
         ".article-card", ".nyhetskort", ".press-release", ".event-item",
-        ".aktuelt-item", ".blog-post"
+        ".aktuelt-item", ".blog-post", ".press-release-item", ".news-card",
+        "li.news-item", "li.article", ".news-list-item"
     ]
     cards = soup.select(", ".join(selectors))
 
     # If no article containers, inspect linked news anchors
     if not cards:
-        links = soup.select("a[href*='/nyheter/'], a[href*='/aktuelt/'], a[href*='/presse/'], a[href*='/news/'], a[href*='/artikler/']")
+        links = soup.select("a[href*='/nyheter/'], a[href*='/aktuelt/'], a[href*='/presse/'], a[href*='/news/'], a[href*='/artikler/'], a[href*='/media/'], a[href*='/newsroom/'], a[href*='/pressroom/'], a[href*='/press-releases/'], a[href*='/investors/']")
         seen_links = set()
         for link in links:
             href = link.get("href")

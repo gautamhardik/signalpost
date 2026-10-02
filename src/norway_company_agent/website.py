@@ -37,8 +37,10 @@ PRIORITY_TERMS = (
     "om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
     "team", "people", "locations", "lokasjoner", "avdelinger", "butikker",
     "karriere", "stillinger", "jobb", "jobs", "career", "ledige-stillinger",
-    "bli-med-pa-laget", "jobb-hos-oss", "rekruttering",
+    "bli-med-pa-laget", "jobb-hos-oss", "rekruttering", "vacancies", "careers",
     "news", "press", "aktuelt", "nyheter", "pressemeldinger", "artikler", "blogg", "blog",
+    "media", "investors", "investor", "investorer", "nyhetsrom", "newsroom",
+    "pressroom", "events", "arrangementer", "kunngjoringer", "announcements",
 )
 
 
@@ -166,7 +168,7 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
         return None
     if platform == "facebook" and lowered[0] == "profile.php":
         return None
-    if platform == "linkedin" and (lowered[0] != "company" or len(parts) < 2):
+    if platform == "linkedin" and (lowered[0] not in {"company", "school", "showcase"} or len(parts) < 2):
         return None
     if platform == "youtube" and lowered[0] not in {"channel", "user", "c"} and not parts[0].startswith("@"):
         return None
@@ -199,13 +201,18 @@ def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[
     candidates: dict[str, int] = {}
     
     t1_paths = {"om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
-                "team", "people", "karriere", "stillinger", "jobb", "jobs", "career",
-                "nyheter", "aktuelt", "presse", "news", "artikler", "blogg", "blog"}
+                "team", "people", "karriere", "stillinger", "jobb", "jobs", "career", "careers",
+                "nyheter", "aktuelt", "presse", "news", "artikler", "blogg", "blog",
+                "media", "investors", "events"}
     
-    t2_sub_keywords = {"karriere", "jobb", "careers", "jobs", "stillinger"}
+    t2_sub_keywords = {"karriere", "jobb", "careers", "jobs", "stillinger", "news", "nyheter", "media", "press", "presse", "blog", "blogg"}
     
     ats_domains = {"finn.no", "jobbnorge.no", "webcruiter.com", "karrierestart.no", 
-                   "manpower.no", "adecco.no", "nav.no", "linkedin.com"}
+                   "manpower.no", "adecco.no", "nav.no", "linkedin.com",
+                   "recman.no", "cruit.no", "easycruit.com", "hr-manager.net", 
+                   "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no", 
+                   "meyerhaugen.no", "cruitive.com", "smartrecruiters.com", 
+                   "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com"}
 
     for anchor in soup.select("a[href]"):
         href = str(anchor.get("href") or "").strip()

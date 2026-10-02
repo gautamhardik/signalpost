@@ -144,7 +144,11 @@ def deterministic_financial_filer_sample(
 
 def iter_bulk(path: str | Path) -> Iterable[dict[str, Any]]:
     p = Path(path)
-    open_fn = gzip.open if p.suffix == ".gz" or str(p).endswith(".gz") else open
+    # Check for gzip magic byte
+    with open(path, "rb") as test_f:
+        is_gzip = test_f.read(2) == b"\x1f\x8b"
+        
+    open_fn = gzip.open if (is_gzip or p.suffix == ".gz" or str(p).endswith(".gz")) else open
     with open_fn(path, "rt", encoding="utf-8-sig", newline="") as handle:
         sample = handle.read(8192)
         handle.seek(0)
