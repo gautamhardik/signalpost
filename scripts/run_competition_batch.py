@@ -117,7 +117,7 @@ def main() -> None:
             # If no website or not publishable/available, execute structured candidate discovery funnel
             if (
                 gated["website"].get("status") not in ("available", "blocked") or not (gated.get("assessment") or {}).get("publishable")
-            ) and opportunity >= 0.35:
+            ):
                 candidate_sources = generate_company_candidate_sources(profile)
                 unfetched_cands = [c for c in candidate_sources if normalize_candidate_url(c.url) != normalize_candidate_url(website_url)]
                 
@@ -145,7 +145,7 @@ def main() -> None:
                     gated = apply_website_identity_gate(profile, v_rec)
 
             # If still not found or not publishable, attempt Layer 2: Controlled Search Discovery
-            if not (gated.get("assessment") or {}).get("publishable") and opportunity >= 0.35 and budget_mgr.can_request("search", cost=1):
+            if not (gated.get("assessment") or {}).get("publishable") and budget_mgr.can_request("search", cost=1):
                 queries = build_flexible_company_search_queries(profile)
                 max_queries = 3 if opportunity >= 0.70 else 2 if opportunity >= 0.50 else 1
                 for q_str in queries[:max_queries]:
