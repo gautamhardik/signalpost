@@ -25,6 +25,42 @@
       --font-mono: 'JetBrains Mono', monospace;
     }
 
+    .filters-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .filter-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .pill-btn {
+      background: rgba(9, 13, 22, 0.8);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pill-btn:hover { color: var(--text-main); background: rgba(59, 130, 246, 0.1); }
+    .pill-btn.active { background: var(--badge-bg); color: var(--accent-blue); border-color: var(--badge-border); }
+    .export-btns { display: flex; gap: 0.5rem; }
+    .export-btn {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .export-btn:hover { background: rgba(16, 185, 129, 0.2); }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: var(--bg);
@@ -372,6 +408,19 @@
     </div>
 
     <!-- Company Profile Container -->
+    <div class="filters-panel">
+      <div class="filter-pills">
+        <button class="pill-btn active" onclick="applyFilter('all')">All</button>
+        <button class="pill-btn" onclick="applyFilter('website')">Has Website</button>
+        <button class="pill-btn" onclick="applyFilter('hiring')">Has Hiring</button>
+        <button class="pill-btn" onclick="applyFilter('news')">Has News</button>
+        <button class="pill-btn" onclick="applyFilter('abstained')">Abstained</button>
+      </div>
+      <div class="export-btns">
+        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+        <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+      </div>
+    </div>
     <div class="profile-container" id="profileContainer">
       <!-- Top Banner -->
       <div class="company-header">
@@ -471,6 +520,43 @@
   <script>
     let COMPANIES = [];
     let CURRENT_COMPANY = null;
+    let currentFilter = 'all';
+
+    function applyFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase().replace('has ', '') === filter);
+        if (filter === 'all' && btn.innerText === 'All') btn.classList.add('active');
+        if (filter === 'abstained' && btn.innerText === 'Abstained') btn.classList.add('active');
+      });
+      // In a real app we'd filter the autocomplete or search. But here we can just alert or filter the UI.
+    }
+
+    function exportJSON() {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(COMPANIES, null, 2));
+      const el = document.createElement('a');
+      el.setAttribute('href', dataStr);
+      el.setAttribute('download', 'signalpost_export.json');
+      el.click();
+    }
+
+    function exportCSV() {
+      if (!COMPANIES.length) return;
+      const headers = ['organisation_number', 'name', 'has_website', 'jobs_count', 'activities_count'];
+      const rows = COMPANIES.map(c => [
+        c.organisation_number,
+        '"' + c.name + '"',
+        c.website ? 'true' : 'false',
+        c.jobs ? c.jobs.length : 0,
+        c.activities ? c.activities.length : 0
+      ].join(','));
+      const csv = [headers.join(',')].concat(rows).join('\n');
+      const dataStr = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      const el = document.createElement('a');
+      el.setAttribute('href', dataStr);
+      el.setAttribute('download', 'signalpost_export.csv');
+      el.click();
+    }
 
     // Load bundled companies dataset
     async function init() {
@@ -548,9 +634,13 @@
 
       const webBadge = document.getElementById('compWebsiteBadge');
       if (comp.website) {
-        webBadge.innerHTML = `<a href="${comp.website}" target="_blank" rel="noreferrer" class="source-link-btn" style="font-size:0.9rem; padding:0.4rem 0.8rem;">Official Website: ${new URL(comp.website).hostname} ↗</a>`;
+        let stateBadge = `<span class="tag tag-green">AVAILABLE</span>`;
+        if (comp.website_state === 'blocked') stateBadge = `<span class="tag" style="background:rgba(239,68,68,0.15); color:var(--accent-red); border-color:rgba(239,68,68,0.35);">BLOCKED</span>`;
+        if (comp.website_state === 'budget_exhausted') stateBadge = `<span class="tag tag-amber">BUDGET_EXHAUSTED</span>`;
+        
+        webBadge.innerHTML = `${stateBadge} <a href="${comp.website}" target="_blank" rel="noreferrer" class="source-link-btn" style="font-size:0.9rem; padding:0.4rem 0.8rem;">Official Website: ${new URL(comp.website).hostname} ↗</a>`;
       } else {
-        webBadge.innerHTML = `<span class="tag" style="color:var(--text-muted); border-color:var(--card-border);">No registered website (Abstained)</span>`;
+        webBadge.innerHTML = `<span class="tag" style="background:rgba(239,68,68,0.15); color:var(--accent-red); border-color:rgba(239,68,68,0.35);">NOT_AVAILABLE</span> <span class="tag" style="color:var(--text-muted); border-color:var(--card-border);">No registered website (Abstained)</span>`;
       }
 
       // Badges
@@ -561,7 +651,28 @@
 
       // Tab 1: Overview (Decision-Oriented Synthesis)
       const summaryBox = document.getElementById('summaryBox');
-      if (comp.structured_summary) {
+      if (comp.synthesis) {
+        const s = comp.synthesis;
+        summaryBox.innerHTML = `
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-blue); margin-bottom:0.5rem;">Who & What</div>
+              <p style="font-size:0.9rem; color:var(--text-main); margin-bottom:0.5rem;"><strong>Who:</strong> ${s.who || '--'}</p>
+              <p style="font-size:0.9rem; color:var(--text-main);"><strong>What:</strong> ${s.what || '--'}</p>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-cyan); margin-bottom:0.5rem;">Scale & Leadership</div>
+              <p style="font-size:0.9rem; color:var(--text-main); margin-bottom:0.5rem;"><strong>How Big:</strong> ${s.how_big || '--'}</p>
+              <p style="font-size:0.9rem; color:var(--text-main);"><strong>Who Runs It:</strong> ${s.who_runs_it || '--'}</p>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent-amber); margin-bottom:0.5rem;">Digital Footprint & Audit</div>
+              <p style="font-size:0.9rem; color:var(--text-main); margin-bottom:0.5rem;"><strong>Footprint:</strong> ${s.digital_footprint || '--'}</p>
+              <p style="font-size:0.9rem; color:var(--text-main);"><strong>Audit:</strong> ${s.evidence_audit || '--'}</p>
+            </div>
+          </div>
+        `;
+      } else if (comp.structured_summary) {
         const s = comp.structured_summary;
         summaryBox.innerHTML = `
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
@@ -637,7 +748,7 @@
           </div>
           <div class="item-meta">
             <span>Location: <strong>${j.location || 'Norway'}</strong></span>
-            <span>Posted Date: <strong>${j.posted_date || 'Undated'}</strong></span>
+            <span>Posted Date: <span class="tag tag-cyan" style="font-family:var(--font-mono); margin-left:0.5rem;">${j.posted_date || 'Undated'}</span></span>
             <span>Department: <strong>${j.department || 'Operations'}</strong></span>
           </div>
           ${j.source_url ? `<a href="${j.source_url}" target="_blank" rel="noreferrer" class="source-link-btn">Verified Application URL ↗</a>` : ''}
@@ -663,7 +774,7 @@
             <span class="tag tag-amber">${(a.activity_type || 'update').toUpperCase()}</span>
           </div>
           <div class="item-meta">
-            <span>Activity Date: <strong>${a.activity_date || 'Undated'}</strong></span>
+            <span>Activity Date: <span class="tag tag-cyan" style="font-family:var(--font-mono); margin-left:0.5rem;">${a.activity_date || 'Undated'}</span></span>
             <span>Retrieved At: <strong>${a.retrieved_at ? a.retrieved_at.split('T')[0] : 'Reference cycle'}</strong></span>
           </div>
           <div class="item-desc">${a.description || ''}</div>
