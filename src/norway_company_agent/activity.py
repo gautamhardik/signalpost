@@ -64,7 +64,21 @@ NEWS_INDEX_SEGMENTS = {
     "nyhetsarkiv", "media", "newsroom", "pressroom", "events", "arrangementer", "kunngjoringer",
     "pressemeldinger", "press-releases", "investors", "investor", "en", "no", "nb",
 }
-NON_ARTICLE_SEGMENTS = {"author", "tag", "tags", "category", "kategori", "page", "side", "search", "sok"}
+NON_ARTICLE_SEGMENTS = {
+    "author", "tag", "tags", "category", "kategori", "page", "side", "search", "sok",
+    "kontakt", "kontakt-oss", "contact", "contact-us", "om", "om-oss", "about", "about-us",
+    "personvern", "privacy", "privacy-policy", "personvernerklaering", "cookies", "cookie-policy",
+    "vilkar", "terms", "ansatte", "team", "people", "ledelse", "management",
+    "karriere", "careers", "jobs", "jobb", "ledige-stillinger",
+    "categories", "archive", "archives", "arkiv", "collections", "collection", "products", "produkter",
+    "produkt", "product", "shop", "butikk", "nettbutikk", "register", "registrer", "bli-medlem", "medlemskap",
+    "login", "logg-inn", "min-side", "checkout", "cart", "handlekurv", "kasse",
+}
+ARTICLE_PATH_HINTS = (
+    "nyhet", "news", "aktuelt", "artikkel", "artikler", "article", "blog", "presse", "press",
+    "pressemelding", "event", "arrangement", "kunngjoring", "siste-nytt", "media", "investor",
+)
+NON_ARTICLE_TITLE = re.compile(r"^(?:kontakt|contact|om oss|about|personvern|privacy|cookies|bli medlem|meld deg|logg inn|log in|sign up|registrer|handlekurv|nettbutikk)\b", re.IGNORECASE)
 LINK_TEXT_TITLES = {
     "les mer", "read more", "les hele saken", "se alle", "se mer", "mer", "more", "vis alle",
     "flere nyheter", "flere prosjekter", "alle nyheter", "all news", "neste", "forrige",
@@ -104,8 +118,11 @@ def is_publishable_news(act: "ActivityRecord", today: date | None = None) -> boo
     if segments[-1] in NEWS_INDEX_SEGMENTS or any(seg in NON_ARTICLE_SEGMENTS for seg in segments):
         return False
     title = act.title.casefold().strip()
-    if len(title) < 8 or title in LINK_TEXT_TITLES:
+    if len(title) < 8 or title in LINK_TEXT_TITLES or NON_ARTICLE_TITLE.search(title):
         return False
+    page_itself = bool(act.found_on_url) and act.source_url.split("#", 1)[0].rstrip("/") == act.found_on_url.split("#", 1)[0].rstrip("/")
+    if page_itself and not date_from_url(act.source_url) and not any(hint in parsed.path.casefold() for hint in ARTICLE_PATH_HINTS):
+        return False  # an ordinary page carrying a publish date is not an article
     return True
 
 
@@ -127,6 +144,9 @@ def clean_activity_title(title: str | None) -> str | None:
     cleaned = TITLE_DATE_PREFIX.sub("", cleaned)
     cleaned = re.sub(r"^\s*\|?\s*regulatory information\s*", "", cleaned, flags=re.IGNORECASE)
     cleaned = TITLE_SECTION_PREFIX.sub("", cleaned)
+    # trailing "13.04.2021 - Publisert av ..." bylines
+    cleaned = re.sub(r"\s*\d{1,2}\.\d{1,2}\.\d{4}\s*[-–]?\s*(?:publisert|oppdatert|published).*$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*[-–|]\s*(?:publisert|published) av .*$", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"^[-–—•*|:]+\s*", "", cleaned)
     cleaned = re.sub(r"\s*[-–—•*|:]+$", "", cleaned).strip()
     if not cleaned or len(cleaned) < 4:
@@ -609,13 +629,27 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
     observations: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
 
+    from .identity import specific_name_tokens, within_site_scope
+    web_value = website.get("value") or {}
+    scope = (web_value.get("identity_assessment") or {}).get("site_scope")
+    site_root = (urlparse(web_value.get("final_url") or "").hostname or "").removeprefix("www.").split(".")[0]
     for act in activities:
+        if site_root:
+            stripped = re.sub(rf"\s*[-–|]\s*{re.escape(site_root)}\s*$", "", act.title, flags=re.IGNORECASE)
+            if stripped != act.title and len(stripped) >= 8:
+                act = replace(act, title=stripped)
         if not is_publishable_news(act):
             continue
+        if not within_site_scope(act.source_url, web_value.get("final_url"), scope):
+            specific = specific_name_tokens(profile.get("name"), urlparse(web_value.get("final_url") or "").hostname or "")
+            title_compact = re.sub(r"[^a-z0-9]", "", " ".join(_tokens(act.title)))
+            if not specific or not all(token in title_compact for token in specific):
+                continue  # article belongs to the wider site, not this company's section
         canonical = act.source_url.split("#", 1)[0].rstrip("/")
-        if canonical in seen_urls:
+        title_key = f"{act.title.casefold()}|{act.activity_date}"
+        if canonical in seen_urls or title_key in seen_urls:
             continue
-        seen_urls.add(canonical)
+        seen_urls.update({canonical, title_key})
         obs = {
             "id": f"act-{org}-{act.activity_id}",
             "organisation_number": org,

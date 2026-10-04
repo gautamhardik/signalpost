@@ -20,7 +20,7 @@ class SocialProfilesAdapter(BaseSourceAdapter):
         website = profile.get("evidence", {}).get("website", {})
         val = website.get("value") or {}
         assessment = val.get("identity_assessment") or {}
-        is_publishable = bool(assessment.get("publishable"))
+        is_publishable = bool(assessment.get("publishable")) and assessment.get("content_attributable", True)
         if not org or not is_publishable:
             return observations
 
@@ -56,6 +56,53 @@ class SocialProfilesAdapter(BaseSourceAdapter):
                     }
                     observations.append(obs)
         return observations
+
+
+class RegistrySocialAdapter(BaseSourceAdapter):
+    """A company whose registered web address is a social profile (a Facebook page, say):
+    that profile is an official registry fact about the company, not its website."""
+
+    @property
+    def source_type(self) -> str:
+        return "registry_social"
+
+    def extract_observations(self, profile: dict[str, Any]) -> list[dict[str, Any]]:
+        from ..website import normalize_social_url
+
+        org = str(profile.get("organisation_number") or "")
+        link = profile.get("registry_social")
+        record = profile.get("evidence", {}).get("registry_live") or {}
+        if record.get("status") != "available":
+            record = profile.get("evidence", {}).get("registry") or {}
+        digest = record.get("snapshot_sha256") or record.get("content_sha256")
+        if not org or not link or not digest or len(str(digest)) != 64:
+            return []
+        normalized = normalize_social_url(link) or {}
+        if not normalized.get("platform"):
+            return []
+        return [{
+            "id": f"registry-social-{org}-{normalized['platform']}",
+            "organisation_number": org,
+            "platform": normalized["platform"],
+            "signal_type": "profile_handle",
+            "source_url": normalized["url"],
+            "retrieved_at": record.get("retrieved_at") or utc_now(),
+            "content_sha256": digest,
+            "snapshot_sha256": record.get("snapshot_sha256"),
+            "snapshot_path": record.get("snapshot_path"),
+            "registry_source_url": record.get("source_url"),
+            "exact_entity": True,
+            "identity_proof": [{
+                "type": "registry_listed_web_address",
+                "reason": "Registered as the company's web address in Enhetsregisteret",
+                "method": "official_registry_field",
+            }],
+            "acquisition_mode": "official_api",
+            "rights_status": "approved",
+            "source_class": "official_registry",
+            "evidence_span": f"{normalized['platform'].capitalize()} profile registered as the web address of {profile.get('name')} in Enhetsregisteret",
+            "metrics": {"platform": normalized["platform"], "url": normalized["url"]},
+        }]
 
 
 class SiteActivityAdapter(BaseSourceAdapter):
@@ -119,7 +166,7 @@ class HiringAdapter(BaseSourceAdapter):
         website = profile.get("evidence", {}).get("website", {})
         val = website.get("value") or {}
         assessment = val.get("identity_assessment") or {}
-        is_publishable = bool(assessment.get("publishable"))
+        is_publishable = bool(assessment.get("publishable")) and assessment.get("content_attributable", True)
         if not org or not is_publishable:
             return observations
 
@@ -142,7 +189,7 @@ class SiteNewsAdapter(BaseSourceAdapter):
         website = profile.get("evidence", {}).get("website", {})
         val = website.get("value") or {}
         assessment = val.get("identity_assessment") or {}
-        is_publishable = bool(assessment.get("publishable"))
+        is_publishable = bool(assessment.get("publishable")) and assessment.get("content_attributable", True)
         if not org or not is_publishable:
             return observations
 

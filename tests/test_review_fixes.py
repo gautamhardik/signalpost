@@ -264,3 +264,179 @@ def test_viewer_is_built_from_run_profiles(tmp_path):
     html = path.read_text(encoding="utf-8")
     assert "ACME AS" in html and "912345678" in html and 'name="viewport"' in html
     assert "@media (max-width:760px)" in html and "Evidence Inspector" in html
+
+
+# --- full-run audit findings (round 1) ----------------------------------------
+
+def test_branch_on_national_site_gets_website_but_not_its_content():
+    profile = _site_profile(
+        "NATURVERNFORBUNDET I SANDNES", "https://naturvernforbundet.no/", title="Naturvernforbundet",
+        text="Naturvernforbundet er Norges eldste miljøvernorganisasjon. " * 4,
+        registry={"hjemmeside": "naturvernforbundet.no", "epostadresse": "sandnes@naturvernforbundet.no"},
+    )
+    assessment = assess_website_identity(profile)
+    assert assessment["publishable"] and not assessment["content_attributable"]
+
+
+def test_company_named_on_its_own_site_owns_the_content():
+    profile = _site_profile("ELTAVLER AS", "https://www.eltavler.no/", title="Eltavler AS",
+                            text="Eltavler AS, Tomtegata 12, 3050 Mjøndalen. " * 3,
+                            registry={"forretningsadresse.adresse": "Tomtegata 12", "forretningsadresse.postnummer": "3050"})
+    assert assess_website_identity(profile)["content_attributable"]
+
+
+def test_section_of_a_larger_site_is_scoped():
+    from norway_company_agent.identity import site_scope, within_site_scope
+    scope = site_scope("https://www.venstre.no/lokal/telemark/midt-telemark/")
+    assert scope == "/lokal/telemark/midt-telemark/"
+    assert within_site_scope("https://www.venstre.no/lokal/telemark/midt-telemark/arsmote-2026", "https://www.venstre.no/lokal/telemark/midt-telemark/", scope)
+    assert not within_site_scope("https://www.venstre.no/artikkel/2021/04/13/forbrukerradet", "https://www.venstre.no/lokal/telemark/midt-telemark/", scope)
+    assert site_scope("https://www.blaser-group.com/no/") is None and site_scope("https://acme.no/") is None
+
+
+def test_link_text_is_not_a_job_title():
+    assert not is_publishable_job(_job("Les mer om stillingen her!", "https://www.finn.no/job/ad/475278843", evidence=("ats_listing",)))
+    assert not is_publishable_job(_job("Klikk her for å søke", "https://acme.teamtailor.com/jobs/1", evidence=("ats_listing",)))
+
+
+def test_contact_and_plain_pages_are_not_news():
+    today = date(2026, 10, 4)
+    contact = _news("Kontakt - Lasse Evensen Taksering AS", "https://lasseevensentaksering.com/kontakt/", "2026-03-24", found_on="https://lasseevensentaksering.com/kontakt/")
+    assert not is_publishable_news(contact, today)
+    plain_page = _news("Våre tjenester innen taksering", "https://acme.no/tjenester/", "2026-03-24", found_on="https://acme.no/tjenester/")
+    assert not is_publishable_news(plain_page, today)
+    article_page = _news("Ny avtale med Statens vegvesen", "https://acme.no/nyheter/ny-avtale", "2026-03-24", found_on="https://acme.no/nyheter/ny-avtale")
+    assert is_publishable_news(article_page, today)
+
+
+def test_unresolvable_domain_is_not_available_not_blocked(monkeypatch):
+    import socket
+    from norway_company_agent import website
+
+    def no_dns(*_args, **_kwargs):
+        raise socket.gaierror("no such host")
+
+    monkeypatch.setattr(website.socket, "getaddrinfo", no_dns)
+    record, metrics = website.fetch_website("https://no-such-company.no/")
+    assert record["status"] == "not_found" and normalize_status(record["status"]) == "not_available"
+    assert metrics["requests"] == 0
+
+
+def test_full_name_domain_is_tried_before_shortened_variants():
+    from norway_company_agent.discovery import generate_company_candidate_sources
+    urls = [c.url for c in generate_company_candidate_sources({"name": "TAKSTHUSET 1 AS", "evidence": {}})]
+    assert urls[0] == "https://taksthuset1.no/" and urls.index("https://taksthuset1.no/") < urls.index("https://taksthuset.no/")
+    urls = [c.url for c in generate_company_candidate_sources({"name": "ASKER MARINE SERVICE AS", "evidence": {}})]
+    assert urls[0] == "https://askermarineservice.no/"
+
+
+def test_items_attributed_to_two_companies_are_withheld():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("runner", Path(__file__).resolve().parents[1] / "scripts" / "run_competition_batch.py")
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+
+    def company(org, urls):
+        observations = [{"id": url, "organisation_number": org, "signal_type": "job_posting", "source_url": url, "platform": "job_board"} for url in urls]
+        return {"organisation_number": org, "name": org, "evidence": {"external_footprint": {"status": "available", "value": {"observations": observations}}}}
+
+    a, b = company("911111111", ["https://www.finn.no/job/ad/1", "https://a.no/jobb/1"]), company("922222222", ["https://finn.no/job/ad/1/"])
+    report = runner.withhold_shared_observations([a, b])
+    assert report == {"shared_items": 1, "companies_affected": 2}
+    assert [o["source_url"] for o in a["evidence"]["external_footprint"]["value"]["observations"]] == ["https://a.no/jobb/1"]
+    assert b["evidence"]["external_footprint"]["status"] == "not_available"
+
+
+def test_registered_facebook_page_is_a_social_profile_not_a_website():
+    from norway_company_agent.adapters.sources import RegistrySocialAdapter
+    profile = {
+        "organisation_number": "912345678", "name": "NORDSTRAND DRILLKLUBB",
+        "registry_social": "https://www.facebook.com/drillklubbnordstrand/",
+        "evidence": {"registry_live": {"status": "available", "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/912345678",
+                                       "retrieved_at": "2026-10-04T00:00:00Z", "content_sha256": "a" * 64, "snapshot_sha256": "a" * 64}},
+    }
+    [obs] = RegistrySocialAdapter().extract_observations(profile)
+    assert obs["platform"] == "facebook" and obs["signal_type"] == "profile_handle"
+    assert obs["source_class"] == "official_registry" and obs["snapshot_sha256"] == "a" * 64
+    from norway_company_agent.external_footprint import publishable_observation
+    assert publishable_observation(obs)
+
+
+# --- full-run audit findings (round 3) ----------------------------------------
+
+def test_one_word_name_with_only_a_city_match_is_not_published():
+    text = "Veronica Writes: stories and notes. Based in Bergen. " * 4
+    profile = _site_profile("T BERGLYD", "https://berglyd.net/", title="Veronica Writes Berglyd", text=text,
+                            registry={"forretningsadresse.poststed": "BERGEN", "forretningsadresse.postnummer": "5003"})
+    assert not assess_website_identity(profile)["publishable"]
+
+
+def test_error_page_is_not_a_website():
+    profile = _site_profile("BYGGMEISTER SONDRE VIKØY", "http://www.byggmeistersondrevikoy.no/_404/index.w3", title="Byggmeister Sondre Vikøy",
+                            text="Byggmeister Sondre Vikøy " * 10, registry={"hjemmeside": "www.byggmeistersondrevikoy.no"})
+    assert not assess_website_identity(profile)["publishable"]
+
+
+def test_social_handle_of_a_different_legal_form_is_rejected():
+    from norway_company_agent.identity import assess_social_identity
+    profile = {"name": "RIME AS", "legal_form": "AS"}
+    assert not assess_social_identity(profile, {"platform": "linkedin", "url": "https://linkedin.com/company/rime-advokatfirma-da"})["publishable"]
+    assert assess_social_identity(profile, {"platform": "linkedin", "url": "https://linkedin.com/company/rime-as"})["publishable"]
+
+
+def test_brand_site_keeps_content_but_branch_on_national_site_does_not():
+    torp = _site_profile("SANDEFJORD LUFTHAVN DRIFT AS", "https://www.torp.no/", title="Sandefjord lufthavn Torp",
+                         text="Velkommen til Sandefjord lufthavn Torp. " * 4,
+                         registry={"hjemmeside": "www.torp.no", "epostadresse": "post@torp.no", "forretningsadresse.kommune": "SANDEFJORD"})
+    assert assess_website_identity(torp)["content_attributable"]
+    branch = _site_profile("NATURVERNFORBUNDET OSLO ØST", "https://naturvernforbundet.no/", title="Naturvernforbundet",
+                           text="Naturvernforbundet i hele landet, Grensen 9, Oslo. " * 4,
+                           registry={"hjemmeside": "naturvernforbundet.no", "epostadresse": "oslo.ost@naturvernforbundet.no", "forretningsadresse.kommune": "OSLO"})
+    assessment = assess_website_identity(branch)
+    assert assessment["publishable"] and not assessment["content_attributable"]
+
+
+def test_index_and_shop_pages_are_not_news():
+    today = date(2026, 10, 4)
+    for url in ("https://berglyd.net/blog/categories/writing/", "https://lux-case.no/collections/smartphone-apple-iphone", "https://nabovarselnorge.no/register/"):
+        assert not is_publishable_news(_news("Something worth reading here", url, "2026-04-21"), today), url
+
+
+# --- full-run audit findings (round 4) ----------------------------------------
+
+def test_norwegian_letters_normalise_the_same_everywhere():
+    from norway_company_agent.identity import _compact_identity_text, _tokens
+    assert _compact_identity_text("Frisør Østre Ålesund") == "".join(_tokens("Frisør Østre Ålesund"))
+
+
+def test_shortened_guess_redirecting_to_a_group_page_needs_the_company_in_its_title():
+    profile = _site_profile("LERØY OCEAN HARVEST AS", "https://www.leroyseafood.com/no/smakfull-sjomat/", title="Smakfull sjømat | Lerøy",
+                            text="Lerøy Seafood Group. Våre selskaper: Lerøy Ocean Harvest AS, Lerøy Aurora AS. Thormøhlens gate 51, 5006 Bergen. " * 2,
+                            registry={"forretningsadresse.adresse": "Thormøhlens gate 51", "forretningsadresse.postnummer": "5006", "forretningsadresse.poststed": "BERGEN"})
+    profile["evidence"]["website"]["value"]["requested_url"] = "https://leroy.no/"
+    assert not assess_website_identity(profile)["publishable"]
+
+
+def test_exact_name_domain_redirecting_to_the_brand_site_is_fine():
+    profile = _site_profile("TASTE OF THAI AS", "https://tasteofthailand.no/", title="Hjem - Taste of Thailand",
+                            text="Taste of Thai AS. Thai restaurant. Storgata 10, 8200 Fauske. " * 3,
+                            registry={"forretningsadresse.adresse": "Storgata 10", "forretningsadresse.postnummer": "8200"})
+    profile["evidence"]["website"]["value"]["requested_url"] = "https://tasteofthai.no/"
+    assert assess_website_identity(profile)["publishable"]
+
+
+def test_registered_person_on_registry_listed_site_owns_its_content():
+    profile = _site_profile("LA5B - SARPSBORG GRUPPEN AV NRRL", "https://la5b.no/", title="LA5B",
+                            text="LA5B amatørradio. Kontakt: Hernan Antonio Serrano. " * 3,
+                            registry={"hjemmeside": "www.la5b.no", "forretningsadresse.kommune": "SARPSBORG"})
+    profile["evidence"]["roles"] = {"value": {"roles": [{"name": "Hernan Antonio Serrano", "role_code": "LEDE"}]}}
+    assessment = assess_website_identity(profile)
+    assert assessment["publishable"] and assessment["content_attributable"]
+
+
+def test_namesake_owner_on_a_site_does_not_confirm_a_personal_name_company():
+    profile = _site_profile("CALLUM INNES", "https://calluminnes.com/", title="Callum Innes",
+                            text="Callum Innes, painter. Exhibitions and works. " * 4, registry={"forretningsadresse.kommune": "OSLO"})
+    profile["evidence"]["roles"] = {"value": {"roles": [{"name": "Callum James Charles Innes", "role_code": "INNH"}]}}
+    assert not assess_website_identity(profile)["publishable"]

@@ -47,7 +47,7 @@ from norway_company_agent.official import fetch_official_modules, merge_live_reg
 from norway_company_agent.refresh import diff_profile  # noqa: E402
 from norway_company_agent.research import synthesize_company_intelligence  # noqa: E402
 from norway_company_agent.viewer import build_viewer  # noqa: E402
-from norway_company_agent.website import fetch_website  # noqa: E402
+from norway_company_agent.website import fetch_website, normalize_homepage, normalize_social_url  # noqa: E402
 
 DEFAULT_MODULES = "registry,accounting_obligation,registry_live,financials,roles,group,locations,website,external_footprint"
 NO_REQUESTS = {"requests": 0, "bytes": 0, "latencies_ms": []}
@@ -125,6 +125,45 @@ def demote_unverified_website(record: dict) -> dict:
     )
 
 
+SHAREABLE_SIGNALS = {"job_posting", "public_post", "profile_handle"}
+
+
+def _canonical_url(url: str) -> str:
+    parsed = urllib.parse.urlparse(url or "")
+    return f"{(parsed.hostname or '').casefold().removeprefix('www.')}{(parsed.path or '').rstrip('/').casefold()}"
+
+
+def withhold_shared_observations(profiles: list[dict]) -> dict:
+    """A job, article or social profile can belong to only one company. If the same item was
+    attributed to two companies in this batch (e.g. branches sharing a national site), it is
+    withheld from both rather than published under a company it may not belong to."""
+    owners: dict[str, set[str]] = {}
+    for profile in profiles:
+        for obs in ((profile["evidence"].get("external_footprint") or {}).get("value") or {}).get("observations") or []:
+            if obs.get("signal_type") in SHAREABLE_SIGNALS:
+                owners.setdefault(_canonical_url(obs.get("source_url")), set()).add(profile["organisation_number"])
+    shared = {url for url, orgs in owners.items() if len(orgs) > 1}
+    affected = 0
+    for profile in profiles:
+        record = profile["evidence"].get("external_footprint") or {}
+        value = record.get("value") or {}
+        observations = value.get("observations") or []
+        kept = [obs for obs in observations if not (obs.get("signal_type") in SHAREABLE_SIGNALS and _canonical_url(obs.get("source_url")) in shared)]
+        if len(kept) == len(observations):
+            continue
+        affected += 1
+        summary = aggregate_footprint(kept)
+        summary["observations"] = kept
+        summary["withheld_shared"] = [
+            {"source_url": obs.get("source_url"), "signal_type": obs.get("signal_type"), "reason": "Also attributed to another company in this batch; ownership is ambiguous"}
+            for obs in observations if obs not in kept
+        ]
+        record["value"] = summary
+        record["status"] = "available" if kept else "not_available"
+        profile["synthesis"] = synthesize_company_intelligence(profile)
+    return {"shared_items": len(shared), "companies_affected": affected}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Signalpost: one evidence-backed result per Norwegian organisation number")
     parser.add_argument("--organisations", required=True, help="JSON, JSONL, or text file of organisation numbers supplied at run time")
@@ -200,7 +239,16 @@ def main() -> None:
             return record, met
 
         website_url = profile.get("website")
+        if website_url and normalize_social_url(normalize_homepage(website_url) or ""):
+            # The registered web address is a social profile: publish it as such (see
+            # RegistrySocialAdapter) and look for an actual website among the candidates.
+            profile["registry_social"] = normalize_homepage(website_url)
+            website_url = None
         website_record, _ = fetch(website_url or None)
+        if website_url and website_record.get("status") == "source_error" and "timed out" in str(website_record.get("note") or "").casefold():
+            # One retry for the registry-listed site, so a single slow response does not lose it.
+            cache.pop(normalize_candidate_url(website_url), None)
+            website_record, _ = fetch(website_url, timeout=25.0)
         gated = apply_website_identity_gate(profile, website_record)
         opportunity = calculate_discovery_opportunity(profile)
 
@@ -210,7 +258,7 @@ def main() -> None:
                 if normalize_candidate_url(candidate.url) != normalize_candidate_url(website_url)
             ]
             # Guessed domains get a short timeout: a real company site answers quickly.
-            funnel = assess_candidate_funnel(profile, candidates, fetch_fn=lambda url: fetch(url, timeout=8.0), identity_gate_fn=apply_website_identity_gate, max_fetches=3)
+            funnel = assess_candidate_funnel(profile, candidates, fetch_fn=lambda url: fetch(url, timeout=8.0), identity_gate_fn=apply_website_identity_gate, max_fetches=5)
             profile["discovery_funnel"] = funnel.get("funnel_metrics")
             if funnel.get("verified_sources"):
                 verified_record, _ = fetch(funnel["verified_sources"][0]["url"])
@@ -246,6 +294,18 @@ def main() -> None:
         for cached_record, _ in cache.values():
             if cached_record is not gated["website"]:
                 strip_transient_bytes(cached_record)
+        landed = (gated["website"].get("value") or {}).get("final_url") or ""
+        if gated["website"].get("status") == "available" and normalize_social_url(landed):
+            # The company's address redirects to a social profile: that profile is not a website.
+            strip_transient_bytes(gated["website"])
+            if (gated.get("assessment") or {}).get("publishable"):
+                profile["registry_social"] = landed
+            profile["evidence"]["website"] = evidence(
+                "website", "not_available", "registry_linked_company_website", gated["website"].get("source_url") or landed,
+                value={"redirects_to_social_profile": landed}, retrieved_at=gated["website"].get("retrieved_at"),
+                note="The company's web address redirects to a social profile, published as such",
+            )
+            return
         profile["evidence"]["website"] = demote_unverified_website(gated["website"])
 
     def carry_forward(profile: dict) -> None:
@@ -359,6 +419,7 @@ def main() -> None:
 
     completed_at = utc_now()
     ordered = [state[org] for org in orgs]
+    shared_report = withhold_shared_observations(ordered)
     envelopes = [terminal_envelope(profile, run_id=run_id, modules=requested_modules, started_at=started_at, completed_at=completed_at) for profile in ordered]
     validation = validate_envelopes(envelopes, len(orgs))
     write_jsonl(profiles_path, ordered)
@@ -396,6 +457,7 @@ def main() -> None:
             "p50_ms": latencies[len(latencies) // 2] if latencies else 0,
             "p95_ms": latencies[int(len(latencies) * 0.95)] if latencies else 0,
         },
+        "withheld_shared_items": shared_report,
         "evidence_store": store.summary(),
         "validation": validation,
     }

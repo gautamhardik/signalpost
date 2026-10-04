@@ -78,6 +78,11 @@ POSTING_HINTS = re.compile(
     r"tiltredelse|arbeidssted|stillingstittel|job id|stillings-?id",
     re.IGNORECASE,
 )
+LINK_TEXT_PATTERN = re.compile(
+    r"^(?:les mer|read more|klikk her|trykk her|se mer|mer om|mer info|søk her|søk nå|apply|se stilling|se ledige|vis stilling)"
+    r"|stillingen her|her!?$|click here|learn more",
+    re.IGNORECASE,
+)
 RECRUITER_DOMAINS = {
     "finn.no", "jobbnorge.no", "webcruiter.com", "webcruiter.no", "karrierestart.no",
     "manpower.no", "adecco.no", "nav.no", "linkedin.com",
@@ -109,6 +114,8 @@ def is_publishable_job(job: "JobRecord") -> bool:
     with a deadline, posting terms or an applicant-tracking link. A careers page is not enough."""
     title = job.job_title.casefold().strip()
     if title in JOB_LINK_TEXT or title in GENERIC_CAREER_TITLES or not (4 <= len(title) <= 160):
+        return False
+    if LINK_TEXT_PATTERN.search(title):
         return False
     if job.extraction_method == "jsonld":
         return True
@@ -578,9 +585,14 @@ def extract_job_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
     observations: list[dict[str, Any]] = []
     seen: set[str] = set()
 
+    from .identity import within_site_scope
+    web_value = website.get("value") or {}
+    scope = (web_value.get("identity_assessment") or {}).get("site_scope")
     for job in jobs:
         if not is_publishable_job(job):
             continue
+        if not within_site_scope(job.source_url, web_value.get("final_url"), scope):
+            continue  # the posting belongs to the wider site (or an ATS we cannot tie to this section)
         key = f"{job.source_url}|{job.job_title.casefold()}"
         if key in seen:
             continue

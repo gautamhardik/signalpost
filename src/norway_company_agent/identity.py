@@ -24,9 +24,10 @@ def _tokens(value: Any) -> list[str]:
 
 
 def _compact_identity_text(value: object) -> str:
-    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize(
-        "NFKD", str(value or "")
-    ).encode("ascii", "ignore").decode().casefold())
+    # Transliterate Norwegian letters the same way _tokens does, so "Frisør" becomes "frisor"
+    # in both (NFKD alone would drop the "ø").
+    text = str(value or "").translate(str.maketrans({"ø": "o", "Ø": "O", "å": "a", "Å": "A", "æ": "ae", "Æ": "AE"}))
+    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().casefold())
 
 
 def _compact_digits(value: object) -> str:
@@ -46,6 +47,42 @@ def _structured_names(value: Any) -> list[str]:
         for child in value:
             names.extend(_structured_names(child))
     return names
+
+
+BRANCH_WORDS = {
+    "ost", "vest", "nord", "sor", "midt", "indre", "ytre", "ostre", "vestre", "nordre", "sondre", "region",
+    "avdeling", "avd", "lokallag", "lag", "krets", "distrikt", "fylkeslag", "fylke", "kommune",
+    "ostfold", "akershus", "buskerud", "vestfold", "telemark", "agder", "rogaland", "hordaland", "vestland",
+    "sogn", "fjordane", "more", "romsdal", "trondelag", "nordland", "troms", "finnmark", "innlandet",
+    "hedmark", "oppland", "viken", "oslo", "bergen", "trondheim", "stavanger",
+}
+
+
+def specific_name_tokens(name: Any, host: str) -> list[str]:
+    """Name words not already in the site's domain: what distinguishes this company from the
+    organisation the domain belongs to ("sandnes" in Naturvernforbundet i Sandnes on
+    naturvernforbundet.no). Empty when the domain carries the whole name."""
+    root = re.sub(r"[^a-z0-9]", "", (host or "").casefold().removeprefix("www.").split(".")[0])
+    return [token for token in _tokens(name) if token not in root]
+
+
+def site_scope(url: str) -> str | None:
+    """Path prefix a company's pages live under when its "website" is a section of a larger
+    site (venstre.no/lokal/telemark/midt-telemark/); None when the site is the whole domain."""
+    path = urllib.parse.urlparse(url or "").path or "/"
+    segments = [segment for segment in path.split("/") if segment]
+    if len(segments) < 2:
+        return None
+    return path if path.endswith("/") else path.rsplit("/", 1)[0] + "/"
+
+
+def within_site_scope(url: str, website_url: str, scope: str | None) -> bool:
+    """True when url belongs to the company's part of the site (always true without a scope)."""
+    if not scope:
+        return True
+    target, site = urllib.parse.urlparse(url or ""), urllib.parse.urlparse(website_url or "")
+    same_host = (target.hostname or "").removeprefix("www.") == (site.hostname or "").removeprefix("www.")
+    return same_host and (target.path or "/").startswith(scope)
 
 
 def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
@@ -206,6 +243,10 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     overlap = sorted(set(core) & candidate_tokens)
     ratio = len(overlap) / len(set(core)) if core else 0.0
     reasons = []
+    error_page = bool(
+        re.search(r"(?:^|/)_?404(?:[/._]|$)", urllib.parse.urlparse(value.get("final_url") or "").path or "")
+        or re.search(r"\b404\b|page not found|siden finnes ikke|fant ikke siden|side ikke funnet|finner ikke siden", str(value.get("title") or ""), re.I)
+    )
     parked_markers = (
         "domain is for sale", "domain for sale", "hugedomains", "parked at", "miss hosting",
         "her flytter snart en ny gjest", "has been informing visitors", "is parked", "domain is parked",
@@ -221,6 +262,19 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     found_org_numbers = set(re.findall(r"\b[89]\d{8}\b", homepage_candidate_text))
     has_conflicting_org = bool(org_digits and any(o != org_digits for o in found_org_numbers))
 
+    # A site reached through a shortened-name domain (leroy.no -> a group page) must name the
+    # company's distinguishing words in its own title/description, not just in a footer that
+    # lists every group company.
+    requested_host = urllib.parse.urlparse(value.get("requested_url") or "").hostname or candidate_host
+    guess_specific = specific_name_tokens(profile.get("name"), requested_host)
+    title_level = _compact_identity_text(" ".join(str(part or "") for part in [value.get("title"), value.get("description"), rendered.get("title"), *structured_names]))
+    guess_place = set(_tokens(" ".join(str(registry_value.get(key) or "") for key in ("forretningsadresse.kommune", "forretningsadresse.poststed")))) | BRANCH_WORDS
+    redirected_elsewhere = requested_host.removeprefix("www.") != candidate_host.removeprefix("www.")
+    guessed_domain_unnamed = redirected_elsewhere and bool(guess_specific) and not (org_digits and org_digits in compact_homepage_candidate) and not (
+        all(token in title_level for token in guess_specific if token in guess_place)
+        and any(token in title_level for token in guess_specific)
+    )
+
     # A name match alone is not enough for a site found by guessing or search: common
     # words ("venture", "nyati") are shared by unrelated businesses worldwide. Such a
     # site must also be linked to the company by the registry, by a Norwegian address
@@ -234,25 +288,34 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         if role.get("inactive") or role.get("organisation_number"):
             continue
         name_tokens = _tokens(role.get("name"))
+        if name_tokens and {name_tokens[0], name_tokens[-1]} <= set(core):
+            continue  # the company is named after this person; their name on a site proves nothing
         if len(name_tokens) >= 2 and f" {name_tokens[0]} " in f" {compact_site} " and f" {name_tokens[-1]} " in f" {compact_site} ":
             full = " ".join(name_tokens)
             first_last = f"{name_tokens[0]} {name_tokens[-1]}"
             if full in compact_site or first_last in compact_site:
                 person_match = role.get("name")
                 break
-    local_corroboration = street_match or postcode_match or phone_match or city_match or subunit_match or bool(person_match)
+    strong_local = street_match or postcode_match or phone_match or subunit_match or bool(person_match)
+    local_corroboration = strong_local or city_match
     raw_name_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", str(profile.get("name") or "")).encode("ascii", "ignore").decode().casefold())
     dropped_short_tokens = [tok for tok in raw_name_tokens if len(tok) == 1 and tok not in LEGAL_AND_GENERIC]
     norwegian_named_domain = (
         candidate_host.endswith(".no")
         and bool(core)
-        and "".join(core) in cand_domain_root.replace("-", "")
+        and "".join(core) == cand_domain_root.replace("-", "")
         and not dropped_short_tokens
     )
     # Single-word names are too often shared, so a guessed domain alone never confirms them.
-    name_link_ok = registry_linked or local_corroboration or (norwegian_named_domain and len(core) >= 2)
+    if len(core) == 1:
+        name_link_ok = registry_linked or strong_local
+    else:
+        name_link_ok = registry_linked or local_corroboration or norwegian_named_domain
 
-    if any(marker in normalized_raw for marker in parked_markers):
+    if error_page:
+        score = 0.1
+        reasons.append("captured page is an error (404) page, not a company website")
+    elif any(marker in normalized_raw for marker in parked_markers):
         score = 0.1
         reasons.append("captured page is a parked, for-sale, or generic hosting placeholder")
     elif is_business_sports_club and "bedriftsidrett" not in normalized_candidate_text and "b i l" not in normalized_candidate_text:
@@ -269,6 +332,9 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         # which the company itself registered; that holds even for a script-only homepage.
         score = 0.92
         reasons.append("registry website and registry e-mail domain both point to this domain")
+    elif not registry_linked and guessed_domain_unnamed:
+        score = 0.85
+        reasons.append("site reached through a shortened name does not name this specific company in its title or description")
     elif len(core) >= 2 and exact_homepage_name and name_link_ok:
         score = 0.95
         reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
@@ -311,16 +377,45 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         score = 0.3
         reasons.append("registry-linked URL lacks strong exact-entity identity evidence")
     status = "exact" if score >= 0.9 else "review" if score >= 0.8 else "related_or_uncertain"
+    # A site can be correctly listed as the company's website yet belong to a broader
+    # organisation (a national association's site registered by a local branch). Its news,
+    # jobs and social links are then not this company's. Treat content as the company's own
+    # only when the site names this exact entity: its org.nr, or its full name on the homepage,
+    # or its full name anywhere on the site together with registered address/phone/person.
+    full_name_on_site = bool(core) and set(core).issubset(candidate_tokens)
+    specific = specific_name_tokens(profile.get("name"), candidate_host)
+    compact_homepage_identity = _compact_identity_text(" ".join(str(part or "") for part in homepage_identity_parts))
+    homepage_token_union = {t for s in homepage_token_sets for t in s}
+    shown = lambda token: (token in compact_homepage_identity) if len(token) >= 5 else (token in homepage_token_union)  # noqa: E731
+    place_words = set(_tokens(" ".join(str(registry_value.get(key) or "") for key in (
+        "forretningsadresse.kommune", "forretningsadresse.poststed", "postadresse.poststed", "postadresse.kommune",
+    )))) | BRANCH_WORDS
+    # Branch-like qualifiers (place, region, "avdeling") must all be on the site; otherwise one
+    # distinguishing word is enough ("Sandefjord" on torp.no for Sandefjord Lufthavn Drift).
+    specific_on_homepage = (not specific) or (
+        all(shown(token) for token in specific if token in place_words)
+        and any(shown(token) for token in specific)
+    )
+    content_attributable = status == "exact" and bool(
+        (org_digits and org_digits in compact_homepage_candidate)
+        or exact_homepage_name
+        or (full_name_on_site and local_corroboration)
+        or (registry_linked and specific_on_homepage)
+        or (registry_linked and bool(person_match))
+    )
     return {
         "status": status,
         "score": score,
         "publishable": status == "exact",
         "exact_entity": score >= 0.9,
+        "content_attributable": content_attributable,
+        "site_scope": site_scope(value.get("final_url") or website.get("source_url") or ""),
         "matched_name_tokens": overlap,
         "name_token_count": len(core),
         "name_match_ratio": ratio,
         "email_domain": email_domain or None,
         "email_domain_match": email_domain_match,
+        "registry_domain_match": registry_domain_match,
         "registry_identity": {
             "person_match": person_match,
             "street_match": street_match,
@@ -350,7 +445,14 @@ def assess_social_identity(profile: dict[str, Any], link: dict[str, str]) -> dic
     matched = [token for token in core if (token in handle_tokens or token in handle_compact or token in handle_raw_compact)]
     ratio = len(set(matched)) / len(set(core)) if core else 0.0
 
-    if (core_compact and (core_compact in handle_compact or core_compact in handle_raw_compact)):
+    legal_forms = {"as", "asa", "da", "ans", "sa", "nuf", "ab", "enk", "ks", "iks"}
+    company_form = str(profile.get("legal_form") or "").casefold()
+    raw_handle_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", handle_text).encode("ascii", "ignore").decode().casefold())
+    other_form = next((token for token in raw_handle_tokens[1:] if token in legal_forms and token != company_form), None)
+    if other_form:
+        score = 0.3
+        reason = f"social handle names a different legal form ({other_form.upper()}) than the company ({company_form.upper()})"
+    elif (core_compact and (core_compact in handle_compact or core_compact in handle_raw_compact)):
         score = 0.98
         reason = "normalized legal-name sequence appears in the social handle"
     elif len(core) == 1 and matched:

@@ -5,6 +5,7 @@ from .base import BaseSourceAdapter
 from .sources import (
     GovernanceRolesAdapter,
     HiringAdapter,
+    RegistrySocialAdapter,
     SiteActivityAdapter,
     SiteNewsAdapter,
     SocialProfilesAdapter,
@@ -12,6 +13,7 @@ from .sources import (
 )
 
 DEFAULT_ADAPTERS: list[BaseSourceAdapter] = [
+    RegistrySocialAdapter(),
     SocialProfilesAdapter(),
     SiteActivityAdapter(),
     HiringAdapter(),

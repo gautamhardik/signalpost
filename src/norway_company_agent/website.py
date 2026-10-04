@@ -55,11 +55,15 @@ def assert_public_url(url: str) -> None:
     try:
         addresses = {item[4][0] for item in socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)}
     except socket.gaierror as exc:
-        raise ValueError("Hostname did not resolve") from exc
+        raise UnresolvableHost("Hostname did not resolve") from exc
     for address in addresses:
         ip = ipaddress.ip_address(address)
         if not ip.is_global:
             raise ValueError("Private, loopback, link-local, multicast, and reserved addresses are blocked")
+
+
+class UnresolvableHost(ValueError):
+    """The hostname has no DNS record: the site does not exist, nothing refused us."""
 
 
 class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -433,6 +437,18 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         return evidence("website", "not_found", "registry_linked_company_website", "https://data.brreg.no/enhetsregisteret/api/enheter", note="No valid registry website URL"), {"requests": 0, "bytes": 0, "latencies_ms": []}
     try:
         assert_public_url(normalized)
+    except UnresolvableHost:
+        host = urllib.parse.urlparse(normalized).hostname or ""
+        if not host.startswith("www."):
+            # Many Norwegian sites only answer on the www. name.
+            www_url = normalized.replace(f"://{host}", f"://www.{host}", 1)
+            try:
+                assert_public_url(www_url)
+            except ValueError:
+                pass
+            else:
+                return fetch_website(www_url, timeout=timeout, max_bytes=max_bytes)
+        return evidence("website", "not_found", "registry_linked_company_website", normalized, note="Domain does not resolve (no DNS record)"), {"requests": 0, "bytes": 0, "latencies_ms": []}
     except ValueError as exc:
         return evidence("website", "blocked", "registry_linked_company_website", normalized, note=str(exc)), {"requests": 0, "bytes": 0, "latencies_ms": []}
     if not _robots_allowed(normalized, timeout):
@@ -446,14 +462,14 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             raw = response.read(max_bytes + 1)
             elapsed = int((time.monotonic() - started) * 1000)
             if len(raw) > max_bytes:
-                return evidence("website", "blocked", "registry_linked_company_website", normalized, note="Homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
+                return evidence("website", "source_error", "registry_linked_company_website", normalized, note="Homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
             if "html" not in content_type.lower():
                 return evidence("website", "source_error", "registry_linked_company_website", normalized, note=f"Unsupported content type: {content_type}"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
             final_url = response.geturl()
             assert_public_url(final_url)
         decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
         if len(decompressed_raw) > max_bytes:
-            return evidence("website", "blocked", "registry_linked_company_website", normalized, note="Decompressed homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
+            return evidence("website", "source_error", "registry_linked_company_website", normalized, note="Decompressed homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
         html = decompressed_raw.decode("utf-8", errors="replace")
         soup = BeautifulSoup(html, "lxml")
         structured = extruct.extract(html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])

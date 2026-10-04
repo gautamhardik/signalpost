@@ -162,6 +162,16 @@ def _tokens(value: Any) -> list[str]:
     return [token for token in re.findall(r"[a-z0-9]+", text) if len(token) > 1]
 
 
+LEGAL_SUFFIX_TOKENS = {"as", "asa", "ans", "da", "enk", "nuf", "sa", "iks", "ks", "ba", "sf", "hf", "bbl", "brl", "esek", "fli", "sti"}
+
+
+def _full_name_tokens(name: str) -> list[str]:
+    """Every word of the name except the legal-form suffix, keeping digits ("Taksthuset 1")."""
+    text = name.translate(str.maketrans({"ø": "o", "å": "a", "æ": "ae", "Ø": "O", "Å": "A", "Æ": "AE", "&": " "}))
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().casefold()
+    return [token for token in re.findall(r"[a-z0-9]+", text) if token not in LEGAL_SUFFIX_TOKENS]
+
+
 def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_candidates: int = MAX_DOMAIN_CANDIDATES_PER_COMPANY) -> list[str]:
     """Generate high-confidence candidate domain URLs derived from clean legal name tokens.
     
@@ -178,6 +188,19 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
 
     raw_candidates: list[str] = []
     
+    # Most specific first: the whole name as one domain ("askermarineservice.no",
+    # "taksthuset1.no"). Shortened variants come later because they often belong to
+    # a different company ("asker.no", "taksthuset.no").
+    full = _full_name_tokens(name)
+    joined = "".join(full)
+    if 1 <= len(full) <= 5 and 3 <= len(joined) <= 40:
+        raw_candidates.append(f"https://{joined}.no/")
+        if len(full) > 1:
+            raw_candidates.append(f"https://{'-'.join(full)}.no/")
+        without_og = [token for token in full if token != "og"]
+        if without_og != full:
+            raw_candidates.append(f"https://{''.join(without_og)}.no/")
+
     t1 = tokens[0] if len(tokens) > 0 else ""
     t2 = tokens[1] if len(tokens) > 1 else ""
     t3 = tokens[2] if len(tokens) > 2 else ""
@@ -225,6 +248,9 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
             f"https://{t1}-{t2}-{t3}-{t4}.no/",
             f"https://{t1}group.no/",
         ])
+
+    if 1 <= len(full) <= 5 and 3 <= len(joined) <= 40:
+        raw_candidates.insert(min(len(raw_candidates), 4), f"https://{joined}.com/")
 
     deduped: list[str] = []
     seen: set[str] = set()
@@ -310,16 +336,42 @@ def generate_company_candidate_sources(profile: dict[str, Any], *, max_candidate
                 rank=1,
             ))
 
-    # 1. Tier 2: Email domain & Subunit candidates (high specificity)
+    # 1. Registry e-mail domain first, then the full-name domains, then sub-unit names,
+    #    then shortened name variants.
     rel_cands = generate_brreg_relationship_candidates(profile, max_candidates=4)
-    for c in rel_cands:
+    email_cands = [c for c in rel_cands if c.discovery_tier == "tier2_email_domain"]
+    subunit_cands = [c for c in rel_cands if c.discovery_tier != "tier2_email_domain"]
+    domain_cands = generate_deterministic_domain_candidates(profile, max_candidates=MAX_DOMAIN_CANDIDATES_PER_COMPANY)
+    full_name_count = min(len(domain_cands), 2)
+    subunit_cands = subunit_cands[:2]
+    for c in email_cands:
+        if c.url not in seen:
+            seen.add(c.url)
+            candidates.append(c)
+    for dom_url in domain_cands[:full_name_count]:
+        if dom_url not in seen:
+            seen.add(dom_url)
+            candidates.append(CandidateSource(
+                url=dom_url,
+                source_type="website",
+                discovery_tier="tier1_deterministic_domain",
+                discovery_reason="Full legal name as domain",
+                rank=len(candidates) + 1,
+            ))
+    # the short brand name (e.g. "ramsvik.no") before sub-unit guesses
+    short_name = [url for url in domain_cands[full_name_count:] if url.count(".") == 1][:1]
+    for dom_url in short_name:
+        if dom_url not in seen:
+            seen.add(dom_url)
+            candidates.append(CandidateSource(url=dom_url, source_type="website", discovery_tier="tier1_deterministic_domain",
+                                              discovery_reason="Short legal name as domain", rank=len(candidates) + 1))
+    for c in subunit_cands:
         if c.url not in seen:
             seen.add(c.url)
             candidates.append(c)
 
-    # 2. Tier 1: Deterministic Name Domain Candidates
-    domain_cands = generate_deterministic_domain_candidates(profile, max_candidates=MAX_DOMAIN_CANDIDATES_PER_COMPANY)
-    for dom_url in domain_cands:
+    # 2. Tier 1: remaining deterministic name variants
+    for dom_url in domain_cands[full_name_count:]:
         if dom_url not in seen:
             seen.add(dom_url)
             candidates.append(CandidateSource(
