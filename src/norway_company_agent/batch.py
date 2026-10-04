@@ -5,21 +5,13 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
-from .evidence import evidence, utc_now
+from .evidence import PUBLISHED_STATES, evidence, normalize_status, utc_now
 from .official import accounting_obligation_assessment
 from .sampling import iter_bulk
 
 
-TERMINAL_STATES = {
-    "complete",
-    "not_applicable",
-    "not_found",
-    "blocked_policy",
-    "blocked_robots",
-    "source_error",
-    "budget_exhausted",
-    "submission_error",
-}
+# The evaluation contract accepts exactly these result states.
+TERMINAL_STATES = set(PUBLISHED_STATES)
 
 
 def read_organisation_inputs(path: str | Path) -> list[dict[str, Any]]:
@@ -122,28 +114,15 @@ def profiles_from_bulk(path: str | Path, organisation_numbers: Iterable[str]) ->
 
 def evidence_terminal_state(record: dict[str, Any] | None) -> str:
     if not record:
-        return "submission_error"
-    status = record.get("status")
+        return "failed"
+    status = normalize_status(record.get("status"))
     if status == "available":
-        # Hard Gate: If an identity assessment exists and is not publishable, website is not available
+        # Hard gate: a website that failed the identity check is never reported as available.
         val = record.get("value")
         if isinstance(val, dict) and "identity_assessment" in val:
             if not val["identity_assessment"].get("publishable"):
-                return "not_found"
-        return "complete"
-    if status == "not_applicable":
-        return "not_applicable"
-    if status == "not_found":
-        return "not_found"
-    if status == "blocked":
-        note = str(record.get("note") or "").casefold()
-        return "blocked_robots" if "robot" in note else "blocked_policy"
-    if status == "source_error":
-        return "source_error"
-    if status == "budget_exhausted":
-        return "budget_exhausted"
-    return "submission_error"
-
+                return "ambiguous"
+    return status
 
 
 def terminal_envelope(
@@ -162,7 +141,13 @@ def terminal_envelope(
             "retry_count": int((record or {}).get("retry_count") or 0),
             "final_timestamp": (record or {}).get("retrieved_at") or completed_at,
         }
-    entity_state = "submission_error" if any(item["state"] == "submission_error" for item in module_states.values()) else "complete"
+    registry_state = module_states.get("registry", {}).get("state")
+    if profile.get("run_error") or registry_state == "failed":
+        entity_state = "failed"
+    elif registry_state == "not_available":
+        entity_state = "not_available"  # organisation number not registered
+    else:
+        entity_state = "available"
 
     # Compile V7 Decision-Useful Intelligence Summary & Sources
     from .research import synthesize_company_intelligence
@@ -179,6 +164,7 @@ def terminal_envelope(
         "run_id": run_id,
         "organisation_number": profile["organisation_number"],
         "state": entity_state,
+        "error": profile.get("run_error"),
         "started_at": started_at,
         "completed_at": completed_at,
         "modules": module_states,
@@ -214,3 +200,75 @@ def validate_envelopes(envelopes: list[dict[str, Any]], expected_count: int) -> 
 def profile_complete_for_modules(profile: dict[str, Any], modules: Iterable[str]) -> bool:
     records = profile.get("evidence", {})
     return all(module in records and records[module].get("status") != "not_fetched" for module in modules)
+
+
+def profile_from_live_registry(org: str) -> dict[str, Any]:
+    """Build a base profile straight from the live Enhetsregisteret API.
+
+    Used when the company is absent from the local snapshot (or the snapshot is an
+    un-pulled Git LFS pointer), so an unseen organisation number still gets a result.
+    """
+    from .http import fetch_json
+    from .identity_store import _profile_from_raw
+    from .official import BRREG_ENTITY, normalize_entity, registry_value_from_live
+
+    result = fetch_json(BRREG_ENTITY.format(org=org))
+    if result.status == 200:
+        raw = registry_value_from_live(normalize_entity(result.body))
+        profile = _profile_from_raw(raw, result.content_sha256 or "", result.retrieved_at or utc_now())
+        profile["evidence"]["registry"].update(
+            source_type="official_registry_live",
+            source_class="official_registry_live",
+            source_url=result.url,
+        )
+        return profile
+    status = "not_available" if result.status in {404, 410} else "failed"
+    note = "Organisation number is not registered in Enhetsregisteret" if status == "not_available" else result.error
+    return {
+        "organisation_number": org,
+        "name": None,
+        "website": None,
+        "evidence": {"registry": evidence("registry", status, "official_registry_live", result.url, note=note)},
+    }
+
+
+def load_profiles(bulk_path: str | Path | None, organisation_numbers: Iterable[str]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Resolve every requested company, preferring the local snapshot and falling back to the live API.
+
+    Never raises for an unknown company: each input gets exactly one profile.
+    """
+    requested = list(organisation_numbers)
+    metadata: dict[str, Any] = {"requested": len(requested)}
+    found: dict[str, dict[str, Any]] = {}
+    try:
+        if bulk_path:
+            profiles, snapshot_meta = profiles_from_bulk(bulk_path, requested)
+        else:
+            from .identity_store import get_default_identity_store
+            profiles, snapshot_meta = get_default_identity_store().get_batch(requested)
+        found = {profile["organisation_number"]: profile for profile in profiles}
+        metadata.update(snapshot_meta)
+    except Exception as exc:  # snapshot missing, LFS pointer, or some orgs absent
+        metadata["snapshot_error"] = f"{type(exc).__name__}: {str(exc)[:200]}"
+        try:
+            # Per-company lookups only against the indexed SQLite store; scanning a bulk
+            # file once per company would be far slower than the live API.
+            from .identity_store import DEFAULT_SQLITE_PATH, SQLiteIdentityStore
+            db_path = Path(bulk_path) if bulk_path and Path(bulk_path).suffix == ".db" else DEFAULT_SQLITE_PATH
+            store = SQLiteIdentityStore(db_path)
+            for org in requested:
+                try:
+                    profile = store.get(org)
+                except Exception:
+                    profile = None
+                if profile:
+                    found[org] = profile
+        except Exception as store_exc:
+            metadata["store_error"] = f"{type(store_exc).__name__}: {str(store_exc)[:200]}"
+    live = [org for org in requested if org not in found]
+    for org in live:
+        found[org] = profile_from_live_registry(org)
+    metadata["snapshot_resolved"] = len(requested) - len(live)
+    metadata["live_resolved"] = len(live)
+    metadata["selected"] = len(found)
+    return [found[org] for org in requested], metadata

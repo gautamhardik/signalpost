@@ -153,6 +153,13 @@ def normalize_locations(body: Any) -> dict[str, Any]:
     } for item in rows]}
 
 
+def _joined(value: Any) -> str | None:
+    if isinstance(value, list):
+        text = " ".join(str(part).strip() for part in value if str(part).strip())
+        return text or None
+    return str(value).strip() or None if value else None
+
+
 def normalize_entity(body: Any) -> dict[str, Any]:
     body = body if isinstance(body, dict) else {}
     return {
@@ -160,14 +167,74 @@ def normalize_entity(body: Any) -> dict[str, Any]:
         "name": body.get("navn"),
         "legal_form": _get(body, "organisasjonsform", "kode"),
         "employees": body.get("antallAnsatte"),
+        "employees_registered_at": body.get("registreringsdatoAntallAnsatteEnhetsregisteret"),
         "bankrupt": body.get("konkurs"),
         "liquidating": body.get("underAvvikling"),
         "website": body.get("hjemmeside"),
+        "email": body.get("epostadresse"),
+        "phone": body.get("telefon"),
+        "mobile": body.get("mobil"),
         "industry": body.get("naeringskode1"),
+        "activity_description": _joined(body.get("aktivitet")),
+        "statutory_purpose": _joined(body.get("vedtektsfestetFormaal")),
         "business_address": body.get("forretningsadresse"),
         "postal_address": body.get("postadresse"),
+        "registered_at": body.get("registreringsdatoEnhetsregisteret"),
+        "founded_at": body.get("stiftelsesdato"),
+        "in_group": body.get("erIKonsern"),
+        "historical_names": body.get("historiskeNavn") or [],
         "latest_submitted_accounts": body.get("sisteInnsendteAarsregnskap"),
     }
+
+
+def registry_value_from_live(entity: dict[str, Any]) -> dict[str, Any]:
+    """Flatten a normalized live entity into the bulk-CSV key layout the identity gate reads."""
+    address = entity.get("business_address") or entity.get("postal_address") or {}
+    postal = entity.get("postal_address") or {}
+    industry = entity.get("industry") or {}
+    return {
+        "organisasjonsnummer": entity.get("organisation_number") or "",
+        "navn": entity.get("name") or "",
+        "organisasjonsform.kode": entity.get("legal_form") or "",
+        "antallAnsatte": "" if entity.get("employees") is None else str(entity.get("employees")),
+        "konkurs": str(bool(entity.get("bankrupt"))).lower(),
+        "underAvvikling": str(bool(entity.get("liquidating"))).lower(),
+        "forretningsadresse.adresse": _joined(address.get("adresse")) or "",
+        "forretningsadresse.postnummer": address.get("postnummer") or "",
+        "forretningsadresse.poststed": address.get("poststed") or "",
+        "forretningsadresse.kommune": address.get("kommune") or "",
+        "forretningsadresse.kommunenummer": address.get("kommunenummer") or "",
+        "postadresse.adresse": _joined(postal.get("adresse")) or "",
+        "postadresse.postnummer": postal.get("postnummer") or "",
+        "postadresse.poststed": postal.get("poststed") or "",
+        "naeringskode1.kode": industry.get("kode") or "",
+        "naeringskode1.beskrivelse": industry.get("beskrivelse") or "",
+        "hjemmeside": entity.get("website") or "",
+        "epostadresse": entity.get("email") or "",
+        "telefon": entity.get("phone") or "",
+        "mobil": entity.get("mobile") or "",
+        "aktivitet": entity.get("activity_description") or "",
+        "sisteInnsendteAarsregnskap": str(entity.get("latest_submitted_accounts") or ""),
+    }
+
+
+def merge_live_registry(profile: dict[str, Any]) -> None:
+    """Fill identity fields missing from the bulk snapshot with the live registry entity.
+
+    The bulk export lacks street address, e-mail and phone, which the website identity
+    gate needs for corroboration. Live values only fill gaps; they never overwrite.
+    """
+    live = (profile.get("evidence", {}).get("registry_live") or {})
+    if live.get("status") != "available" or not isinstance(live.get("value"), dict):
+        return
+    registry = profile.get("evidence", {}).get("registry") or {}
+    current = registry.get("value") if isinstance(registry.get("value"), dict) else {}
+    for key, live_value in registry_value_from_live(live["value"]).items():
+        if live_value and not current.get(key):
+            current[key] = live_value
+    registry["value"] = current
+    if not profile.get("website") and live["value"].get("website"):
+        profile["website"] = live["value"]["website"]
 
 
 def _classified(field: str, source_type: str, result: FetchResult, value: Any = None) -> dict[str, Any]:

@@ -76,3 +76,6 @@ Thumbs.db
 
 # Local scratch outputs (keep tracked benchmark inputs intact)
 out/*.tmp
+
+# Agent run outputs (profiles, envelopes, saved sources, viewer)
+out/run/

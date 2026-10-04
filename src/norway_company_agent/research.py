@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -282,10 +283,169 @@ def screen_profiles(rows: list[dict[str, Any]], query: str) -> dict[str, Any]:
     return {"query": query, "plan": plan, "results": results, "result_count": len(results), "abstained": False}
 
 
+LEGAL_FORM_LABELS = {
+    "AS": "private limited company (AS)",
+    "ASA": "public limited company (ASA)",
+    "ENK": "sole proprietorship (ENK)",
+    "ANS": "general partnership (ANS)",
+    "DA": "partnership with shared liability (DA)",
+    "SA": "cooperative (SA)",
+    "STI": "foundation (STI)",
+    "NUF": "Norwegian branch of a foreign company (NUF)",
+    "BRL": "housing cooperative (BRL)",
+    "ESEK": "condominium (ESEK)",
+    "FLI": "association (FLI)",
+    "IKS": "inter-municipal company (IKS)",
+    "HF": "health trust (HF)",
+    "KF": "municipal enterprise (KF)",
+    "SF": "state enterprise (SF)",
+}
+
+MODULE_LABELS = {
+    "registry_live": "live registry entry",
+    "financials": "annual accounts",
+    "roles": "registered roles (CEO, board)",
+    "group": "group structure",
+    "locations": "registered locations (sub-units)",
+    "website": "official website",
+}
+
+
+def _source(record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "source_url": record.get("source_url"),
+        "retrieved_at": record.get("retrieved_at"),
+        "content_sha256": record.get("content_sha256"),
+    }
+
+
+def _date_only(value: Any) -> str | None:
+    match = re.match(r"(\d{4}-\d{2}-\d{2})", str(value or ""))
+    return match.group(1) if match else None
+
+
+def _what_changed(profile: dict[str, Any], observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Dated, sourced events: company news, new postings, registry updates and refresh diffs."""
+    evidence = profile.get("evidence") or {}
+    events: list[dict[str, Any]] = []
+
+    for obs in observations:
+        metrics = obs.get("metrics") or {}
+        if obs.get("platform") == "news" and metrics.get("activity_date"):
+            events.append({
+                "date": metrics["activity_date"],
+                "type": "news." + str(metrics.get("activity_type") or "update"),
+                "description": metrics.get("title") or "Company announcement",
+                "source_url": obs.get("source_url"),
+                "retrieved_at": obs.get("retrieved_at"),
+                "snapshot_sha256": obs.get("snapshot_sha256"),
+            })
+        elif obs.get("signal_type") == "job_posting" and metrics.get("published_at"):
+            events.append({
+                "date": metrics["published_at"],
+                "type": "hiring.posting",
+                "description": "Job posted: " + str(metrics.get("job_title")),
+                "source_url": obs.get("source_url"),
+                "retrieved_at": obs.get("retrieved_at"),
+                "snapshot_sha256": obs.get("snapshot_sha256"),
+            })
+
+    roles_rec = evidence.get("roles") or {}
+    if roles_rec.get("status") == "available":
+        seen_groups: set[tuple[str, str]] = set()
+        for role in (roles_rec.get("value") or {}).get("roles") or []:
+            changed = _date_only(role.get("last_changed"))
+            group = role.get("group") or role.get("group_code") or "Roles"
+            if changed and (group, changed) not in seen_groups:
+                seen_groups.add((group, changed))
+                events.append({"date": changed, "type": "registry.roles", "description": f"{group} last updated in the register", **_source(roles_rec)})
+
+    live_rec = evidence.get("registry_live") or {}
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+    for item in live.get("historical_names") or []:
+        changed = _date_only(item.get("tilDato"))
+        if changed and item.get("navn"):
+            events.append({"date": changed, "type": "registry.name", "description": f"Name changed from {item['navn']} to {profile.get('name')}", **_source(live_rec)})
+    if _date_only(live.get("employees_registered_at")) and live.get("employees") is not None:
+        events.append({"date": _date_only(live["employees_registered_at"]), "type": "registry.employees", "description": f"Employee count registered as {live['employees']}", **_source(live_rec)})
+
+    fin_rec = evidence.get("financials") or {}
+    fin_records = ((fin_rec.get("value") or {}).get("records") or []) if fin_rec.get("status") == "available" else []
+    for record in fin_records[:1]:
+        period_end = _date_only((record.get("period") or {}).get("tilDato"))
+        if period_end:
+            revenue = record.get("revenue")
+            currency = record.get("currency") or "NOK"
+            suffix = f": revenue {currency} {revenue:,.0f}" if isinstance(revenue, (int, float)) else ""
+            events.append({"date": period_end, "type": "financials.period", "description": f"Annual accounts for period ending {period_end}{suffix}", **_source(fin_rec)})
+
+    for change in profile.get("changes_since_previous_run") or []:
+        events.append({
+            "date": _date_only(change.get("retrieved_at")),
+            "type": "refresh." + str(change.get("field")),
+            "description": f"{change.get('field')} changed since the previous run",
+            "previous_value": change.get("old_value"),
+            "current_value": change.get("new_value"),
+            "source_url": change.get("source_url"),
+            "retrieved_at": change.get("retrieved_at"),
+            "previous_content_sha256": change.get("old_content_sha256"),
+            "content_sha256": change.get("new_content_sha256"),
+        })
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    # Upcoming events are not changes; keep only things that have already happened.
+    events = [event for event in events if event.get("date") and event["date"] <= today]
+    events.sort(key=lambda event: event["date"], reverse=True)
+    return events[:20]
+
+
+def _what_is_unknown(profile: dict[str, Any], website_ok: bool, ceo: Any, chair: Any, fin_record: dict[str, Any], observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """State plainly what could not be established, with the result state that explains why."""
+    evidence = profile.get("evidence") or {}
+    unknown: list[dict[str, Any]] = []
+    for module, label in MODULE_LABELS.items():
+        record = evidence.get(module)
+        if not record:
+            continue
+        status = record.get("status")
+        if module == "website":
+            if website_ok:
+                continue
+            reason = {
+                "ambiguous": "A candidate site was found but could not be tied to this exact company.",
+                "blocked": "The site refused automated access.",
+                "failed": "The site could not be fetched.",
+            }.get(status, "No website is registered and none could be verified.")
+            unknown.append({"topic": label, "state": status, "reason": reason, "source_url": record.get("source_url")})
+        elif status != "available":
+            unknown.append({"topic": label, "state": status, "reason": record.get("note") or f"{label} not available", "source_url": record.get("source_url")})
+    roles_rec = evidence.get("roles") or {}
+    if roles_rec.get("status") == "available":
+        if not ceo:
+            unknown.append({"topic": "CEO", "state": "not_available", "reason": "No daily manager (DAGL) is registered.", "source_url": roles_rec.get("source_url")})
+        if not chair:
+            unknown.append({"topic": "board chair", "state": "not_available", "reason": "No board chair (LEDE) is registered.", "source_url": roles_rec.get("source_url")})
+    fin_rec = evidence.get("financials") or {}
+    if fin_rec.get("status") == "available" and fin_record.get("revenue") is None:
+        unknown.append({"topic": "revenue", "state": "not_available", "reason": "The filed accounts do not report revenue.", "source_url": fin_rec.get("source_url")})
+    platforms = {obs.get("platform") for obs in observations}
+    checked = "verified company sources" if website_ok else "any verified company source (no verified website)"
+    if not any(obs.get("signal_type") == "job_posting" for obs in observations):
+        unknown.append({"topic": "hiring", "state": "not_available", "reason": f"No individual job posting found on {checked}."})
+    if "news" not in platforms:
+        unknown.append({"topic": "news", "state": "not_available", "reason": f"No dated company article found on {checked}."})
+    if not platforms & {"linkedin", "facebook", "instagram", "x", "youtube", "tiktok"}:
+        unknown.append({"topic": "social profiles", "state": "not_available", "reason": f"No social profile linked from {checked}."})
+    return unknown
+
+
 def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
     """Synthesize a structured, decision-useful intelligence snapshot derived strictly from evidence."""
     evidence = profile.get("evidence") or {}
-    reg = ((evidence.get("registry_live") or evidence.get("registry") or {}).get("value") or {})
+    live_rec = evidence.get("registry_live") or {}
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+    registry_rec = evidence.get("registry") or {}
+    reg = registry_rec.get("value") or {}
     fin_record = _latest_financial(profile)
     roles_val = (evidence.get("roles") or {}).get("value") or {}
     roles = (roles_val.get("roles") if isinstance(roles_val, dict) else []) or []
@@ -293,80 +453,63 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
     website_val = website_rec.get("value") or {}
     website_ok = website_rec.get("status") == "available" and bool((website_val.get("identity_assessment") or {}).get("publishable"))
 
-    # Determine Key Management
     ceo = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "DAGL" and not r.get("inactive")), None)
     chair = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "LEDE" and not r.get("inactive")), None)
 
-    # Footprint
-    social_links = website_val.get("social_links") or [] if website_ok else []
-    fp_rec = evidence.get("external_footprint") or {}
-    fp_val = fp_rec.get("value") or {}
+    social_links = (website_val.get("social_links") or []) if website_ok else []
+    observations = ((evidence.get("external_footprint") or {}).get("value") or {}).get("observations") or []
 
-    # Claims audit completeness
-    facts_obj = answer_profile(profile, "all")
-    total_claims = len(facts_obj.get("facts", []))
+    activity_text = live.get("activity_description") or reg.get("aktivitet")
+    what_does_it_do_source = live_rec if live.get("activity_description") else registry_rec
 
-    # Extract what changed (dated news)
-    what_changed = []
-    for obs in fp_val.get("observations", []):
-        d = obs.get("metrics", {}).get("activity_date")
-        if d:
-            what_changed.append({
-                "date": d,
-                "description": obs.get("description") or obs.get("activity_type") or "Activity reported",
-                "source_url": obs.get("source_url")
-            })
-            
-    # Extract unknown / abstained
-    what_is_unknown = []
-    if not website_ok:
-        what_is_unknown.append("No verified official website.")
-    if not ceo:
-        what_is_unknown.append("No registered CEO (DAGL).")
-    if not chair:
-        what_is_unknown.append("No registered Board Chair (LEDE).")
-    if fin_record.get("revenue") is None:
-        what_is_unknown.append("Recent revenue figures not available.")
-    if not what_changed:
-        what_is_unknown.append("No recently dated external activity or news discovered.")
-        
-    # Evidence mapping
     evidence_list = []
     if website_ok:
         evidence_list.append({
-            "claim": "Official digital footprint verified.",
+            "claim": "Official website verified",
+            "value": website_val.get("final_url"),
             "source_url": website_val.get("final_url"),
             "publication_date": None,
-            "retrieval_date": website_rec.get("retrieved_at")
+            "retrieval_date": website_rec.get("retrieved_at"),
+            "snapshot_sha256": website_val.get("snapshot_sha256"),
         })
-    for obs in fp_val.get("observations", []):
+    for obs in observations:
+        metrics = obs.get("metrics") or {}
         evidence_list.append({
-            "claim": obs.get("description") or obs.get("activity_type") or "External footprint activity",
+            "claim": obs.get("evidence_span") or obs.get("signal_type"),
+            "value": metrics.get("title") or metrics.get("job_title") or metrics.get("url"),
             "source_url": obs.get("source_url"),
-            "publication_date": obs.get("metrics", {}).get("activity_date"),
-            "retrieval_date": obs.get("retrieved_at")
+            "publication_date": metrics.get("activity_date") or metrics.get("published_at"),
+            "retrieval_date": obs.get("retrieved_at"),
+            "snapshot_sha256": obs.get("snapshot_sha256"),
         })
 
     return {
-        "what_is_this_company": f"{profile.get('name')} (Org.nr {profile.get('organisation_number')}) is a {profile.get('legal_form')} registered in {profile.get('municipality', 'Norway')}.",
-        "what_does_it_do": reg.get("aktivitet") or profile.get("industry_label") or "No explicit activity description registered.",
+        "what_is_this_company": f"{profile.get('name')} (Org.nr {profile.get('organisation_number')}) is a Norwegian {LEGAL_FORM_LABELS.get(str(profile.get('legal_form') or ''), (str(profile.get('legal_form')) + ' entity') if profile.get('legal_form') else 'entity')} registered in {profile.get('municipality') or 'Norway'}.",
+        "what_does_it_do": activity_text or profile.get("industry_label") or "No activity description is registered.",
+        "what_does_it_do_source": _source(what_does_it_do_source),
         "how_big_is_it": {
-            "employees": profile.get("employees"),
-            "revenue_nok": fin_record.get("revenue"),
-            "operating_result_nok": fin_record.get("operating_result"),
-            "reporting_period": fin_record.get("period")
+            "employees": live.get("employees") if live.get("employees") is not None else profile.get("employees"),
+            "currency": fin_record.get("currency") or ("NOK" if fin_record else None),
+            "revenue": fin_record.get("revenue"),
+            "operating_result": fin_record.get("operating_result"),
+            "reporting_period": fin_record.get("period"),
+            "source": _source(evidence.get("financials") or {}),
         },
         "who_runs_it": {
-            "ceo": ceo or "Unknown",
-            "board_chair": chair or "Unknown"
+            "ceo": ceo or "Not registered",
+            "board_chair": chair or "Not registered",
+            "source": _source(evidence.get("roles") or {}),
         },
-        "what_changed": what_changed,
+        "what_changed": _what_changed(profile, observations),
         "digital_footprint": {
-            "website": website_val.get("final_url") if website_ok else "Abstained",
-            "social_platforms": [item.get("platform") for item in social_links] if social_links else []
+            "website": website_val.get("final_url") if website_ok else None,
+            "website_state": "available" if website_ok else (website_rec.get("status") or "not_available"),
+            "social_platforms": [item.get("platform") for item in social_links],
+            "job_postings": sum(1 for obs in observations if obs.get("signal_type") == "job_posting"),
+            "dated_news": sum(1 for obs in observations if obs.get("platform") == "news"),
         },
-        "what_is_unknown": what_is_unknown,
-        "evidence": evidence_list
+        "what_is_unknown": _what_is_unknown(profile, website_ok, ceo, chair, fin_record, observations),
+        "evidence": evidence_list,
     }
 
 
@@ -398,7 +541,7 @@ def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
         parts.append(f"Recent verified hiring activity includes postings for: {sample_job}.")
 
     if news:
-        sample_news = news[0].get("metrics", {}).get("article_title") or "public announcements"
+        sample_news = news[0].get("metrics", {}).get("title") or "public announcements"
         parts.append(f"Latest verified company announcement: {sample_news}.")
 
     return " ".join(parts)

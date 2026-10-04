@@ -111,8 +111,10 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     candidate_host = str(value.get("url") or value.get("final_url") or website.get("source_url") or "").split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold()
     candidate_host = candidate_host.removeprefix("www.")
 
+    shared_mail_hosts = {"gmail.com", "hotmail.com", "outlook.com", "live.no", "live.com", "online.no", "yahoo.com", "icloud.com", "msn.com", "hotmail.no", "outlook.no"}
     email_domain_match = bool(
         email_domain
+        and email_domain not in shared_mail_hosts
         and candidate_host
         and (
             candidate_host == email_domain
@@ -219,6 +221,37 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     found_org_numbers = set(re.findall(r"\b[89]\d{8}\b", homepage_candidate_text))
     has_conflicting_org = bool(org_digits and any(o != org_digits for o in found_org_numbers))
 
+    # A name match alone is not enough for a site found by guessing or search: common
+    # words ("venture", "nyati") are shared by unrelated businesses worldwide. Such a
+    # site must also be linked to the company by the registry, by a Norwegian address
+    # or phone on the page, or (for a .no domain) by the name forming the domain itself.
+    registry_linked = registry_domain_match or email_domain_match
+    # A registered person (CEO, chair, board member) named on the site ties it to this company.
+    roles = (profile.get("evidence", {}).get("roles", {}).get("value") or {}).get("roles") or []
+    compact_site = " ".join(_tokens(identity_text))
+    person_match = None
+    for role in roles:
+        if role.get("inactive") or role.get("organisation_number"):
+            continue
+        name_tokens = _tokens(role.get("name"))
+        if len(name_tokens) >= 2 and f" {name_tokens[0]} " in f" {compact_site} " and f" {name_tokens[-1]} " in f" {compact_site} ":
+            full = " ".join(name_tokens)
+            first_last = f"{name_tokens[0]} {name_tokens[-1]}"
+            if full in compact_site or first_last in compact_site:
+                person_match = role.get("name")
+                break
+    local_corroboration = street_match or postcode_match or phone_match or city_match or subunit_match or bool(person_match)
+    raw_name_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", str(profile.get("name") or "")).encode("ascii", "ignore").decode().casefold())
+    dropped_short_tokens = [tok for tok in raw_name_tokens if len(tok) == 1 and tok not in LEGAL_AND_GENERIC]
+    norwegian_named_domain = (
+        candidate_host.endswith(".no")
+        and bool(core)
+        and "".join(core) in cand_domain_root.replace("-", "")
+        and not dropped_short_tokens
+    )
+    # Single-word names are too often shared, so a guessed domain alone never confirms them.
+    name_link_ok = registry_linked or local_corroboration or (norwegian_named_domain and len(core) >= 2)
+
     if any(marker in normalized_raw for marker in parked_markers):
         score = 0.1
         reasons.append("captured page is a parked, for-sale, or generic hosting placeholder")
@@ -231,12 +264,20 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif has_conflicting_org and not (org_digits and org_digits in compact_homepage_candidate):
         score = 0.2
         reasons.append("captured page contains conflicting organisation number belonging to a different entity")
-    elif len(core) >= 2 and exact_homepage_name:
+    elif registry_domain_match and email_domain_match and not has_conflicting_org:
+        # Two independent official registry fields (website and e-mail) name this domain,
+        # which the company itself registered; that holds even for a script-only homepage.
+        score = 0.92
+        reasons.append("registry website and registry e-mail domain both point to this domain")
+    elif len(core) >= 2 and exact_homepage_name and name_link_ok:
         score = 0.95
         reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
-    elif len(core) == 1 and exact_homepage_name and substantive_homepage:
+    elif len(core) == 1 and exact_homepage_name and substantive_homepage and name_link_ok:
         score = 0.95
         reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content")
+    elif exact_homepage_name and not name_link_ok:
+        score = 0.85
+        reasons.append("name appears on the site, but nothing links the site to the registered Norwegian company (no registry domain, address, phone or .no name domain)")
     elif (
         core
         and (exact_homepage_name or ratio >= 0.75)
@@ -281,6 +322,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         "email_domain": email_domain or None,
         "email_domain_match": email_domain_match,
         "registry_identity": {
+            "person_match": person_match,
             "street_match": street_match,
             "postcode_match": postcode_match,
             "city_match": city_match,

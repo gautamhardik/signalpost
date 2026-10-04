@@ -3,24 +3,21 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Package Manager: uv](https://img.shields.io/badge/package%20manager-uv-purple.svg)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![External Precision](https://img.shields.io/badge/external%20precision-100%25-brightgreen.svg)](#-verified-benchmark-performance)
-[![Naked Facts](https://img.shields.io/badge/naked%20facts-0-brightgreen.svg)](#-core-architectural-tenets)
 
 > **Signalpost** is a production-grade, deterministic intelligence system that discovers, crawls, verifies, and synthesizes operating intelligence for any Norwegian corporate entity (*Foretak / Enhet*) directly from official Brønnøysund registries and corroborated public digital channels.
 >
-> Built around a strict **"No Evidence, No Claim"** doctrine: external search strings and fuzzy mentions are **never** treated as proof. A digital presence only enters a company’s profile after clearing cryptographic provenance and deterministic identity gates ($\ge 0.90$ token similarity, registered address, phone, or corporate email domain matching).
+> Built around a strict **"No Evidence, No Claim"** doctrine: external search strings and fuzzy mentions are **never** treated as proof. A website or social profile only enters a company’s profile after a deterministic identity check ties it to that exact company (organisation number on the site, the registry’s own website and e-mail domain, or the name together with the registered address, phone or people), and its source is saved with the run.
 
 ---
 
 ## 📑 Table of Contents
 - [Executive Overview](#-executive-overview)
-- [Key Verified Performance Metrics](#-key-verified-performance-metrics)
 - [Core Architectural Tenets](#-core-architectural-tenets)
 - [End-to-End System Architecture](#-end-to-end-system-architecture)
-- [Interactive UI & Provenance Inspector](#-interactive-ui--provenance-inspector)
+- [Viewer](#️-viewer)
 - [Project Layout](#-project-layout)
 - [Quickstart & Execution](#-quickstart--execution)
-- [Pipeline Verification & Evaluation](#-pipeline-verification--evaluation)
+- [Pipeline Verification](#-pipeline-verification)
 - [Source Policy & Data Governance](#-source-policy--data-governance)
 - [License](#-license)
 
@@ -28,126 +25,96 @@
 
 ## 🌟 Executive Overview
 
-Extracting structured business intelligence from public web sources is notoriously prone to **hallucinations, entity confusion, and stale data** (e.g., confusing a sole trader with a multinational of the same name, or scraping third-party aggregators).
+Extracting structured business intelligence from public web sources is prone to **entity confusion and stale data**: confusing a sole trader with a multinational of the same name, or treating a directory listing as the company's own site.
 
-Signalpost solves this through a **multi-stage deterministic verification pipeline**:
-1. **Official Registry Grounding**: Ingests authoritative records directly from Brønnøysundregistrene (*Enhetsregisteret*, *Regnskapsregisteret*, *Roller*, *Underenheter*).
-2. **Adaptive Opportunity Scoring**: Intelligently skips wasteful searches for shell companies, real-estate SPVs, or entities with zero plausible digital footprint.
-3. **Deterministic Identity Gates**: Enforces multi-attribute corroboration (organization number, domain WHOIS, custom MX/email host, executive names, phone numbers, postal codes).
-4. **Transport-Level Resilience**: Hardened streaming HTTP decompression (gzip and deflate with raw/wrapped zlib modes) protecting against zip-bombs with hard byte limits while restoring compressed company pages.
-5. **Zero Naked Facts**: Every published field links to a full source URL, an ISO-8601 retrieval timestamp, a source tier classification, and an immutable SHA-256 snapshot hash.
-6. **Deterministic Replay & Refresh**: Re-running pipelines over existing corpora computes cryptographic diffs, pinpointing verified corporate changes with zero false drifts.
-
----
-
-## 🏆 Verified Benchmark Performance
-
-### 1. Independent 100-Company Ground Truth Audit (Run 10A / `v10a-freeze`)
-Rigorously audited across a balanced 100-company ground truth universe representing all operational cohorts:
-
-| Metric | Result | Benchmark Bar | Status |
-|:---|:---:|:---:|:---:|
-| **Wrong-Company Publications** | **0** | **0 (Zero Tolerance)** | **Flawless (100.0% Precision)** |
-| **External Identity Precision** | **100.0%** | $\ge 95.0\%$ | **Perfect (318/318 observations)** |
-| **Registered Website Recall** | **68.0% (34/50)** | $\ge 60.0\%$ | **+4.0% over V7 baseline** |
-| **Total Verified Websites Discovered** | **43 / 100** | $> 40$ | **43 companies** |
-| **Holding Company Abstentions** | **25 / 25 (100%)** | 100% | **Zero boundary leaks** |
-| **Outbound HTTP Request Footprint** | **939 requests** | $\le 2,000$ quota | **1,061 requests remaining** |
-| **External Paid API Cost** | **$0.00** | $0.00 | **Zero commercial API costs** |
-| **Terminal Contract Compliance** | **100% (100/100)** | 100% | **0 silent drops** |
+Signalpost handles this with a deterministic pipeline:
+1. **Official Registry Grounding**: Reads authoritative records from Brønnøysundregistrene (*Enhetsregisteret*, *Regnskapsregisteret*, roles, sub-units). Every supplied company is resolved, from the local snapshot or the live API.
+2. **Bounded Website Discovery**: Checks the registry-listed website, then a small set of candidate domains derived from the registry (name, e-mail domain, sub-units), capped at 30 website requests per company.
+3. **Deterministic Identity Gate**: A site is published only when it is tied to the exact company. That takes the organisation number on the site, the registry's own website and e-mail domain, or the company name together with the registered address, postcode, city, phone, or a registered CEO or board member.
+4. **Transport-Level Resilience**: Bounded streaming decompression (gzip and deflate) with hard byte limits, robots.txt checks once per host, and short timeouts for guessed domains.
+5. **No Naked Facts**: Every published fact carries its source URL, retrieval time, source class and the SHA-256 of the exact source bytes, which are saved with the run.
+6. **Refresh**: A rerun with `--previous` records what changed since the earlier run and keeps earlier evidence that a source failed to return.
 
 ---
 
 ## 🛡️ Core Architectural Tenets
 
 ### 1. No Naked Facts (Every Claim Audited)
-Every data point emitted in terminal profiles implements the strict `ClaimRecord` contract:
+Every evidence record in a profile has this shape (a real `financials` record):
 ```json
 {
-  "claim": "financials.revenue_nok",
-  "value": 48250000,
-  "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/987654321",
-  "source_class": "tier2_registry",
-  "retrieved_at": "2026-09-15T10:14:22Z",
-  "content_sha256": "4a31b12cc032b60fab050d59f8da35ceb1e3778385038ab9a89d714578b"
+  "field": "financials",
+  "status": "available",
+  "source_class": "official_annual_accounts",
+  "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/986093036",
+  "retrieved_at": "2026-10-04T00:29:47.389553Z",
+  "content_sha256": "bc2b2ea7d7cace4722d82c7b8793093f027935e40ca62738643a19fdf2251538",
+  "snapshot_path": "sources/bc2b2ea7d7cace4722d82c7b8793093f027935e40ca62738643a19fdf2251538.json.gz"
 }
 ```
+`status` is always one of `available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`.
 
 ### 2. Strict Deterministic Identity Resolution
-A discovered candidate URL is **rejected or accepted deterministically** based on rigorous corroboration:
-* **Direct Match**: Presence of the 9-digit Norwegian Org Number (*Organisasjonsnummer*) on the page or in footer metadata.
-* **Email & Domain Corroboration**: MX records and official email host matching the registered entity name.
-* **Corroborative Match**: Tokenized company name similarity $\ge 0.90$ combined with registered visiting/business address, executive names (*Daglig leder / Styreleder*), or telephone match.
-* **Aggregator Blocking**: Hard blocks directory aggregator scrapers (*Proff, 1881, Purehelp, Gulesider, Companywall*) from acting as identity anchors.
+A candidate website is **accepted or rejected deterministically**:
+* **Direct Match**: The company's 9-digit organisation number appears on the site, including its footer or contact block.
+* **Registry Domain Match**: The registry's website field and e-mail domain both point to the site. Shared mail hosts such as gmail.com never count.
+* **Corroborated Name Match**: The legal name appears on the site together with the registered street address, postcode, city or phone, or a registered CEO or board member's name.
+* **Conflict Rejection**: A different organisation number on the site, a parked or for-sale domain, or a name-only match on an unrelated domain is never published. Name-only matches are reported as `ambiguous`.
+* **Aggregator Blocking**: Directory sites (*Proff, 1881, Purehelp, Gulesider, CompanyWall* and others) are never treated as the company's website.
 
-### 3. Change-Diff Refresh Engine
-Tracks historical state snapshots. Re-evaluating an existing corpus generates an unambiguous diff:
-* `ADDED`, `MODIFIED`, or `REMOVED` claims with before/after timestamps.
-* Cryptographically validated against snapshot hashes to prevent phantom update alerts.
+### 3. Refresh and Change Tracking
+Run with `--previous <profiles.jsonl>` to compare against an earlier run:
+* Each changed field (registry details, roles, accounts, locations, website) is recorded with old and new values and both content hashes.
+* When a source fails on the rerun but answered before, the earlier evidence is carried forward and marked as such, never silently dropped.
+* Saved sources are content-addressed, so rerunning over unchanged sources stores nothing new.
 
 ---
 
 ## 🏗️ End-to-End System Architecture
 
 ```text
-               Target Norwegian Entity (Org Number)
+              Organisation numbers supplied at run time
                                │
                                ▼
-                Brønnøysund Official Registries
-     (Enhetsregisteret, Regnskapsregisteret, Roller, Underenheter)
+              Brønnøysund registers (snapshot or live API)
+       entity · annual accounts · roles · group · sub-units
                                │
                                ▼
-                  Evidence Opportunity Scorer
-    (Evaluates legal form, employees, custom email domain, industry)
-                               │
-                ┌──────────────┴──────────────┐
-                ▼                             ▼
-       High Opportunity Entity       Low Opportunity Entity
-       (1-2 Targeted Searches)       (Abstain / Registry Only)
-                │                             │
-                ▼                             │
-    Candidate Discovery & Crawl               │
-                │                             │
-                ▼                             │
-    Streaming Decompression & Subpages        │
-      (safe_decompress_body gzip/deflate,     │
-       /kontakt and /om-oss corroboration)    │
-                │                             │
-                ▼                             │
-    Deterministic Identity Gate               │
-      (Token similarity >= 0.90,              │
-       address / phone / org match)           │
-                │                             │
-                ▼                             ▼
-       Verified Company Evidence       Official Registry Profile
-                │                             │
-                └──────────────┬──────────────┘
+      Website: registry-listed site, then up to 3 candidate domains
+            (≤ 30 website requests per company, robots.txt)
                                │
                                ▼
-                 Synthesized Company Dossier
-          (Who, What, How Big, Leadership, Signals, Provenance)
-                               │
-                               ▼
-                  Terminal Execution Envelope
-            (Cryptographic SHA-256 Hashes, JSONL)
+         Deterministic identity gate (org.nr, registry domain,
+          name + address / postcode / city / phone / person)
+                 │                               │
+            verified site                 not tied to company
+                 │                       (ambiguous / not_available)
+                 ▼                               │
+   Social links, job postings and dated          │
+   articles read from the verified site          │
+                 │                               │
+                 └───────────────┬───────────────┘
+                                 ▼
+          Synthesis: what it is, what it does, size, who runs it,
+          what changed, what is unknown (each with sources)
+                                 │
+                                 ▼
+     profiles.jsonl · envelopes.jsonl · run-report.json · sources/ · viewer/
 ```
 
 ---
 
-## 🖥️ Interactive UI & Provenance Console
+## 🖥️ Viewer
 
-Signalpost provides an evidence inspection and comparison UI (`ui/index.html`):
-- **Search Console**: Look up any entity by Norwegian Org Number or Legal Name.
-- **Decision Dossier**: Interactive breakdown of operational status, financials, active jobs, news events, and corporate governance.
-- **Evidence Drawer**: Click any claim to inspect the underlying source URL, timestamp, retrieval mode, and cryptographic content hash.
-- **Diff & Refresh Viewer**: Compare historical snapshots to view additions and modifications side-by-side.
+Every run writes a self-contained viewer over **that run's own profiles** to `<output-dir>/viewer/index.html`: a dark, three-column workspace (company explorer, intelligence panel, evidence inspector) with no build step. It works offline and on mobile, where the columns collapse to one at a time and the inspector opens as a drawer.
+- **Search and filters**: by name, org number, municipality or industry; filter to companies with a website, social profiles, job postings, dated news, an ambiguous site, no website, or a failed result.
+- **Intelligence panel**: status strip, executive summary, at-a-glance cards, a dated "what changed" timeline, digital footprint and hiring signals, and an evidence table of every fact.
+- **Evidence inspector**: click any fact to see its source URL, publication and retrieval dates, identity check, SHA-256, a link to the saved copy of the source, and the extracted text.
+- **Result states**: every module's state (`available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`) with the reason when it is not available.
+- **What changed / what is unknown**: dated, sourced events and an explicit list of what could not be established.
+- **Compare and export**: side-by-side comparison of up to four companies; CSV or JSON export of the filtered set.
 
-To open the console locally:
-```bash
-# Serve the repository root
-python -m http.server 8000
-# Navigate to http://localhost:8000/ui/
-```
+To browse the latest run in `out/run`, double-click `start.bat` (or open `out/run/viewer/index.html` directly).
 
 ---
 
@@ -159,12 +126,12 @@ signalpost/
 ├── uv.lock                     # Pinned reproducible dependency lockfile
 ├── README.md                   # System documentation & architectural reference
 ├── RUN.md                      # Official execution guide & evaluation runner
-├── benchmark-100.jsonl         # 100-company frozen evaluation benchmark
+├── benchmark-100.jsonl         # 100-company frozen evaluation sample
 ├── brreg-enheter.csv           # Brreg bulk registry snapshot (Tracked via Git LFS)
 │
 ├── data/
 │   ├── company_universe_411k.db           # SQLite index of 411,160 active Norwegian entities (LFS)
-│   ├── discovery-ground-truth.jsonl       # Audited ground truth for precision/recall validation
+│   ├── discovery-ground-truth.jsonl       # Audited ground truth for discovery validation
 │   ├── ground-truth-100.jsonl             # 100-company ground truth labels
 │   ├── operating-sample-35.jsonl          # Calibration sample for active trading entities
 │   └── signalpost-company-universe-*.gz   # Compressed active universe export
@@ -178,7 +145,8 @@ signalpost/
 │   ├── budget.py               # Token & request footprint budget governor
 │   ├── crawl_events.py         # HTTP crawl event emitter & ledger
 │   ├── discovery.py            # Targeted discovery engine with aggregator blocking
-│   ├── evidence.py             # Claim record definitions & provenance contracts
+│   ├── evidence.py             # Claim record definitions, provenance & the six result states
+│   ├── evidence_store.py       # Content-addressed store of the source bytes behind each fact
 │   ├── external_control.py     # External search loop controller & guardrails
 │   ├── external_footprint.py   # Web & digital footprint extractor
 │   ├── history.py              # Snapshot comparison & cryptographic change-diff engine
@@ -191,22 +159,21 @@ signalpost/
 │   ├── research.py             # Autonomous company synthesis & profile assembler
 │   ├── sampling.py             # Stratified sampling & universe slicing
 │   ├── scrapy_crawler.py       # Asynchronous web crawler with robots.txt compliance
+│   ├── viewer.py               # Builds the per-run HTML viewer from profiles
 │   └── website.py              # Homepage content parser, safe decompression & subpages
 │
 ├── scripts/                    # Automation, execution, and evaluation CLI tools
-│   ├── run_competition_batch_v2.py            # Main production runner (100 to 1,100+ entities)
+│   ├── run_competition_batch.py               # The agent: one result per supplied organisation number
 │   ├── evaluate_independent_ground_truth.py   # Independent 100-company audit tool
-│   ├── evaluate_competition.py                # Official 35/30/20/10/5 rubric evaluator
-│   ├── evaluate_external_recall.py            # Precision & recall validator
 │   ├── test_adversarial_identity.py           # Adversarial edge-case validation suite
-│   ├── validate_submission_corpus.py          # 1:1 manifest-to-envelope integrity auditor
-│   └── score_company_completeness.py          # Profile completeness scoring tool
+│   └── validate_submission_corpus.py          # 1:1 manifest-to-envelope integrity auditor
 │
 ├── tests/                      # Comprehensive pytest regression suite
 │   ├── test_activity.py        # Activity and news extraction tests
 │   ├── test_discovery.py       # Discovery funnel tests
 │   ├── test_history.py         # Refresh diff tests
 │   ├── test_jobs.py            # Career posting tests
+│   ├── test_review_fixes.py    # Result states, identity, hiring/news rules, evidence store, viewer
 │   └── test_website_decompression.py # HTTP decompression & zip-bomb protection tests
 │
 ├── submission/                 # Official competition submission artifacts
@@ -214,102 +181,73 @@ signalpost/
 │   ├── envelopes.jsonl                # 1,100 validated terminal execution envelopes
 │   ├── profiles.jsonl                 # 1,100 completed evidence-backed profiles
 │   ├── run-report.json                # Execution ledger & resource consumption report
-│   ├── score.json                     # Official calibrated benchmark report (94.57/100)
 │   └── source-policy.md               # Source compliance policy
 │
-└── ui/
-    └── index.html              # Interactive Provenance Inspector & Intelligence Console
+└── out/run/                    # Default run output (git-ignored)
+    ├── profiles.jsonl          # One evidence-backed profile per company, input order
+    ├── envelopes.jsonl         # One result envelope per company
+    ├── run-report.json         # Counts, module states, request usage, validation checks
+    ├── sources/                # Saved source bytes, named by SHA-256
+    └── viewer/index.html       # Viewer over this run
 ```
 
 ---
 
 ## 🚀 Quickstart & Execution
 
-Signalpost is 100% reproducible using [`uv`](https://docs.astral.sh/uv/).
-
 ### 1. Prerequisites
 - Python 3.12 or newer
-- `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh` or `winget install astral-sh.uv`)
-- `git-lfs` initialized (`git lfs install`)
+- [`uv`](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh` or `winget install astral-sh.uv`)
+- Git LFS is optional: without the large local snapshots the agent reads every company from the live Brønnøysund API.
 
 ### 2. Installation
 ```bash
-# Clone the repository
 git clone https://github.com/gautamhardik/signalpost.git
 cd signalpost
-
-# Pull large database assets
-git lfs pull
-
-# Sync exact locked dependencies
 uv sync
 ```
 
-### 3. Run the Production Batch Pipeline
-Execute the crawler and analysis pipeline on the 100-company benchmark:
+### 3. Run the agent
+One command. Give it the company list (JSON, JSONL, or one organisation number per line):
 
 ```bash
-uv run python scripts/run_competition_batch_v2.py \
-  --organisations data/ground-truth-100.jsonl \
-  --bulk data/signalpost-company-universe-2025.jsonl.gz \
-  --profiles-output out/v7_run10_profiles.jsonl \
-  --output out/v7_run10_envelopes.jsonl \
-  --report out/v7_run10_batch_report.json \
-  --run-id run10-decompression-subpages \
-  --budget 2000 \
-  --workers 4
+uv run python scripts/run_competition_batch.py --organisations data/fresh_10.jsonl --output-dir out/run
 ```
 
-### 4. Run the Evidence-First Workspace UI
-Signalpost includes a premium, 3-column verification workspace built for navigating the output profiles. It explicitly visualizes the identity verification gates and exact provenance.
+It returns exactly one result per input, including companies it has never seen and numbers that are not registered. Each result carries one of six states: `available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`. Useful options:
 
-Simply double-click the `start.bat` file in the project root, or run it from your terminal:
-```bash
-.\start.bat
-```
-This will launch the local Python server and automatically serve the `ui/index.html` dashboard mapping to the extracted `companies.json` intelligence.
+| Option | Default | Purpose |
+|:---|:---|:---|
+| `--workers` | 12 | Companies researched in parallel |
+| `--web-requests-per-company` | 30 | Cap on website and search requests per company (registry calls are not capped) |
+| `--budget` | none | Optional run-wide ceiling on website and search requests |
+| `--previous` | none | Profiles from an earlier run: records what changed and keeps earlier evidence a source no longer returns |
+| `--resume` | off | Continue an interrupted run in the same output directory |
+
+### 4. Open the viewer
+Double-click `start.bat`, or open `out/run/viewer/index.html`.
 
 ---
 
-## 📊 Pipeline Verification & Evaluation
+## 📊 Pipeline Verification
 
 ### 1. Independent 100-Company Ground Truth Audit
-Audit against the stratified ground-truth benchmark:
+Audit against the stratified ground-truth sample:
 ```bash
 uv run python scripts/evaluate_independent_ground_truth.py \
-  --profiles out/v7_run10_profiles.jsonl \
-  --envelopes out/v7_run10_envelopes.jsonl \
+  --profiles out/run/profiles.jsonl \
+  --envelopes out/run/envelopes.jsonl \
   --ground-truth data/ground-truth-100.jsonl \
-  --output out/v7_run10_evaluation_report.json
+  --output out/run/evaluation-report.json
 ```
 
-### 2. Score Against the Official Competition Rubric
-Calculate the official **35 / 30 / 20 / 10 / 5** point distribution:
-```bash
-uv run python scripts/evaluate_competition.py \
-  --profiles out/v7_run10_profiles.jsonl \
-  --envelopes out/v7_run10_envelopes.jsonl \
-  --ground-truth data/discovery-ground-truth.jsonl \
-  --report out/v7_run10_batch_report.json \
-  --output out/score.json
-```
-
-### 3. Validate External Precision & Recall
-Audit against verified external online footprints:
-```bash
-uv run python scripts/evaluate_external_recall.py \
-  --profiles out/v7_run10_profiles.jsonl \
-  --ground-truth data/discovery-ground-truth.jsonl \
-  --output out/recall.json
-```
-
-### 4. Run Adversarial Identity & Stress Tests
-Verify zero false positives against name collisions, parked domains, and spoofed footers:
+### 2. Run Adversarial Identity & Stress Tests
+Checks the identity gate against name collisions, corporate hierarchies, parked domains and spoofed footers:
 ```bash
 uv run python scripts/test_adversarial_identity.py
 ```
 
-### 5. Run Unit & Regression Tests
+### 3. Run Unit & Regression Tests
 ```bash
 uv run pytest tests/ -q
 ```

@@ -12,9 +12,10 @@ from .official import accounting_obligation_assessment
 from .sampling import iter_bulk
 
 OFFICIAL_BULK_URL = "https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv"
-FALLBACK_CSV_PATH = Path("brreg-enheter.csv")
-DEFAULT_SQLITE_PATH = Path("data/company_universe_411k.db")
-DEFAULT_UNIVERSE_GZ_PATH = Path("data/signalpost-company-universe-2025.jsonl.gz")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+FALLBACK_CSV_PATH = REPO_ROOT / "brreg-enheter.csv"
+DEFAULT_SQLITE_PATH = REPO_ROOT / "data" / "company_universe_411k.db"
+DEFAULT_UNIVERSE_GZ_PATH = REPO_ROOT / "data" / "signalpost-company-universe-2025.jsonl.gz"
 
 
 def _build_registry_evidence_value(raw_record: dict[str, Any]) -> dict[str, Any]:
@@ -295,6 +296,16 @@ class HybridIdentityStore(IdentityStore):
         return ordered, metadata
 
 
+def _usable_data_file(path: Path) -> bool:
+    """False for a missing file or an un-pulled Git LFS pointer standing in for the data."""
+    if not path.exists():
+        return False
+    if path.stat().st_size < 1024:
+        with path.open("rb") as handle:
+            return not handle.read(64).startswith(b"version https://git-lfs")
+    return True
+
+
 def get_default_identity_store(
     db_path: str | Path | None = None,
     bulk_path: str | Path | None = None,
@@ -304,14 +315,14 @@ def get_default_identity_store(
     bulk_store = None
 
     target_db = Path(db_path) if db_path else DEFAULT_SQLITE_PATH
-    if target_db.exists():
+    if _usable_data_file(target_db):
         try:
             sqlite_store = SQLiteIdentityStore(target_db)
         except Exception:
             sqlite_store = None
 
-    target_bulk = Path(bulk_path) if bulk_path else (FALLBACK_CSV_PATH if FALLBACK_CSV_PATH.exists() else DEFAULT_UNIVERSE_GZ_PATH)
-    if target_bulk.exists():
+    target_bulk = Path(bulk_path) if bulk_path else (FALLBACK_CSV_PATH if _usable_data_file(FALLBACK_CSV_PATH) else DEFAULT_UNIVERSE_GZ_PATH)
+    if _usable_data_file(target_bulk):
         try:
             bulk_store = BulkFileIdentityStore(target_bulk)
         except Exception:

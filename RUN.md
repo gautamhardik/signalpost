@@ -1,84 +1,72 @@
-# Signalpost Submission Execution Guide (RUN.md)
+# Signalpost Execution Guide (RUN.md)
 
-## Environment Requirements
+## Environment
 - Python 3.12+
 - `uv` package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh` or `winget install astral-sh.uv`)
-- `git-lfs` initialized (`git lfs install && git lfs pull`)
+- Git LFS is optional. Without the large local snapshots, every company is read from the live Brønnøysund API.
 
-## Quick Setup
+## Install
 ```bash
 uv sync
 ```
 
----
-
-## 🚀 Running the Production Pipeline (V8 Final)
-The unified command executes the deterministic crawler, applies streaming HTTP decompression (gzip/deflate), validates identity gates, corroborates subpages, and emits terminal execution envelopes:
-
+## Run command
 ```bash
-uv run python scripts/run_competition_batch.py \
-  --organisations data/ground-truth-100.jsonl \
-  --bulk data/signalpost-company-universe-2025.jsonl.gz \
-  --profiles-output out/v8_final_profiles.jsonl \
-  --output out/v8_final_envelopes.jsonl \
-  --report out/v8_final_batch_report.json \
-  --run-id v8_final \
-  --budget 2000 \
-  --expected-count 100 \
-  --workers 4
+uv run python scripts/run_competition_batch.py --organisations <company-list> --output-dir out/run
 ```
 
----
+`<company-list>` is the batch supplied at run time: a JSON list, JSONL rows with `organisation_number`, or a text file with one organisation number per line. The agent researches every company in the file, including companies it has never seen, and writes:
 
-## 📊 Evaluation & Verification Commands
+| File | Contents |
+|:---|:---|
+| `out/run/envelopes.jsonl` | One result envelope per input company, in input order |
+| `out/run/profiles.jsonl` | One evidence-backed profile per company |
+| `out/run/run-report.json` | Module states, coverage counts, request usage and validation checks |
+| `out/run/sources/` | The exact source bytes behind each published fact, named by SHA-256 |
+| `out/run/viewer/index.html` | Viewer over this run (search, filters, sources, compare, export) |
 
-### 1. Independent 100-Company Ground Truth Audit
-Audits against the stratified benchmark cohorts (operating large, operating small, operating unlisted, holding abstentions) with decoupled statutory vs external intelligence accounting:
+The process exits with code 0 when every input has exactly one result envelope.
 
+## Result states
+Every module of every company carries exactly one of:
+
+| State | Meaning |
+|:---|:---|
+| `available` | Found, with source URL, retrieval time and saved source |
+| `not_available` | Looked, nothing there |
+| `blocked` | The source refused the request (HTTP 401/403/429, robots.txt) |
+| `not_applicable` | Does not apply (for example, an organisation number that is not registered) |
+| `ambiguous` | A candidate was found but could not be tied to this exact company, so it is not published |
+| `failed` | The fetch or the run broke for this item |
+
+## Publication rules
+- **Website**: published only after the identity check ties it to the company: organisation number on the site, the registry's own website and e-mail domain, or the company name together with the registered address, postcode, city, phone or a registered CEO/board member named on the site. A name match alone on an unrelated domain is `ambiguous`.
+- **Hiring**: only individual postings, meaning a structured `JobPosting`, or a role-specific listing with a deadline, posting terms or an applicant-tracking link. A careers page by itself is never a hiring fact.
+- **News**: only individual, dated articles from the verified company site. Index pages, menus and undated pages are not published.
+- **Evidence**: every published website, social profile, job and news item links to the stored page it was read from (`snapshot_sha256`, `snapshot_path`).
+
+## Options
+| Option | Default | Purpose |
+|:---|:---|:---|
+| `--workers` | 12 | Companies researched in parallel |
+| `--web-requests-per-company` | 30 | Cap on website and search requests per company (registry calls are not capped) |
+| `--budget` | none | Optional run-wide ceiling on website and search requests |
+| `--previous <profiles.jsonl>` | none | Refresh: record changes since that run and carry forward evidence a source no longer returns |
+| `--resume` | off | Continue an interrupted run in the same output directory |
+| `--expected-count N` | none | Fail fast if the input does not contain exactly N companies |
+| `--bulk <file>` | auto | Local Brreg snapshot to read first (SQLite, CSV or JSONL.GZ) |
+
+## Refresh run
 ```bash
-uv run python scripts/evaluate_independent_ground_truth.py \
-  --profiles out/v8_final_profiles.jsonl \
-  --envelopes out/v8_final_envelopes.jsonl \
-  --ground-truth data/ground-truth-100.jsonl \
-  --output out/v8_final_evaluation_report.json
+uv run python scripts/run_competition_batch.py --organisations <company-list> --output-dir out/run-2 --previous out/run/profiles.jsonl
 ```
 
-### 2. Official Competition Rubric Evaluation (35/30/20/10/5)
+## Tests
 ```bash
-uv run python scripts/evaluate_competition.py \
-  --profiles out/v8_final_profiles.jsonl \
-  --envelopes out/v8_final_envelopes.jsonl \
-  --ground-truth data/discovery-ground-truth.jsonl \
-  --report out/v8_final_batch_report.json \
-  --output out/score.json
+uv run pytest -q
 ```
 
-### 3. External Recall & Precision Evaluation
-```bash
-uv run python scripts/evaluate_external_recall.py \
-  --profiles out/v8_final_profiles.jsonl \
-  --ground-truth data/discovery-ground-truth.jsonl \
-  --output out/recall.json
-```
-
-### 4. Adversarial Identity & Stress Test Suite
-
-Verifies 10/10 adversarial defenses against name collisions, corporate shell hierarchies, sports clubs, and brand boundary leaks:
-
-```bash
-uv run python scripts/test_adversarial_identity.py
-```
-
-### 5. Full Unit & Regression Suite
-```bash
-uv run pytest tests/ -q
-```
-
----
-
-## ⚡ Operational Profile & Invariants
-- **Outbound HTTP requests**: ~939 requests across 100 companies (Strict budget ceiling: 2,000 requests)
-- **External API Cost**: **$0.00** (Zero reliance on commercial search APIs, paid LLM tokens, or credentialed services)
-- **Identity Invariant**: **0 wrong-company publications** across all cohorts (100.0% precision target preserved)
-- **Transport Safety**: Bounded streaming decompression protects against zip-bombs with hard byte limits
-- **Terminal Contract**: 100/100 terminal envelopes emitted with 0 silent drops
+## Operational profile
+- **External API cost**: $0.00. No paid APIs, LLM tokens or credentialed services.
+- **Sources**: Brønnøysund open APIs (NLOD) and the company's own public website, respecting robots.txt.
+- **Failure handling**: an error on one company marks that company `failed` and the run continues; no input is dropped.

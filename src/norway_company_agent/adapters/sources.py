@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 from typing import Any
-from urllib.parse import urlparse
 
 from ..evidence import utc_now
 from .base import BaseSourceAdapter
@@ -124,62 +123,10 @@ class HiringAdapter(BaseSourceAdapter):
         if not org or not is_publishable:
             return observations
 
-        # 1. First-class discrete job openings via jobs.py
+        # Only discrete postings (a role with its own listing, feed item or apply action)
+        # count as hiring. A careers page by itself is not a hiring fact.
         from ..jobs import extract_job_observations
-        discrete_jobs = extract_job_observations(profile)
-        if discrete_jobs:
-            return discrete_jobs
-
-        # 2. Career page presence fallback if career section exists
-        pages = val.get("pages") or []
-        career_pages = []
-        career_keywords = (
-            "karriere", "stillinger", "jobb", "jobs", "career", "rekruttering",
-            "ledig stilling", "ledige stillinger", "bli en del av vårt team",
-            "vi søker etter", "vi søker", "vil du jobbe hos oss", "jobb hos oss",
-            "bli med på laget", "ledige stillinger hos oss", "åpen søknad", "søk jobb"
-        )
-        for pg in pages:
-            url_str = str(pg.get("url") or "")
-            path_str = urlparse(url_str).path.casefold()
-            text_str = (str(pg.get("main_text_excerpt") or "") + " " + str(pg.get("title") or "")).casefold()
-            if any(k in path_str for k in ("karriere", "stillinger", "jobb", "jobs", "career", "rekruttering", "ledige-stillinger")) or \
-               any(k in text_str for k in career_keywords):
-                career_pages.append(pg)
-
-        if career_pages:
-            primary = career_pages[0]
-            url = str(primary.get("url") or "")
-            digest = str(primary.get("content_sha256") or "")
-            if url and len(digest) == 64:
-                obs = {
-                    "id": f"hiring-signal-{org}-{digest[:16]}",
-                    "organisation_number": org,
-                    "platform": "job_board",
-                    "signal_type": "job_posting",
-                    "source_url": url,
-                    "retrieved_at": website.get("retrieved_at") or utc_now(),
-                    "content_sha256": digest,
-                    "exact_entity": True,
-                    "identity_proof": [
-                        {
-                            "type": "website_identity_gate",
-                            "score": assessment.get("score"),
-                            "method": assessment.get("method"),
-                        }
-                    ],
-                    "acquisition_mode": "permitted_public_page",
-                    "rights_status": "approved",
-                    "source_class": "company_careers",
-                    "evidence_span": f"Active recruitment and career portal at {url}: {primary.get('title')}",
-                    "metrics": {
-                        "career_pages_count": len(career_pages),
-                        "page_title": primary.get("title"),
-                    },
-                }
-                observations.append(obs)
-        return observations
-
+        return extract_job_observations(profile)
 
 
 class SiteNewsAdapter(BaseSourceAdapter):
@@ -199,59 +146,10 @@ class SiteNewsAdapter(BaseSourceAdapter):
         if not org or not is_publishable:
             return observations
 
-        # 1. First-class discrete dated activities via activity.py
+        # Only dated, individual articles count as news. An index page ("Nyheter",
+        # "Blog") by itself is not a news fact.
         from ..activity import extract_activity_observations
-        discrete_activities = extract_activity_observations(profile)
-        if discrete_activities:
-            return discrete_activities
-
-        # 2. General news page presence fallback
-        pages = val.get("pages") or []
-        news_pages = []
-        news_terms = ("nyheter", "aktuelt", "presse", "news", "artikler", "blog", "blogg", "pressemeldinger")
-        for pg in pages:
-            url_str = str(pg.get("url") or "")
-            path_str = urlparse(url_str).path.casefold()
-            title_str = str(pg.get("title") or "").casefold()
-            text_str = str(pg.get("main_text_excerpt") or "").casefold()
-            if any(k in path_str for k in news_terms) or \
-               any(k in title_str for k in ("siste nytt", "aktuelt", "nyheter", "pressemelding", "blogg")) or \
-               ("siste nytt" in text_str or "pressemelding" in text_str):
-                news_pages.append(pg)
-
-        if news_pages:
-            primary = news_pages[0]
-            url = str(primary.get("url") or "")
-            digest = str(primary.get("content_sha256") or "")
-            if url and len(digest) == 64:
-                obs = {
-                    "id": f"company-site-news-{org}-{digest[:16]}",
-                    "organisation_number": org,
-                    "platform": "news",
-                    "signal_type": "public_post",
-                    "source_url": url,
-                    "retrieved_at": website.get("retrieved_at") or utc_now(),
-                    "content_sha256": digest,
-                    "exact_entity": True,
-                    "identity_proof": [
-                        {
-                            "type": "website_identity_gate",
-                            "score": assessment.get("score"),
-                            "method": assessment.get("method"),
-                        }
-                    ],
-                    "acquisition_mode": "permitted_public_page",
-                    "rights_status": "approved",
-                    "source_class": "company_news",
-                    "evidence_span": f"Public announcements and news page at {url}: {primary.get('title')}",
-                    "metrics": {
-                        "captured_news_pages": len(news_pages),
-                        "page_title": primary.get("title"),
-                    },
-                }
-                observations.append(obs)
-        return observations
-
+        return extract_activity_observations(profile)
 
 
 class SubunitsAdapter(BaseSourceAdapter):
@@ -292,6 +190,8 @@ class SubunitsAdapter(BaseSourceAdapter):
                 "rights_status": "approved",
                 "source_class": "official_registry",
                 "evidence_span": f"Official BRREG registered operational presence with {len(subunits)} registered subunits.",
+                "snapshot_sha256": locations_rec.get("snapshot_sha256"),
+                "snapshot_path": locations_rec.get("snapshot_path"),
                 "metrics": {
                     "subunits_count": len(subunits),
                     "subunit_orgs": [s.get("organisation_number") for s in subunits[:10] if s.get("organisation_number")],
@@ -344,6 +244,8 @@ class GovernanceRolesAdapter(BaseSourceAdapter):
                 "rights_status": "approved",
                 "source_class": "official_registry",
                 "evidence_span": f"Official BRREG registered governance leadership ({len(roles)} active roles): {', '.join(key_leaders)}",
+                "snapshot_sha256": roles_rec.get("snapshot_sha256"),
+                "snapshot_path": roles_rec.get("snapshot_path"),
                 "metrics": {
                     "active_roles_count": len(roles),
                     "key_leaders": key_leaders,

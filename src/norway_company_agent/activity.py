@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, replace
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
@@ -47,15 +47,86 @@ class ActivityRecord:
     retrieved_at: str
     content_sha256: str
     identity_assessment: dict[str, Any]
+    found_on_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+URL_DATE_PATTERNS = (
+    re.compile(r"/(20\d{2})/([01]?\d)/([0-3]?\d)(?:/|$)"),
+    re.compile(r"(?:^|[/_-])(20\d{2})-([01]\d)-([0-3]\d)(?:[/_-]|$)"),
+)
+
+# Path segments that mark a listing, archive or author page rather than one article.
+NEWS_INDEX_SEGMENTS = {
+    "nyheter", "news", "blog", "blogg", "aktuelt", "presse", "press", "artikler", "arkiv",
+    "nyhetsarkiv", "media", "newsroom", "pressroom", "events", "arrangementer", "kunngjoringer",
+    "pressemeldinger", "press-releases", "investors", "investor", "en", "no", "nb",
+}
+NON_ARTICLE_SEGMENTS = {"author", "tag", "tags", "category", "kategori", "page", "side", "search", "sok"}
+LINK_TEXT_TITLES = {
+    "les mer", "read more", "les hele saken", "se alle", "se mer", "mer", "more", "vis alle",
+    "flere nyheter", "flere prosjekter", "alle nyheter", "all news", "neste", "forrige",
+}
+
+
+def date_from_url(url: str) -> str | None:
+    """Read a publication date embedded in an article URL (/2026/08/10/slug or 2026-08-10-slug)."""
+    path = urlparse(url).path
+    for pattern in URL_DATE_PATTERNS:
+        m = pattern.search(path)
+        if m:
+            year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            if 1 <= month <= 12 and 1 <= day <= 31:
+                return f"{year:04d}-{month:02d}-{day:02d}"
+    return None
+
+
+def is_publishable_news(act: "ActivityRecord", today: date | None = None) -> bool:
+    """A news fact must be one dated article, not an index page, menu link or undated page."""
+    if not act.activity_date:
+        return False
+    try:
+        published = date.fromisoformat(act.activity_date)
+    except ValueError:
+        return False
+    today = today or datetime.now(timezone.utc).date()
+    horizon = timedelta(days=366) if act.activity_type == "event" else timedelta(days=1)
+    if published < date(2000, 1, 1) or published > today + horizon:
+        return False
+    parsed = urlparse(act.source_url)
+    segments = [seg for seg in parsed.path.casefold().split("/") if seg]
+    if not segments:
+        return False  # homepage, or an anchor on it
+    if parsed.fragment and act.found_on_url and act.source_url.split("#", 1)[0].rstrip("/") == act.found_on_url.split("#", 1)[0].rstrip("/"):
+        return False  # in-page anchor, not an article
+    if segments[-1] in NEWS_INDEX_SEGMENTS or any(seg in NON_ARTICLE_SEGMENTS for seg in segments):
+        return False
+    title = act.title.casefold().strip()
+    if len(title) < 8 or title in LINK_TEXT_TITLES:
+        return False
+    return True
+
+
+# Leading "Publisert: 01.07.2026", "13.08.2026 |", "24 September 2026, 21:00 |" and a section
+# word ("Nyheter", "News") that listing cards print before the actual headline.
+TITLE_DATE_PREFIX = re.compile(
+    r"^(?:(?:publisert|oppdatert|published|updated|dato|date)\s*:?\s*)?"
+    r"(?:\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}\.?\s+(?:" + "|".join(sorted(MONTH_MAP, key=len, reverse=True)) + r")\.?\s+\d{4})"
+    r"(?:,?\s*(?:kl\.?\s*)?\d{1,2}[:.]\d{2})?\s*[|·•–—-]?\s*",
+    re.IGNORECASE,
+)
+TITLE_SECTION_PREFIX = re.compile(r"^(?:nyheter|nyhet|news|aktuelt|pressemelding|press release|blogg|blog|artikkel)\s*[|·:–—-]?\s+(?=\S)", re.IGNORECASE)
 
 
 def clean_activity_title(title: str | None) -> str | None:
     if not title:
         return None
     cleaned = re.sub(r"\s+", " ", str(title)).strip()
+    cleaned = TITLE_DATE_PREFIX.sub("", cleaned)
+    cleaned = re.sub(r"^\s*\|?\s*regulatory information\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = TITLE_SECTION_PREFIX.sub("", cleaned)
     cleaned = re.sub(r"^[-–—•*|:]+\s*", "", cleaned)
     cleaned = re.sub(r"\s*[-–—•*|:]+$", "", cleaned).strip()
     if not cleaned or len(cleaned) < 4:
@@ -234,7 +305,8 @@ def extract_activity_from_jsonld(
 
         # Dates: datePublished, startDate (for events), dateModified
         date_raw = c.get("datePublished") or c.get("startDate") or c.get("dateCreated")
-        activity_date = normalize_date_string(date_raw)
+        act_url_for_date = urljoin(base_url, str(c.get("url") or base_url))
+        activity_date = normalize_date_string(date_raw) or date_from_url(act_url_for_date)
 
         # Publisher / author
         pub_val = c.get("publisher") or c.get("author")
@@ -326,8 +398,17 @@ def extract_activity_from_html_articles(
             if not title_text:
                 continue
 
-            parent_text = link.parent.get_text(" ", strip=True) if link.parent else ""
-            activity_date = extract_activity_date_from_text(parent_text)
+            # Date the link from its own text, or from its parent only when the parent holds no
+            # other article links; a shared list wrapper would give every link the first date.
+            link_text = link.get_text(" ", strip=True)
+            parent = link.parent
+            own_parent = parent is not None and len(parent.select("a[href]")) <= 2
+            parent_text = parent.get_text(" ", strip=True) if own_parent else link_text
+            activity_date = (
+                extract_activity_date_from_text(link_text)
+                or (extract_activity_date_from_text(parent_text) if own_parent else None)
+                or date_from_url(full_url)
+            )
 
             id_assessment = verify_activity_identity(profile, {"title": title_text, "description": parent_text}, full_url)
             if not id_assessment["verified"]:
@@ -369,10 +450,13 @@ def extract_activity_from_html_articles(
         activity_date = None
         if time_el:
             activity_date = normalize_date_string(time_el.get("datetime") or time_el.get_text(" ", strip=True))
-        if not activity_date:
+        if not activity_date and item_url.split("#", 1)[0].rstrip("/") == base_url.split("#", 1)[0].rstrip("/"):
+            # The page's own publish date only dates the page itself, never the cards listed on it.
             activity_date = page_meta_date
         if not activity_date:
             activity_date = extract_activity_date_from_text(card_text)
+        if not activity_date:
+            activity_date = date_from_url(item_url)
 
         id_assessment = verify_activity_identity(profile, {"title": title, "description": card_text}, item_url)
         if not id_assessment["verified"]:
@@ -421,7 +505,7 @@ def extract_activity_from_crawl_material(
             p_html = f"<html><head><title>{page.get('title', '')}</title></head><body>{p_text}</body></html>"
 
         # 1. Primary: JSON-LD Article/Event
-        jsonld_activities = extract_activity_from_jsonld(p_html, p_url, profile)
+        jsonld_activities = [replace(act, found_on_url=p_url) for act in extract_activity_from_jsonld(p_html, p_url, profile)]
         for act in jsonld_activities:
             if act.activity_id not in all_activities:
                 all_activities[act.activity_id] = act
@@ -430,7 +514,7 @@ def extract_activity_from_crawl_material(
         p_path = urlparse(p_url).path.casefold()
         is_activity_url = any(k in p_path for k in ("nyhet", "aktuelt", "presse", "news", "press", "blog", "event", "artikkel"))
         if is_activity_url or not jsonld_activities:
-            html_activities = extract_activity_from_html_articles(p_html, p_url, profile)
+            html_activities = [replace(act, found_on_url=p_url) for act in extract_activity_from_html_articles(p_html, p_url, profile)]
             for act in html_activities:
                 if act.activity_id not in all_activities:
                     all_activities[act.activity_id] = act
@@ -439,7 +523,7 @@ def extract_activity_from_crawl_material(
             if not html_activities and is_activity_url:
                 p_title = clean_activity_title(page.get("title"))
                 if p_title and len(p_text.strip()) > 40:
-                    act_date = extract_activity_date_from_text(p_text[:400])
+                    act_date = date_from_url(p_url) or extract_activity_date_from_text(p_text[:400])
                     act_type = classify_activity_type(p_title, p_text)
                     id_assessment = verify_activity_identity(profile, {"title": p_title, "description": p_text}, p_url)
                     if id_assessment["verified"]:
@@ -457,6 +541,7 @@ def extract_activity_from_crawl_material(
                             retrieved_at=utc_now(),
                             content_sha256=content_sha,
                             identity_assessment=id_assessment,
+                            found_on_url=p_url,
                         )
                         if act_id not in all_activities:
                             all_activities[act_id] = standalone_act
@@ -522,8 +607,15 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
 
     activities = extract_activity_from_crawl_material(profile, website)
     observations: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
 
     for act in activities:
+        if not is_publishable_news(act):
+            continue
+        canonical = act.source_url.split("#", 1)[0].rstrip("/")
+        if canonical in seen_urls:
+            continue
+        seen_urls.add(canonical)
         obs = {
             "id": f"act-{org}-{act.activity_id}",
             "organisation_number": org,
@@ -538,10 +630,12 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
             "rights_status": "approved",
             "source_class": f"company_{act.activity_type}",
             "evidence_span": f"Verified {act.activity_type}: {act.title}" + (f" ({act.activity_date})" if act.activity_date else ""),
+            "found_on_url": act.found_on_url,
             "metrics": {
                 "activity_type": act.activity_type,
                 "title": act.title,
                 "activity_date": act.activity_date,
+                "published_at": act.activity_date,
             },
         }
         observations.append(obs)

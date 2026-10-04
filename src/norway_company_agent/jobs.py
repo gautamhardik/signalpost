@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -54,9 +54,72 @@ class JobRecord:
     retrieved_at: str
     content_sha256: str
     identity_assessment: dict[str, Any]
+    extraction_method: str = "html"
+    posting_evidence: tuple[str, ...] = ()
+    found_on_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+# Last path segments of a careers landing page (as opposed to one posting).
+CAREER_INDEX_SEGMENTS = {
+    "karriere", "careers", "career", "jobs", "jobb", "jobber", "stillinger", "ledige-stillinger",
+    "ledige-jobber", "vacancies", "jobb-hos-oss", "rekruttering", "open-positions", "join-us",
+    "bli-med-pa-laget", "en", "no", "nb",
+}
+JOB_LINK_TEXT = {
+    "les mer", "read more", "se stilling", "se stillingen", "søk her", "søk nå", "apply", "apply now",
+    "søk", "mer info", "se alle stillinger", "alle stillinger", "se ledige stillinger", "view all jobs",
+}
+POSTING_HINTS = re.compile(
+    r"søknadsfrist|søk på stillingen|søk stillingen|søk nå|apply now|apply for|application deadline|"
+    r"stillingsprosent|fast stilling|fast ansettelse|vikariat|engasjement|heltid|deltid|full[- ]time|part[- ]time|"
+    r"tiltredelse|arbeidssted|stillingstittel|job id|stillings-?id",
+    re.IGNORECASE,
+)
+RECRUITER_DOMAINS = {
+    "finn.no", "jobbnorge.no", "webcruiter.com", "webcruiter.no", "karrierestart.no",
+    "manpower.no", "adecco.no", "nav.no", "linkedin.com",
+    "recman.no", "cruit.no", "easycruit.com", "hr-manager.net",
+    "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no",
+    "meyerhaugen.no", "cruitive.com", "smartrecruiters.com",
+    "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com",
+}
+
+
+def _registered_domain(url: str) -> str:
+    return tldextract.extract(urlparse(url).hostname or "").top_domain_under_public_suffix or ""
+
+
+def posting_evidence_for(job_url: str, context_text: str, deadline: str | None) -> tuple[str, ...]:
+    """Collect concrete signs that a link is one job posting rather than a careers landing page."""
+    found: list[str] = []
+    if deadline:
+        found.append("deadline")
+    if POSTING_HINTS.search(context_text or ""):
+        found.append("posting_terms")
+    if _registered_domain(job_url) in RECRUITER_DOMAINS:
+        found.append("ats_listing")
+    return tuple(found)
+
+
+def is_publishable_job(job: "JobRecord") -> bool:
+    """A hiring fact needs a real role: a structured JobPosting, or a role-specific listing
+    with a deadline, posting terms or an applicant-tracking link. A careers page is not enough."""
+    title = job.job_title.casefold().strip()
+    if title in JOB_LINK_TEXT or title in GENERIC_CAREER_TITLES or not (4 <= len(title) <= 160):
+        return False
+    if job.extraction_method == "jsonld":
+        return True
+    segments = [seg for seg in urlparse(job.source_url).path.casefold().split("/") if seg]
+    page = (job.found_on_url or "").split("#", 1)[0].rstrip("/")
+    if "ats_listing" not in job.posting_evidence:
+        if job.source_url.split("#", 1)[0].rstrip("/") == page:
+            return False  # card without its own posting page
+        if not segments or segments[-1] in CAREER_INDEX_SEGMENTS:
+            return False
+    return bool(job.posting_evidence)
 
 
 def normalize_date_string(raw: str | None) -> str | None:
@@ -147,15 +210,7 @@ def verify_job_identity(
     name_overlap = len(core_tokens & org_tokens) if hiring_org else 0
     token_ratio = name_overlap / len(core_tokens) if core_tokens else 0.0
 
-    recruiter_domains = {
-        "finn.no", "jobbnorge.no", "webcruiter.com", "karrierestart.no",
-        "manpower.no", "adecco.no", "nav.no", "linkedin.com",
-        "recman.no", "cruit.no", "easycruit.com", "hr-manager.net", 
-        "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no", 
-        "meyerhaugen.no", "cruitive.com", "smartrecruiters.com", 
-        "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com"
-    }
-    is_external_ats = job_reg_domain in recruiter_domains
+    is_external_ats = job_reg_domain in RECRUITER_DOMAINS
 
     job_text = str(job_candidate.get("description") or "")
     has_org_nr = org_nr in job_text if org_nr else False
@@ -172,7 +227,11 @@ def verify_job_identity(
         reason = "Job hosted directly on verified company domain"
         method = "verified_domain_first_party_job"
     elif is_external_ats:
-        if token_ratio >= 0.75 or has_org_nr:
+        if job_candidate.get("linked_from_verified_site"):
+            score = 0.92
+            reason = "Applicant-tracking posting linked directly from the verified company website"
+            method = "verified_site_ats_link"
+        elif token_ratio >= 0.75 or has_org_nr:
             score = 0.92
             reason = f"Job on ATS/portal verified by legal company name match ({hiring_org})"
             method = "ats_exact_entity_match"
@@ -306,6 +365,8 @@ def extract_jobs_from_jsonld(
             retrieved_at=utc_now(),
             content_sha256=content_sha,
             identity_assessment=id_assessment,
+            extraction_method="jsonld",
+            posting_evidence=("structured_job_posting",),
         ))
 
     return records
@@ -344,11 +405,15 @@ def extract_jobs_from_html_cards(
             if not title_text:
                 continue
 
-            parent_text = link.parent.get_text(" ", strip=True) if link.parent else ""
+            # Use the parent's text only when it belongs to this link alone; a shared list
+            # wrapper would lend every link the same deadline and posting terms.
+            parent = link.parent
+            own_parent = parent is not None and len(parent.select("a[href]")) <= 2
+            parent_text = parent.get_text(" ", strip=True) if own_parent else link.get_text(" ", strip=True)
             deadline = _extract_deadline_from_text(parent_text)
             published = normalize_date_string(parent_text)
 
-            id_assessment = verify_job_identity(profile, {"title": title_text}, full_url)
+            id_assessment = verify_job_identity(profile, {"title": title_text, "linked_from_verified_site": True}, full_url)
             if not id_assessment["verified"]:
                 continue
 
@@ -368,6 +433,8 @@ def extract_jobs_from_html_cards(
                 retrieved_at=utc_now(),
                 content_sha256=content_sha,
                 identity_assessment=id_assessment,
+                extraction_method="html_link",
+                posting_evidence=posting_evidence_for(full_url, parent_text, deadline),
             ))
         return records
 
@@ -389,7 +456,7 @@ def extract_jobs_from_html_cards(
         loc_el = card.select_one(".location, .job-location, .sted, [data-location]")
         location = loc_el.get_text(" ", strip=True) if loc_el else None
 
-        id_assessment = verify_job_identity(profile, {"title": title, "description": card_text}, job_url)
+        id_assessment = verify_job_identity(profile, {"title": title, "description": card_text, "linked_from_verified_site": True}, job_url)
         if not id_assessment["verified"]:
             continue
 
@@ -410,6 +477,8 @@ def extract_jobs_from_html_cards(
             retrieved_at=utc_now(),
             content_sha256=content_sha,
             identity_assessment=id_assessment,
+            extraction_method="html_card",
+            posting_evidence=posting_evidence_for(job_url, card_text, deadline),
         ))
 
     return records
@@ -437,7 +506,7 @@ def extract_jobs_from_crawl_material(
         if not p_html:
             p_html = f"<html><head><title>{page.get('title', '')}</title></head><body>{p_text}</body></html>"
 
-        jsonld_jobs = extract_jobs_from_jsonld(p_html, p_url, profile)
+        jsonld_jobs = [replace(j, found_on_url=p_url) for j in extract_jobs_from_jsonld(p_html, p_url, profile)]
         for j in jsonld_jobs:
             if j.job_id not in all_jobs:
                 all_jobs[j.job_id] = j
@@ -445,7 +514,7 @@ def extract_jobs_from_crawl_material(
         p_path = urlparse(p_url).path.casefold()
         is_career_url = any(k in p_path for k in ("karriere", "stillinger", "jobb", "jobs", "career", "rekruttering"))
         if is_career_url or not jsonld_jobs:
-            html_jobs = extract_jobs_from_html_cards(p_html, p_url, profile)
+            html_jobs = [replace(j, found_on_url=p_url) for j in extract_jobs_from_html_cards(p_html, p_url, profile)]
             for j in html_jobs:
                 if j.job_id not in all_jobs:
                     all_jobs[j.job_id] = j
@@ -507,8 +576,15 @@ def extract_job_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
 
     jobs = extract_jobs_from_crawl_material(profile, website)
     observations: list[dict[str, Any]] = []
+    seen: set[str] = set()
 
     for job in jobs:
+        if not is_publishable_job(job):
+            continue
+        key = f"{job.source_url}|{job.job_title.casefold()}"
+        if key in seen:
+            continue
+        seen.add(key)
         obs = {
             "id": f"job-{org}-{job.job_id}",
             "organisation_number": org,
@@ -523,6 +599,8 @@ def extract_job_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
             "rights_status": "approved",
             "source_class": "company_careers",
             "evidence_span": f"Verified job opening: {job.job_title}" + (f" in {job.location}" if job.location else ""),
+            "found_on_url": job.found_on_url,
+            "posting_evidence": list(job.posting_evidence),
             "metrics": {
                 "job_title": job.job_title,
                 "location": job.location,

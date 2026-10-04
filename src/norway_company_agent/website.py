@@ -6,6 +6,7 @@ import json
 import ipaddress
 import re
 import socket
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -88,22 +89,34 @@ def _registered_domain(url: str) -> str:
     return ext.top_domain_under_public_suffix
 
 
+_ROBOTS_CACHE: dict[str, urllib.robotparser.RobotFileParser | None] = {}
+_ROBOTS_LOCK = threading.Lock()
+
+
 def _robots_allowed(url: str, timeout: float) -> bool:
+    """Check robots.txt, fetching it once per scheme+host for the whole run."""
     assert_public_url(url)
     parsed = urllib.parse.urlparse(url)
-    robots_url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, "/robots.txt", "", "", ""))
-    parser = urllib.robotparser.RobotFileParser()
-    parser.set_url(robots_url)
-    try:
-        request = urllib.request.Request(robots_url, headers={"User-Agent": USER_AGENT})
-        with SAFE_OPENER.open(request, timeout=timeout) as response:
-            parser.parse(response.read().decode("utf-8", errors="replace").splitlines())
-        return parser.can_fetch(USER_AGENT, url)
-    except Exception:
-        # An unavailable robots file is not permission to ignore explicit site terms; callers retain
-        # the URL and can route uncertain domains to review. For this bounded homepage POC, allow one
-        # ordinary GET when robots.txt is absent rather than crawl deeper.
-        return True
+    key = f"{parsed.scheme}://{parsed.netloc}".casefold()
+    with _ROBOTS_LOCK:
+        cached = key in _ROBOTS_CACHE
+        parser = _ROBOTS_CACHE.get(key)
+    if not cached:
+        robots_url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, "/robots.txt", "", "", ""))
+        parser = urllib.robotparser.RobotFileParser()
+        parser.set_url(robots_url)
+        try:
+            request = urllib.request.Request(robots_url, headers={"User-Agent": USER_AGENT})
+            with SAFE_OPENER.open(request, timeout=timeout) as response:
+                parser.parse(response.read().decode("utf-8", errors="replace").splitlines())
+        except Exception:
+            # An unavailable robots file is not permission to ignore explicit site terms; callers retain
+            # the URL and can route uncertain domains to review. For this bounded homepage POC, allow one
+            # ordinary GET when robots.txt is absent rather than crawl deeper.
+            parser = None
+        with _ROBOTS_LOCK:
+            _ROBOTS_CACHE[key] = parser
+    return True if parser is None else parser.can_fetch(USER_AGENT, url)
 
 
 def _social_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
@@ -285,6 +298,23 @@ def safe_decompress_body(raw: bytes, encoding: str = "", max_bytes: int = 2_000_
     return raw, None
 
 
+FOOTER_SELECTORS = "footer, address, [class*=footer], [id*=footer], [class*=kontakt], [class*=contact], [id*=contact]"
+
+
+def _footer_identity_text(soup: BeautifulSoup) -> str:
+    """Text of footer/contact blocks, where Norwegian sites usually print org.nr, address and phone.
+
+    The main-text extractor drops these blocks as boilerplate, so without this the identity
+    gate never sees the strongest evidence a site offers.
+    """
+    parts = []
+    for element in soup.select(FOOTER_SELECTORS)[:12]:
+        text = element.get_text(" ", strip=True)
+        if text:
+            parts.append(text)
+    return " ".join(dict.fromkeys(parts))[:3000]
+
+
 def _bounded_html(soup: BeautifulSoup) -> str:
     """Return a highly minimal HTML fragment preserving only structural layout and date/identity metadata."""
     for tag in soup.find_all(["style", "svg", "nav", "footer", "form", "iframe", "canvas", "img", "video", "audio", "noscript"]):
@@ -324,7 +354,7 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
         page_soup = BeautifulSoup(page_html, "lxml")
         structured = extruct.extract(page_html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         page_text = trafilatura.extract(page_html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
-        meta_identity = _extract_metadata_identity_text(structured, page_soup)
+        meta_identity = " ".join(filter(None, [_extract_metadata_identity_text(structured, page_soup), _footer_identity_text(page_soup)]))
         page = {
             "url": final_url,
             "title": page_soup.title.get_text(" ", strip=True)[:500] if page_soup.title else "",
@@ -332,6 +362,7 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
             "identity_text_excerpt": meta_identity,
             "content_sha256": __import__("hashlib").sha256(decompressed_raw).hexdigest(),
             "html": _bounded_html(page_soup),
+            "_raw": decompressed_raw,
         }
         return page, _social_links(final_url, page_soup), 2, len(raw), elapsed, None
     except Exception as exc:
@@ -430,7 +461,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         title = soup.title.get_text(" ", strip=True) if soup.title else ""
         description_tag = soup.select_one('meta[name="description"], meta[property="og:description"]')
         description = str(description_tag.get("content") or "").strip() if description_tag else ""
-        meta_identity = _extract_metadata_identity_text(structured, soup)
+        meta_identity = " ".join(filter(None, [_extract_metadata_identity_text(structured, soup), _footer_identity_text(soup)]))
         value = {
             "requested_url": normalized,
             "final_url": final_url,
@@ -444,7 +475,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
             "extraction_state": _extraction_state(text, soup),
         }
-        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "content_sha256": value["content_sha256"], "html": _bounded_html(soup)}]
+        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "identity_text_excerpt": meta_identity, "content_sha256": value["content_sha256"], "html": _bounded_html(soup), "_raw": decompressed_raw}]
         social = value["social_links"]
         crawl_errors = []
         requests = 2
@@ -473,7 +504,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         return evidence("website", "available", "registry_linked_company_website", final_url, value=value, note="Company-controlled claim layer; not an official registry fact", content_sha256=value["content_sha256"]), {"requests": requests, "bytes": bytes_received, "latencies_ms": page_latencies}
     except urllib.error.HTTPError as exc:
         elapsed = int((time.monotonic() - started) * 1000)
-        status = "not_found" if exc.code in {404, 410} else "source_error"
+        status = "not_found" if exc.code in {404, 410} else "blocked" if exc.code in {401, 403, 429, 451} else "source_error"
         return evidence("website", status, "registry_linked_company_website", normalized, note=f"HTTP {exc.code}"), {"requests": 2, "bytes": 0, "latencies_ms": [elapsed]}
     except urllib.error.URLError as exc:
         if not supplied_scheme and normalized.startswith("https://"):
