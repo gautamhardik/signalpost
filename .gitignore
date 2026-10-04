@@ -74,8 +74,6 @@ Thumbs.db
 *.temp
 *.zip
 
-# Local scratch outputs (keep tracked benchmark inputs intact)
-out/*.tmp
 
 # Agent run outputs (profiles, envelopes, saved sources, viewer)
-out/run/
+out/

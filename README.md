@@ -122,66 +122,54 @@ To browse the latest run in `out/run`, double-click `start.bat` (or open `out/ru
 
 ```text
 signalpost/
-├── pyproject.toml              # Project dependencies & build configuration
-├── uv.lock                     # Pinned reproducible dependency lockfile
-├── README.md                   # System documentation & architectural reference
-├── RUN.md                      # Official execution guide & evaluation runner
-├── benchmark-100.jsonl         # 100-company frozen evaluation sample
-├── brreg-enheter.csv           # Brreg bulk registry snapshot (Tracked via Git LFS)
+├── pyproject.toml              # Dependencies
+├── uv.lock                     # Pinned, reproducible dependency lockfile
+├── README.md                   # System documentation
+├── RUN.md                      # Run command, outputs, result states and options
+├── start.bat                   # Opens the viewer of the latest run (Windows)
+├── brreg-enheter.csv           # Brreg bulk registry snapshot (Git LFS, optional)
 │
 ├── data/
-│   ├── company_universe_411k.db           # SQLite index of 411,160 active Norwegian entities (LFS)
-│   ├── discovery-ground-truth.jsonl       # Audited ground truth for discovery validation
-│   ├── ground-truth-100.jsonl             # 100-company ground truth labels
-│   ├── operating-sample-35.jsonl          # Calibration sample for active trading entities
-│   └── signalpost-company-universe-*.gz   # Compressed active universe export
+│   ├── company_universe_411k.db           # SQLite index of 411,160 Norwegian entities (Git LFS, optional)
+│   ├── signalpost-company-universe-*.gz   # Compressed universe export
+│   ├── ground-truth-100.jsonl             # 100-company labelled set used for recall checks
+│   ├── discovery-ground-truth.jsonl       # Audited website labels
+│   ├── operating-sample-35.jsonl          # Operating-company sample
+│   └── fresh_10.jsonl, fresh_20.jsonl, genuine_fresh_100.jsonl   # Small test batches
 │
-├── src/norway_company_agent/   # Core intelligence library
-│   ├── adapters/               # Pluggable external footprint & governance adapters
-│   │   ├── base.py             # Base adapter interface
-│   │   └── sources.py          # Hiring, SiteActivity, SiteNews, Subunits, GovernanceRoles
-│   ├── activity.py             # Company announcements, dated activity & events
-│   ├── batch.py                # Batch pipeline execution & worker coordination
-│   ├── budget.py               # Token & request footprint budget governor
-│   ├── crawl_events.py         # HTTP crawl event emitter & ledger
-│   ├── discovery.py            # Targeted discovery engine with aggregator blocking
-│   ├── evidence.py             # Claim record definitions, provenance & the six result states
+├── src/norway_company_agent/   # Core library
+│   ├── adapters/               # Social, site, hiring, news, sub-unit and role observations
+│   ├── activity.py             # Dated news and announcements from company sites
+│   ├── batch.py                # Input reading, live-registry fallback, result envelopes
+│   ├── discovery.py            # Candidate website discovery with aggregator blocking
+│   ├── evidence.py             # Evidence records and the six result states
 │   ├── evidence_store.py       # Content-addressed store of the source bytes behind each fact
-│   ├── external_control.py     # External search loop controller & guardrails
-│   ├── external_footprint.py   # Web & digital footprint extractor
-│   ├── history.py              # Snapshot comparison & cryptographic change-diff engine
-│   ├── identity.py             # Deterministic multi-attribute identity gate (threshold: 0.90)
-│   ├── identity_store.py       # Entity caching & local state store
-│   ├── jobs.py                 # Open vacancies & career posting discovery
-│   ├── official.py             # Brønnøysund API & bulk CSV connector
-│   ├── operations.py           # AST-based deterministic query interpreter
-│   ├── refresh.py              # SHA-256 change-diff & snapshot comparison engine
-│   ├── research.py             # Autonomous company synthesis & profile assembler
-│   ├── sampling.py             # Stratified sampling & universe slicing
-│   ├── scrapy_crawler.py       # Asynchronous web crawler with robots.txt compliance
-│   ├── viewer.py               # Builds the per-run HTML viewer from profiles
-│   └── website.py              # Homepage content parser, safe decompression & subpages
+│   ├── external_footprint.py   # Observation validation and aggregation
+│   ├── history.py, refresh.py  # Change detection between runs
+│   ├── http.py                 # JSON fetching with retries
+│   ├── identity.py             # Deterministic company identity gate
+│   ├── identity_store.py       # Local registry snapshot lookup
+│   ├── jobs.py                 # Individual job postings
+│   ├── official.py             # Brønnøysund registry and accounts APIs
+│   ├── research.py             # Synthesis: what it is, does, size, people, changes, unknowns
+│   ├── sampling.py             # Bulk snapshot reading
+│   ├── viewer.py               # Builds the per-run HTML viewer
+│   └── website.py              # Safe website fetching, decompression and sub-page crawl
 │
-├── scripts/                    # Automation, execution, and evaluation CLI tools
+├── scripts/
 │   ├── run_competition_batch.py               # The agent: one result per supplied organisation number
-│   ├── evaluate_independent_ground_truth.py   # Independent 100-company audit tool
-│   ├── test_adversarial_identity.py           # Adversarial edge-case validation suite
-│   └── validate_submission_corpus.py          # 1:1 manifest-to-envelope integrity auditor
+│   ├── evaluate_independent_ground_truth.py   # Website recall and precision on the labelled set
+│   ├── test_adversarial_identity.py           # Adversarial identity cases (name collisions, parked domains)
+│   ├── validate_submission_corpus.py          # Manifest-to-envelope integrity check
+│   ├── build_ground_truth_100.py              # Rebuilds the labelled 100-company set
+│   └── run_google_news_rss_connector.py       # Experimental news connector (not used by the agent)
 │
-├── tests/                      # Comprehensive pytest regression suite
-│   ├── test_activity.py        # Activity and news extraction tests
-│   ├── test_discovery.py       # Discovery funnel tests
-│   ├── test_history.py         # Refresh diff tests
-│   ├── test_jobs.py            # Career posting tests
-│   ├── test_review_fixes.py    # Result states, identity, hiring/news rules, evidence store, viewer
-│   └── test_website_decompression.py # HTTP decompression & zip-bomb protection tests
+├── tests/                      # pytest suite (uv run pytest -q)
 │
-├── submission/                 # Official competition submission artifacts
-│   ├── organisation-manifest.jsonl    # 1,100 stratified Norwegian test entities
-│   ├── envelopes.jsonl                # 1,100 validated terminal execution envelopes
-│   ├── profiles.jsonl                 # 1,100 completed evidence-backed profiles
-│   ├── run-report.json                # Execution ledger & resource consumption report
-│   └── source-policy.md               # Source compliance policy
+├── submission/
+│   ├── organisation-manifest.jsonl    # 1,100 stratified Norwegian companies for full-size test runs
+│   ├── source-policy.md               # Source compliance policy
+│   └── RUN.md                         # Submission run notes
 │
 └── out/run/                    # Default run output (git-ignored)
     ├── profiles.jsonl          # One evidence-backed profile per company, input order
@@ -232,13 +220,14 @@ Double-click `start.bat`, or open `out/run/viewer/index.html`.
 ## 📊 Pipeline Verification
 
 ### 1. Independent 100-Company Ground Truth Audit
-Audit against the stratified ground-truth sample:
+Run the agent on the labelled 100-company set, then check website recall and wrong-company publications against the labels:
 ```bash
+uv run python scripts/run_competition_batch.py --organisations data/ground-truth-100.jsonl --output-dir out/gt100
 uv run python scripts/evaluate_independent_ground_truth.py \
-  --profiles out/run/profiles.jsonl \
-  --envelopes out/run/envelopes.jsonl \
+  --profiles out/gt100/profiles.jsonl \
+  --envelopes out/gt100/envelopes.jsonl \
   --ground-truth data/ground-truth-100.jsonl \
-  --output out/run/evaluation-report.json
+  --output out/gt100/evaluation-report.json
 ```
 
 ### 2. Run Adversarial Identity & Stress Tests
