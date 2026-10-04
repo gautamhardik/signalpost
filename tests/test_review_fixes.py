@@ -440,3 +440,37 @@ def test_namesake_owner_on_a_site_does_not_confirm_a_personal_name_company():
                             text="Callum Innes, painter. Exhibitions and works. " * 4, registry={"forretningsadresse.kommune": "OSLO"})
     profile["evidence"]["roles"] = {"value": {"roles": [{"name": "Callum James Charles Innes", "role_code": "INNH"}]}}
     assert not assess_website_identity(profile)["publishable"]
+
+
+# --- one-step viewer --------------------------------------------------------------
+
+def _load_runner():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("runner", Path(__file__).resolve().parents[1] / "scripts" / "run_competition_batch.py")
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+    return runner
+
+
+def test_open_flag_is_off_unless_asked_for():
+    runner = _load_runner()
+    assert runner.build_parser().parse_args(["--organisations", "x.txt"]).open is False
+    assert runner.build_parser().parse_args(["--organisations", "x.txt", "--open"]).open is True
+
+
+def test_opening_the_viewer_never_breaks_a_run(tmp_path, monkeypatch):
+    import webbrowser
+    runner = _load_runner()
+    page = tmp_path / "viewer" / "index.html"
+    page.parent.mkdir()
+    page.write_text("<html></html>", encoding="utf-8")
+    opened = []
+    monkeypatch.setattr(webbrowser, "open", lambda url: opened.append(url) or True)
+    assert runner.open_viewer(page) and opened == [page.resolve().as_uri()]
+
+    def no_browser(url):
+        raise webbrowser.Error("no display")
+
+    monkeypatch.setattr(webbrowser, "open", no_browser)
+    assert runner.open_viewer(page) is False

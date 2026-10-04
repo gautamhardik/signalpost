@@ -164,7 +164,17 @@ def withhold_shared_observations(profiles: list[dict]) -> dict:
     return {"shared_items": len(shared), "companies_affected": affected}
 
 
-def main() -> None:
+def open_viewer(viewer_path: Path) -> bool:
+    """Open the run's viewer in the default browser; never fails the run if that is not possible."""
+    import webbrowser
+
+    try:
+        return bool(webbrowser.open(viewer_path.resolve().as_uri()))
+    except Exception:
+        return False
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Signalpost: one evidence-backed result per Norwegian organisation number")
     parser.add_argument("--organisations", required=True, help="JSON, JSONL, or text file of organisation numbers supplied at run time")
     parser.add_argument("--output-dir", default="out/run", help="Directory for profiles, envelopes, report, sources and viewer")
@@ -183,7 +193,12 @@ def main() -> None:
     parser.add_argument("--search-endpoint", default=None, help="Optional SearXNG-compatible JSON search endpoint for website discovery")
     parser.add_argument("--modules", default=DEFAULT_MODULES)
     parser.add_argument("--no-viewer", action="store_true", help="Skip building the HTML viewer")
-    args = parser.parse_args()
+    parser.add_argument("--open", action="store_true", help="Open the viewer in the default browser when the run finishes")
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -466,6 +481,9 @@ def main() -> None:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in ("run_id", "input_count", "emitted_envelopes", "failed_companies", "coverage", "validation")}, ensure_ascii=False, indent=2))
+    if args.open and report.get("viewer"):
+        viewer = Path(report["viewer"])
+        print(f"Opening viewer: {viewer.resolve()}" if open_viewer(viewer) else f"Could not open a browser; open {viewer.resolve()} manually.", file=sys.stderr)
     raise SystemExit(0 if validation["passed"] else 1)
 
 

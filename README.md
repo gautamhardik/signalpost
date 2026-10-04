@@ -114,7 +114,7 @@ Every run writes a self-contained viewer over **that run's own profiles** to `<o
 - **What changed / what is unknown**: dated, sourced events and an explicit list of what could not be established.
 - **Compare and export**: side-by-side comparison of up to four companies; CSV or JSON export of the filtered set.
 
-To browse the latest run in `out/run`, double-click `start.bat` (or open `out/run/viewer/index.html` directly).
+To open it in one step, double-click `start.bat` (Windows; it runs the 10-company sample first if there is no run yet) or add `--open` to the run command. You can also open `out/run/viewer/index.html` directly.
 
 ---
 
@@ -126,7 +126,7 @@ signalpost/
 ├── uv.lock                     # Pinned, reproducible dependency lockfile
 ├── README.md                   # System documentation
 ├── RUN.md                      # Run command, outputs, result states and options
-├── start.bat                   # Opens the viewer of the latest run (Windows)
+├── start.bat                   # One click: runs the 10-company sample if needed, then opens the viewer (Windows)
 ├── brreg-enheter.csv           # Brreg bulk registry snapshot (Git LFS, optional)
 │
 ├── data/
@@ -213,7 +213,14 @@ It returns exactly one result per input, including companies it has never seen a
 | `--resume` | off | Continue an interrupted run in the same output directory |
 
 ### 4. Open the viewer
-Double-click `start.bat`, or open `out/run/viewer/index.html`.
+One step, either way:
+- **Windows:** double-click `start.bat`. If no run exists yet, it first researches the 10-company sample in `data/fresh_10.jsonl` (a few minutes the first time), then opens the viewer in your browser. After that it opens instantly.
+- **Any system:** add `--open` to the run command and the viewer opens in your browser when the run finishes:
+  ```bash
+  uv run python scripts/run_competition_batch.py --organisations data/fresh_10.jsonl --output-dir out/run --open
+  ```
+
+You can also open `out/run/viewer/index.html` directly at any time.
 
 ---
 

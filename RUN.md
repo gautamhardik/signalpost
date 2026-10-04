@@ -53,6 +53,7 @@ Every module of every company carries exactly one of:
 | `--budget` | none | Optional run-wide ceiling on website and search requests |
 | `--previous <profiles.jsonl>` | none | Refresh: record changes since that run and carry forward evidence a source no longer returns |
 | `--resume` | off | Continue an interrupted run in the same output directory |
+| `--open` | off | Open the viewer in the default browser when the run finishes |
 | `--expected-count N` | none | Fail fast if the input does not contain exactly N companies |
 | `--bulk <file>` | auto | Local Brreg snapshot to read first (SQLite, CSV or JSONL.GZ) |
 
