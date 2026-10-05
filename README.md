@@ -29,11 +29,13 @@ Extracting structured business intelligence from public web sources is prone to 
 
 Signalpost handles this with a deterministic pipeline:
 1. **Official Registry Grounding**: Reads authoritative records from Brønnøysundregistrene (*Enhetsregisteret*, *Regnskapsregisteret*, roles, sub-units). Every supplied company is resolved, from the local snapshot or the live API.
-2. **Bounded Website Discovery**: Checks the registry-listed website, then a small set of candidate domains derived from the registry (name, e-mail domain, sub-units), capped at 30 website requests per company.
+2. **Bounded Website Discovery**: Checks the registry-listed website, then a small set of candidate domains derived from the registry (name, e-mail domain, sub-units), capped at 40 website requests per company.
 3. **Deterministic Identity Gate**: A site is published only when it is tied to the exact company. That takes the organisation number on the site, the registry's own website and e-mail domain, or the company name together with the registered address, postcode, city, phone, or a registered CEO or board member.
 4. **Transport-Level Resilience**: Bounded streaming decompression (gzip and deflate) with hard byte limits, robots.txt checks once per host, and short timeouts for guessed domains.
 5. **No Naked Facts**: Every published fact carries its source URL, retrieval time, source class and the SHA-256 of the exact source bytes, which are saved with the run.
-6. **Refresh**: A rerun with `--previous` records what changed since the earlier run and keeps earlier evidence that a source failed to return.
+6. **Deeper Reading of Verified Sites**: Once a site is tied to the company, its own sitemap and RSS/Atom feed are read to reach individual dated articles several levels deep, and its careers page is checked for a link into the company's job board.
+7. **Facts Apart from Inference**: Growth signals (revenue trend from filed accounts, registered employees, postings and job board, recent articles, management changes) are listed with their sources; anything concluded from them is labelled as inference and names the signals it rests on.
+8. **Refresh**: A rerun with `--previous` records what changed since the earlier run and keeps earlier evidence that a source failed to return.
 
 ---
 
@@ -62,6 +64,8 @@ A candidate website is **accepted or rejected deterministically**:
 * **Conflict Rejection**: A different organisation number on the site, a parked or for-sale domain, or a name-only match on an unrelated domain is never published. Name-only matches are reported as `ambiguous`.
 * **Aggregator Blocking**: Directory sites (*Proff, 1881, Purehelp, Gulesider, CompanyWall* and others) are never treated as the company's website.
 
+A social profile linked from the verified site is published when its handle carries the company's legal name, or when it is the verified site's own name (`x.com/g3i_no` on `g3i.no`). A local branch on a parent organisation's site (Naturvernforbundet i Sandnes on `naturvernforbundet.no`) does not inherit the parent's profiles, and a profile claimed by two companies in the same run is withheld.
+
 ### 3. Refresh and Change Tracking
 Run with `--previous <profiles.jsonl>` to compare against an earlier run:
 * Each changed field (registry details, roles, accounts, locations, website) is recorded with old and new values and both content hashes.
@@ -81,7 +85,7 @@ Run with `--previous <profiles.jsonl>` to compare against an earlier run:
                                │
                                ▼
       Website: registry-listed site, then up to 3 candidate domains
-            (≤ 30 website requests per company, robots.txt)
+            (≤ 40 website requests per company, robots.txt)
                                │
                                ▼
          Deterministic identity gate (org.nr, registry domain,
@@ -90,13 +94,13 @@ Run with `--previous <profiles.jsonl>` to compare against an earlier run:
             verified site                 not tied to company
                  │                       (ambiguous / not_available)
                  ▼                               │
-   Social links, job postings and dated          │
-   articles read from the verified site          │
+   Social links, job postings, job-board link,   │
+   dated articles (pages, sitemap, feed)         │
                  │                               │
                  └───────────────┬───────────────┘
                                  ▼
           Synthesis: what it is, what it does, size, who runs it,
-          what changed, what is unknown (each with sources)
+          what changed, growth signals vs inference, what is unknown
                                  │
                                  ▼
      profiles.jsonl · envelopes.jsonl · run-report.json · sources/ · viewer/
@@ -108,7 +112,7 @@ Run with `--previous <profiles.jsonl>` to compare against an earlier run:
 
 Every run writes a self-contained viewer over **that run's own profiles** to `<output-dir>/viewer/index.html`: a dark, three-column workspace (company explorer, intelligence panel, evidence inspector) with no build step. It works offline and on mobile, where the columns collapse to one at a time and the inspector opens as a drawer.
 - **Search and filters**: by name, org number, municipality or industry; filter to companies with a website, social profiles, job postings, dated news, an ambiguous site, no website, or a failed result.
-- **Intelligence panel**: status strip, executive summary, at-a-glance cards, a dated "what changed" timeline, digital footprint and hiring signals, and an evidence table of every fact.
+- **Intelligence panel**: status strip, executive summary, at-a-glance cards, a dated "what changed" timeline, growth signals (sourced facts in one column, labelled inferences in the other), digital footprint and hiring signals, and an evidence table of every fact.
 - **Evidence inspector**: click any fact to see its source URL, publication and retrieval dates, identity check, SHA-256, a link to the saved copy of the source, and the extracted text.
 - **Result states**: every module's state (`available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`) with the reason when it is not available.
 - **What changed / what is unknown**: dated, sourced events and an explicit list of what could not be established.
@@ -149,9 +153,10 @@ signalpost/
 │   ├── http.py                 # JSON fetching with retries
 │   ├── identity.py             # Deterministic company identity gate
 │   ├── identity_store.py       # Local registry snapshot lookup
-│   ├── jobs.py                 # Individual job postings
+│   ├── jobs.py                 # Individual job postings and job-board hiring signals
 │   ├── official.py             # Brønnøysund registry and accounts APIs
-│   ├── research.py             # Synthesis: what it is, does, size, people, changes, unknowns
+│   ├── research.py             # Synthesis: what it is, does, size, people, changes, growth signals, unknowns
+│   ├── site_sources.py         # Sitemap and RSS/Atom reading of verified sites
 │   ├── sampling.py             # Bulk snapshot reading
 │   ├── viewer.py               # Builds the per-run HTML viewer
 │   └── website.py              # Safe website fetching, decompression and sub-page crawl
@@ -207,7 +212,7 @@ It returns exactly one result per input, including companies it has never seen a
 | Option | Default | Purpose |
 |:---|:---|:---|
 | `--workers` | 12 | Companies researched in parallel |
-| `--web-requests-per-company` | 30 | Cap on website and search requests per company (registry calls are not capped) |
+| `--web-requests-per-company` | 40 | Cap on website and search requests per company (registry calls are not capped) |
 | `--budget` | none | Optional run-wide ceiling on website and search requests |
 | `--previous` | none | Profiles from an earlier run: records what changed and keeps earlier evidence a source no longer returns |
 | `--resume` | off | Continue an interrupted run in the same output directory |

@@ -46,6 +46,7 @@ from norway_company_agent.identity import apply_website_identity_gate  # noqa: E
 from norway_company_agent.official import fetch_official_modules, merge_live_registry  # noqa: E402
 from norway_company_agent.refresh import diff_profile  # noqa: E402
 from norway_company_agent.research import synthesize_company_intelligence  # noqa: E402
+from norway_company_agent.site_sources import read_site_sources  # noqa: E402
 from norway_company_agent.viewer import build_viewer  # noqa: E402
 from norway_company_agent.website import fetch_website, normalize_homepage, normalize_social_url  # noqa: E402
 
@@ -125,7 +126,7 @@ def demote_unverified_website(record: dict) -> dict:
     )
 
 
-SHAREABLE_SIGNALS = {"job_posting", "public_post", "profile_handle"}
+SHAREABLE_SIGNALS = {"job_posting", "public_post", "profile_handle", "hiring_signal"}
 
 
 def _canonical_url(url: str) -> str:
@@ -188,7 +189,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint-every", type=int, default=25)
     parser.add_argument("--resume", action="store_true", help="Reuse complete profiles from an interrupted run in the same output directory")
     parser.add_argument("--previous", help="Profiles JSONL from an earlier run; enables change detection and carries forward evidence a source no longer returns")
-    parser.add_argument("--web-requests-per-company", type=int, default=30, help="Website and search request cap per company (registry calls are not counted)")
+    parser.add_argument("--web-requests-per-company", type=int, default=40, help="Website and search request cap per company (registry calls are not counted)")
     parser.add_argument("--budget", type=int, default=None, help="Optional run-wide ceiling on website and search requests")
     parser.add_argument("--search-endpoint", default=None, help="Optional SearXNG-compatible JSON search endpoint for website discovery")
     parser.add_argument("--modules", default=DEFAULT_MODULES)
@@ -322,6 +323,21 @@ def main() -> None:
             )
             return
         profile["evidence"]["website"] = demote_unverified_website(gated["website"])
+        assessment = gated.get("assessment") or {}
+        if profile["evidence"]["website"].get("status") == "available" and assessment.get("publishable") and assessment.get("content_attributable", True):
+            # The site is the company's own: read its feed and sitemap for articles the homepage
+            # crawl cannot reach, and a careers page it did not link to.
+            def charge(met: dict) -> None:
+                budget.charge(met.get("requests", 0))
+                metrics["requests"] += met.get("requests", 0)
+                metrics["bytes"] += met.get("bytes", 0)
+                metrics["latencies_ms"].extend(met.get("latencies_ms", []))
+
+            value = profile["evidence"]["website"].setdefault("value", {})
+            try:
+                value["site_sources"] = read_site_sources(value, reserve=budget.reserve, charge=charge)
+            except Exception as exc:  # deeper reading is best effort; the verified site stands
+                value["site_sources"] = {"error": f"{type(exc).__name__}: {str(exc)[:200]}"}
 
     def carry_forward(profile: dict) -> None:
         """Refresh: keep earlier evidence a source failed to return, and record what changed."""
@@ -460,6 +476,8 @@ def main() -> None:
             "companies_with_social_profiles": companies_with(lambda o: o.get("signal_type") == "profile_handle"),
             "companies_with_job_postings": companies_with(lambda o: o.get("signal_type") == "job_posting"),
             "job_postings": sum(1 for o in observations if o.get("signal_type") == "job_posting"),
+            "companies_with_job_board_link": companies_with(lambda o: o.get("signal_type") == "hiring_signal"),
+            "companies_with_hiring_signal": companies_with(lambda o: o.get("signal_type") in {"job_posting", "hiring_signal"}),
             "companies_with_dated_news": companies_with(lambda o: o.get("platform") == "news"),
             "dated_news_items": sum(1 for o in observations if o.get("platform") == "news"),
             "observations_with_source_snapshot": sum(1 for o in observations if o.get("snapshot_sha256")),

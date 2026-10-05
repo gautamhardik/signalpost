@@ -76,6 +76,12 @@ def normalize_financials(body: Any) -> dict[str, Any]:
     if not records:
         return {"records": []}
     normalized = []
+    # Newest period first (the register returns them oldest first); company accounts before group.
+    records = sorted(
+        (item for item in records if isinstance(item, dict)),
+        key=lambda item: (str((item.get("regnskapsperiode") or {}).get("tilDato") or ""), item.get("regnskapstype") == "SELSKAP"),
+        reverse=True,
+    )
     for item in records[:3]:
         normalized.append({
             "record_id": item.get("id"),

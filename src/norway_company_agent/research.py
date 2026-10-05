@@ -430,13 +430,147 @@ def _what_is_unknown(profile: dict[str, Any], website_ok: bool, ceo: Any, chair:
         unknown.append({"topic": "revenue", "state": "not_available", "reason": "The filed accounts do not report revenue.", "source_url": fin_rec.get("source_url")})
     platforms = {obs.get("platform") for obs in observations}
     checked = "verified company sources" if website_ok else "any verified company source (no verified website)"
-    if not any(obs.get("signal_type") == "job_posting" for obs in observations):
-        unknown.append({"topic": "hiring", "state": "not_available", "reason": f"No individual job posting found on {checked}."})
+    if not any(obs.get("signal_type") in {"job_posting", "hiring_signal"} for obs in observations):
+        unknown.append({"topic": "hiring", "state": "not_available", "reason": f"No job posting or job-board link found on {checked}."})
     if "news" not in platforms:
-        unknown.append({"topic": "news", "state": "not_available", "reason": f"No dated company article found on {checked}."})
+        from .activity import is_news_publisher
+
+        if is_news_publisher(profile):
+            unknown.append({"topic": "news", "state": "not_applicable", "reason": "The company is a news publisher; its editorial articles are not news about the company."})
+        else:
+            unknown.append({"topic": "news", "state": "not_available", "reason": f"No dated company article found on {checked}."})
     if not platforms & {"linkedin", "facebook", "instagram", "x", "youtube", "tiktok"}:
         unknown.append({"topic": "social profiles", "state": "not_available", "reason": f"No social profile linked from {checked}."})
     return unknown
+
+
+def _days_ago(value: Any, today: datetime) -> int | None:
+    try:
+        return (today.date() - datetime.fromisoformat(str(value)[:10]).date()).days
+    except ValueError:
+        return None
+
+
+def _growth_signals(profile: dict[str, Any], observations: list[dict[str, Any]]) -> dict[str, Any]:
+    """Growth signals, kept apart from what is inferred from them.
+
+    ``supported`` items are facts read from a source (filed accounts, the register, the verified
+    website), each with its source. ``inferred`` items are conclusions drawn from those facts;
+    they name the facts they rest on and are never presented as sourced.
+    """
+    evidence = profile.get("evidence") or {}
+    today = datetime.now(timezone.utc)
+    supported: list[dict[str, Any]] = []
+
+    fin_rec = evidence.get("financials") or {}
+    records = [r for r in ((fin_rec.get("value") or {}).get("records") or []) if isinstance(r.get("revenue"), (int, float))] if fin_rec.get("status") == "available" else []
+    revenue_change = None
+    if len(records) >= 2:
+        latest = records[0]
+        prior = next((r for r in records[1:] if r.get("account_type") == latest.get("account_type")), None)
+        if prior and prior.get("revenue"):
+            currency = latest.get("currency") or "NOK"
+            revenue_change = (latest["revenue"] - prior["revenue"]) / abs(prior["revenue"])
+            year = str((latest.get("period") or {}).get("tilDato") or "")[:4]
+            prior_year = str((prior.get("period") or {}).get("tilDato") or "")[:4]
+            supported.append({
+                "id": "revenue_trend",
+                "signal": "Revenue in the last two filed annual accounts",
+                "value": f"{currency} {latest['revenue']:,.0f} ({year}) against {currency} {prior['revenue']:,.0f} ({prior_year}), {revenue_change:+.0%}",
+                "change_pct": round(revenue_change * 100, 1),
+                "date": _date_only((latest.get("period") or {}).get("tilDato")),
+                **_source(fin_rec),
+            })
+
+    live_rec = evidence.get("registry_live") or {}
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+    if live.get("employees") is not None:
+        registered = _date_only(live.get("employees_registered_at"))
+        supported.append({
+            "id": "registered_employees",
+            "signal": "Employees registered in Enhetsregisteret",
+            "value": f"{live['employees']} employees" + (f" (registered {registered})" if registered else ""),
+            "date": registered,
+            **_source(live_rec),
+        })
+
+    postings = [obs for obs in observations if obs.get("signal_type") == "job_posting"]
+    if postings:
+        titles = [str((obs.get("metrics") or {}).get("job_title")) for obs in postings[:3]]
+        supported.append({
+            "id": "job_postings",
+            "signal": "Individual job postings found through the verified website",
+            "value": f"{len(postings)} posting(s): " + "; ".join(titles),
+            "source_url": postings[0].get("source_url"),
+            "retrieved_at": postings[0].get("retrieved_at"),
+            "snapshot_sha256": postings[0].get("snapshot_sha256"),
+        })
+    board = next((obs for obs in observations if obs.get("signal_type") == "hiring_signal"), None)
+    if board:
+        supported.append({
+            "id": "job_board",
+            "signal": "The verified website links to the company's job board",
+            "value": (board.get("metrics") or {}).get("job_board_url"),
+            "source_url": board.get("source_url"),
+            "retrieved_at": board.get("retrieved_at"),
+            "snapshot_sha256": board.get("snapshot_sha256"),
+        })
+
+    def news_age(obs: dict[str, Any]) -> int | None:
+        return _days_ago((obs.get("metrics") or {}).get("activity_date"), today)
+
+    news = sorted(
+        (obs for obs in observations if obs.get("platform") == "news" and news_age(obs) is not None and 0 <= news_age(obs) <= 365),
+        key=lambda obs: (obs.get("metrics") or {}).get("activity_date") or "",
+        reverse=True,
+    )
+    if news:
+        latest_news = news[0].get("metrics") or {}
+        supported.append({
+            "id": "recent_news",
+            "signal": "Dated company articles in the last 12 months",
+            "value": f"{len(news)} article(s); latest {latest_news.get('activity_date')}: {latest_news.get('title')}",
+            "date": latest_news.get("activity_date"),
+            "source_url": news[0].get("source_url"),
+            "retrieved_at": news[0].get("retrieved_at"),
+            "snapshot_sha256": news[0].get("snapshot_sha256"),
+        })
+
+    roles_rec = evidence.get("roles") or {}
+    if roles_rec.get("status") == "available":
+        recent_roles = sorted({
+            (str(role.get("group") or role.get("role") or "Role"), _date_only(role.get("last_changed")))
+            for role in (roles_rec.get("value") or {}).get("roles") or []
+            if role.get("group_code") in {"DAGL", "STYR"} and role.get("last_changed")
+            and 0 <= (_days_ago(role.get("last_changed"), today) if _days_ago(role.get("last_changed"), today) is not None else -1) <= 365
+        }, key=lambda item: item[1] or "", reverse=True)
+        if recent_roles:
+            supported.append({
+                "id": "leadership_change",
+                "signal": "Management or board registration changed in the last 12 months",
+                "value": "; ".join(f"{group} updated {changed}" for group, changed in recent_roles[:3]),
+                "date": recent_roles[0][1],
+                **_source(roles_rec),
+            })
+
+    inferred: list[dict[str, Any]] = []
+    if revenue_change is not None and revenue_change >= 0.10:
+        inferred.append({"statement": f"The business is likely growing: revenue rose {revenue_change:.0%} in the latest filed year.", "basis": ["revenue_trend"], "confidence": "medium"})
+    elif revenue_change is not None and revenue_change <= -0.10:
+        inferred.append({"statement": f"The business may be contracting: revenue fell {abs(revenue_change):.0%} in the latest filed year.", "basis": ["revenue_trend"], "confidence": "medium"})
+    if postings:
+        inferred.append({"statement": "The company is likely recruiting now.", "basis": ["job_postings"] + (["job_board"] if board else []), "confidence": "medium"})
+    elif board:
+        inferred.append({"statement": "The company recruits through its own job board; whether roles are open now was not read.", "basis": ["job_board"], "confidence": "low"})
+    if len(news) >= 2:
+        inferred.append({"statement": "The company publishes news regularly.", "basis": ["recent_news"], "confidence": "low"})
+    for item in inferred:
+        item["kind"] = "inference"
+    return {
+        "supported": supported,
+        "inferred": inferred,
+        "note": "Supported signals are facts read from the cited source. Inferred statements are conclusions drawn from those signals, not facts read from any source.",
+    }
 
 
 def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
@@ -476,7 +610,7 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
         metrics = obs.get("metrics") or {}
         evidence_list.append({
             "claim": obs.get("evidence_span") or obs.get("signal_type"),
-            "value": metrics.get("title") or metrics.get("job_title") or metrics.get("url"),
+            "value": metrics.get("title") or metrics.get("job_title") or metrics.get("job_board_url") or metrics.get("url"),
             "source_url": obs.get("source_url"),
             "publication_date": metrics.get("activity_date") or metrics.get("published_at"),
             "retrieval_date": obs.get("retrieved_at"),
@@ -506,8 +640,10 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
             "website_state": "available" if website_ok else (website_rec.get("status") or "not_available"),
             "social_platforms": [item.get("platform") for item in social_links],
             "job_postings": sum(1 for obs in observations if obs.get("signal_type") == "job_posting"),
+            "job_board": next(((obs.get("metrics") or {}).get("job_board_url") for obs in observations if obs.get("signal_type") == "hiring_signal"), None),
             "dated_news": sum(1 for obs in observations if obs.get("platform") == "news"),
         },
+        "growth_signals": _growth_signals(profile, observations),
         "what_is_unknown": _what_is_unknown(profile, website_ok, ceo, chair, fin_record, observations),
         "evidence": evidence_list,
     }

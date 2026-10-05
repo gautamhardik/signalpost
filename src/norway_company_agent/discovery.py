@@ -344,8 +344,16 @@ def generate_company_candidate_sources(profile: dict[str, Any], *, max_candidate
     domain_cands = generate_deterministic_domain_candidates(profile, max_candidates=MAX_DOMAIN_CANDIDATES_PER_COMPANY)
     full_name_count = min(len(domain_cands), 2)
     subunit_cands = subunit_cands[:2]
+    # An e-mail domain that carries none of the company's name often belongs to a parent group
+    # or a service provider (Bonheur ASA mails from fredolsen.no); the company's own name
+    # domain goes first then, and the e-mail domain right after it.
+    from .identity import _tokens
+
+    name_words = [token for token in _tokens(profile.get("name")) if len(token) >= 3]
+    named = lambda url: any(word in re.sub(r"[^a-z0-9]", "", (urllib.parse.urlparse(url).hostname or "").removeprefix("www.").split(".")[0]) for word in name_words)  # noqa: E731
+    unnamed_email = [c for c in email_cands if name_words and not named(c.url)]
     for c in email_cands:
-        if c.url not in seen:
+        if c.url not in seen and c not in unnamed_email:
             seen.add(c.url)
             candidates.append(c)
     for dom_url in domain_cands[:full_name_count]:
@@ -358,6 +366,10 @@ def generate_company_candidate_sources(profile: dict[str, Any], *, max_candidate
                 discovery_reason="Full legal name as domain",
                 rank=len(candidates) + 1,
             ))
+    for c in unnamed_email:
+        if c.url not in seen:
+            seen.add(c.url)
+            candidates.append(c)
     # the short brand name (e.g. "ramsvik.no") before sub-unit guesses
     short_name = [url for url in domain_cands[full_name_count:] if url.count(".") == 1][:1]
     for dom_url in short_name:

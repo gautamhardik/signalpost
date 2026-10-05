@@ -173,6 +173,13 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
             or candidate_host.endswith("." + registry_host)
         )
     )
+    # The registered address itself was requested and redirected elsewhere (palfingermarine.com
+    # -> palfinger.com); counted only where the registry e-mail domain names the destination.
+    requested_host = str(value.get("requested_url") or "").split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold().removeprefix("www.")
+    registry_redirect_match = bool(
+        registry_host and requested_host and not registry_domain_match
+        and (requested_host == registry_host or requested_host.endswith("." + registry_host))
+    )
 
     title_text = str(value.get("title") or rendered.get("title") or "")
     title_tokens = set(_tokens(title_text))
@@ -251,10 +258,22 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         "domain is for sale", "domain for sale", "hugedomains", "parked at", "miss hosting",
         "her flytter snart en ny gjest", "has been informing visitors", "is parked", "domain is parked",
         "find the best information and most relevant links on all topics related to",
+        # Norwegian registrars' parking pages ("oyslebovel.no | Parkert Domene")
+        "parkert domene", "er parkert hos", "domenet er parkert", "dette domenet er registrert hos",
+        "domene.no er norsk domeneregistrar", "parked free of charge",
     )
     normalized_raw = unicodedata.normalize("NFKD", candidate_text).encode("ascii", "ignore").decode().casefold()
     homepage_token_sets = [set(_tokens(part)) for part in homepage_identity_parts if part]
-    exact_homepage_name = bool(core and any(set(core).issubset(tokens) for tokens in homepage_token_sets))
+    # The name may also be written as one word ("HJEM | sognedanseklubb" for Søgne Danseklubb,
+    # "Afrodite`s Skjønnhet"): compare it joined up, in what the page says (not its domain).
+    compact_core = "".join(core)
+    # Domain names written in the page ("energyconsult.no Hjem" as a site name) are the domain
+    # echoing itself, not the page naming the company.
+    domain_text = re.compile(r"\b(?:www\.)?[\w-]+(?:\.[\w-]+)*\.(?:no|com|net|org|se|dk|fi|eu|io|biz|info|nu|co|app|online|site)\b", re.IGNORECASE)
+    compact_homepage_named = len(core) >= 2 and len(compact_core) >= 10 and any(
+        compact_core in _compact_identity_text(domain_text.sub(" ", str(part))) for part in homepage_identity_parts if part and part != hostname
+    )
+    exact_homepage_name = bool(core and (any(set(core).issubset(tokens) for tokens in homepage_token_sets) or compact_homepage_named))
     substantive_homepage = len(str(value.get("main_text_excerpt") or "").strip()) >= 100
     substantive_site = substantive_homepage or any(len(str(p.get("main_text_excerpt") or "").strip()) >= 100 for p in value.get("pages", []))
     is_business_sports_club = bool(re.search(r"(?:^|\s)B\.?\s*I\.?\s*L\.?(?:\s|$)", str(profile.get("name") or ""), re.I))
@@ -312,6 +331,10 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     else:
         name_link_ok = registry_linked or local_corroboration or norwegian_named_domain
 
+    spelled_by_domain, rest_of_name = name_spelled_by_domain(profile.get("name"), re.sub(r"[^a-z0-9]", "", cand_domain_root))
+    branch_registered_site = bool(spelled_by_domain and rest_of_name and all(token in _place_words(profile) for token in rest_of_name))
+    chain_site_of_branch = False
+
     if error_page:
         score = 0.1
         reasons.append("captured page is an error (404) page, not a company website")
@@ -327,11 +350,15 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif has_conflicting_org and not (org_digits and org_digits in compact_homepage_candidate):
         score = 0.2
         reasons.append("captured page contains conflicting organisation number belonging to a different entity")
-    elif registry_domain_match and email_domain_match and not has_conflicting_org:
+    elif (registry_domain_match or registry_redirect_match) and email_domain_match and not has_conflicting_org:
         # Two independent official registry fields (website and e-mail) name this domain,
         # which the company itself registered; that holds even for a script-only homepage.
         score = 0.92
-        reasons.append("registry website and registry e-mail domain both point to this domain")
+        reasons.append(
+            "registry website and registry e-mail domain both point to this domain"
+            if registry_domain_match else
+            "the registered website redirects here and the registry e-mail domain is this domain"
+        )
     elif not registry_linked and guessed_domain_unnamed:
         score = 0.85
         reasons.append("site reached through a shortened name does not name this specific company in its title or description")
@@ -367,6 +394,13 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         reasons.append(
             "candidate domain is registered to company in official registry and homepage title corroborates primary brand token"
         )
+    elif registry_domain_match and branch_registered_site and substantive_site:
+        # "Jordbærpikene Stjørdal AS" registers jordbarpikene.no: the domain spells the rest of
+        # the name and what is left is its own place. The site is its registered website, but
+        # it is the chain's, so none of its content is attributed to this branch.
+        score = 0.9
+        chain_site_of_branch = True
+        reasons.append("registry lists this site; it is the website of the organisation or chain this local branch belongs to")
     elif ratio >= 0.75 and len(overlap) >= 2:
         score = 0.85
         reasons.append("most legal-name tokens appear, but exact identity is incomplete")
@@ -403,6 +437,9 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         or (registry_linked and specific_on_homepage)
         or (registry_linked and bool(person_match))
     )
+    if chain_site_of_branch:
+        # A chain homepage listing "Stjørdal" among its shops does not make its content the branch's.
+        content_attributable = bool((org_digits and org_digits in compact_homepage_candidate) or exact_homepage_name)
     return {
         "status": status,
         "score": score,
@@ -430,7 +467,86 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def assess_social_identity(profile: dict[str, Any], link: dict[str, str]) -> dict[str, Any]:
+# Hosting platforms and site builders: their domain is not a company's own name.
+HOSTING_ROOTS = {
+    "wix", "wixsite", "squarespace", "webflow", "weebly", "jimdo", "jimdofree", "blogspot", "wordpress",
+    "github", "netlify", "vercel", "google", "sites", "framer", "godaddysites", "mystrikingly", "strikingly",
+    "hubspot", "shopify", "myshopify", "facebook", "instagram", "linkedin", "youtube", "tiktok", "twitter",
+}
+# Handles that belong to a platform or theme, never to the company ("Powered by Wix" icons).
+PLATFORM_HANDLES = HOSTING_ROOTS | {"envato", "themeforest", "elementor", "mailchimp", "home", "share", "sharer", "username", "yourpage", "page"}
+HANDLE_SUFFIXES = {"", "no", "norge", "norway", "as", "asa", "sa", "official", "offisiell", "hq", "group", "gruppen", "com", "dk", "se"}
+
+
+def site_name_root(url: str) -> str:
+    """The name part of a site's registered domain ("g3i" for https://g3i.no/, "" for hosting platforms)."""
+    import tldextract
+
+    ext = tldextract.extract(urllib.parse.urlparse(url or "").hostname or "")
+    root = re.sub(r"[^a-z0-9]", "", (ext.domain or "").casefold())
+    return "" if len(root) < 3 or root in HOSTING_ROOTS else root
+
+
+def name_spelled_by_domain(name: Any, root: str) -> tuple[list[str], list[str]]:
+    """(name words the domain root spells out, the remaining name words).
+
+    Tries "æ" written both as "ae" and as "a" (jordbarpikene.no for Jordbærpikene); the
+    spelled words must make up the whole root, so "venstre" spells Venstre but "sparebank1"
+    does not spell Sparebank alone.
+    """
+    text = str(name or "")
+    for variant in (text, text.replace("æ", "a").replace("Æ", "A")):
+        tokens = _tokens(variant)
+        spelled = [token for token in tokens if token in root]
+        if root and spelled and "".join(spelled) == root:
+            return spelled, [token for token in tokens if token not in spelled]
+    return [], _tokens(text)
+
+
+def _place_words(profile: dict[str, Any]) -> set[str]:
+    registry = profile.get("evidence", {}).get("registry", {}).get("value") or {}
+    return set(_tokens(" ".join(str(registry.get(key) or "") for key in (
+        "forretningsadresse.kommune", "forretningsadresse.poststed", "postadresse.poststed", "postadresse.kommune",
+    )))) | set(_tokens(profile.get("municipality"))) | BRANCH_WORDS
+
+
+def branch_of_site_owner(profile: dict[str, Any], root: str) -> bool:
+    """True when the company is a local branch of the organisation the domain belongs to:
+    the domain spells name words and the rest of the name is a place or branch word
+    (Naturvernforbundet i Sandnes on naturvernforbundet.no, Midt-Telemark Venstre on venstre.no).
+    The site's profiles are then the parent's, not this company's."""
+    spelled, rest = name_spelled_by_domain(profile.get("name"), root)
+    if not spelled:
+        return False
+    return any(token in _place_words(profile) for token in rest)
+
+
+def _handle_only(path: str) -> str:
+    """The account name in a profile path: "/company/sigma-bil" -> "sigmabil", "/@venstreno" -> "venstreno"."""
+    segments = [segment for segment in path.split("/") if segment]
+    if segments and segments[0].casefold() in {"company", "school", "showcase", "channel", "user", "c", "pg"}:
+        segments = segments[1:]
+    if not segments or segments[0].isdigit() or re.fullmatch(r"UC[\w-]{20,}", segments[0]):
+        return ""  # numeric page ids and YouTube channel ids carry no name
+    return _compact_identity_text(segments[0].lstrip("@"))
+
+
+def handle_matches_site(handle_compact: str, root: str) -> bool:
+    """The handle is the site's own name ("g3i_no" on g3i.no, "Sunnaas" on sunnaas.no)."""
+    if not root or not handle_compact or handle_compact in PLATFORM_HANDLES:
+        return False
+    if handle_compact.startswith(root) and handle_compact[len(root):] in HANDLE_SUFFIXES:
+        return True
+    # Longer names may carry a short prefix or suffix ("weareknowit", "campingkilefjorden").
+    return len(root) >= 6 and root in handle_compact and len(handle_compact) - len(root) <= 12
+
+
+def assess_social_identity(profile: dict[str, Any], link: dict[str, str], site_root: str = "", branch_site: bool = False) -> dict[str, Any]:
+    """Tie a social profile linked from the company's verified site to the company.
+
+    Accepted when the handle carries the company's legal name, or when it is the verified
+    site's own name (``site_root``) and the company is not a branch on a parent's site.
+    """
     core = _tokens(profile.get("name"))
     parsed = urllib.parse.urlparse(link.get("url") or "")
     handle_text = urllib.parse.unquote(parsed.path)
@@ -464,6 +580,9 @@ def assess_social_identity(profile: dict[str, Any], link: dict[str, str]) -> dic
     elif len(core) >= 2 and set(core).issubset(set(handle_tokens)):
         score = 0.95
         reason = "all distinctive legal-name tokens appear in the social handle"
+    elif not branch_site and handle_matches_site(_handle_only(handle_text), site_root):
+        score = 0.92
+        reason = f"social handle is the verified website's own name ({site_root}) and is linked from that site"
     else:
         score = 0.3
         reason = "social handle lacks strong exact-entity name evidence"
@@ -473,7 +592,7 @@ def assess_social_identity(profile: dict[str, Any], link: dict[str, str]) -> dic
         "publishable": score >= 0.9,
         "matched_tokens": matched,
         "reason": reason,
-        "method": "deterministic_social_handle_identity_v1",
+        "method": "deterministic_social_handle_identity_v2",
     }
 
 
@@ -486,7 +605,9 @@ def apply_website_identity_gate(profile: dict[str, Any], website: dict[str, Any]
     value["identity_assessment"] = assessment
     original = list(value.get("discovered_social_links") or value.get("social_links") or [])
     value["discovered_social_links"] = original
-    social_assessments = [assess_social_identity(profile, link) for link in original]
+    site_root = site_name_root(value.get("final_url") or website.get("source_url") or "")
+    branch_site = bool(assessment.get("site_scope")) or branch_of_site_owner(profile, site_root)
+    social_assessments = [assess_social_identity(profile, link, site_root, branch_site) for link in original]
     value["social_link_assessments"] = social_assessments
     value["social_links"] = [
         {"platform": item["platform"], "url": item["url"]}

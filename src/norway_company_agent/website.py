@@ -34,15 +34,6 @@ SOCIAL_HOSTS = {
     "youtu.be": "youtube",
     "tiktok.com": "tiktok",
 }
-PRIORITY_TERMS = (
-    "om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
-    "team", "people", "locations", "lokasjoner", "avdelinger", "butikker",
-    "karriere", "stillinger", "jobb", "jobs", "career", "ledige-stillinger",
-    "bli-med-pa-laget", "jobb-hos-oss", "rekruttering", "vacancies", "careers",
-    "news", "press", "aktuelt", "nyheter", "pressemeldinger", "artikler", "blogg", "blog",
-    "media", "investors", "investor", "investorer", "nyhetsrom", "newsroom",
-    "pressroom", "events", "arrangementer", "kunngjoringer", "announcements",
-)
 
 
 def assert_public_url(url: str) -> None:
@@ -97,11 +88,32 @@ _ROBOTS_CACHE: dict[str, urllib.robotparser.RobotFileParser | None] = {}
 _ROBOTS_LOCK = threading.Lock()
 
 
+def _robots_key(url: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}".casefold()
+
+
+def robots_cached(url: str) -> bool:
+    """True when robots.txt for this host was already fetched, so checking it costs no request."""
+    with _ROBOTS_LOCK:
+        return _robots_key(url) in _ROBOTS_CACHE
+
+
+def robots_sitemaps(url: str) -> list[str]:
+    """Sitemap URLs the host declares in robots.txt (empty when none or not fetched yet)."""
+    with _ROBOTS_LOCK:
+        parser = _ROBOTS_CACHE.get(_robots_key(url))
+    try:
+        return list(parser.site_maps() or []) if parser else []
+    except Exception:
+        return []
+
+
 def _robots_allowed(url: str, timeout: float) -> bool:
     """Check robots.txt, fetching it once per scheme+host for the whole run."""
     assert_public_url(url)
     parsed = urllib.parse.urlparse(url)
-    key = f"{parsed.scheme}://{parsed.netloc}".casefold()
+    key = _robots_key(url)
     with _ROBOTS_LOCK:
         cached = key in _ROBOTS_CACHE
         parser = _ROBOTS_CACHE.get(key)
@@ -138,11 +150,12 @@ def _social_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
         normalized = normalize_social_url(url)
         if not normalized:
             continue
-        found[(normalized["platform"], normalized["url"])] = normalized
+        found[(normalized["platform"], normalized["url"])] = {**normalized, "found_on": base_url}
     return sorted(found.values(), key=lambda item: (item["platform"], item["url"]))
 
 
-def structured_social_links(value: Any) -> list[dict[str, str]]:
+def structured_social_links(value: Any, found_on: str | None = None) -> list[dict[str, str]]:
+    """Profiles a page declares as its organisation's own through JSON-LD ``sameAs``."""
     found: dict[tuple[str, str], dict[str, str]] = {}
 
     def walk(node: Any) -> None:
@@ -154,7 +167,7 @@ def structured_social_links(value: Any) -> list[dict[str, str]]:
                     continue
                 normalized = normalize_social_url(raw.strip())
                 if normalized:
-                    found[(normalized["platform"], normalized["url"])] = normalized
+                    found[(normalized["platform"], normalized["url"])] = {**normalized, "found_on": found_on or "", "via": "json_ld_same_as"}
             for child in node.values():
                 walk(child)
         elif isinstance(node, list):
@@ -177,7 +190,7 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
     parts = [part.strip() for part in parsed.path.split("/") if part.strip()]
     lowered = [part.casefold() for part in parts]
     rejected_first = {
-        "facebook": {"sharer", "sharer.php", "share.php", "dialog", "policy.php", "privacy", "events", "groups", "plugins"},
+        "facebook": {"sharer", "sharer.php", "share.php", "share", "dialog", "policy.php", "privacy", "events", "groups", "plugins", "watch", "photo.php", "story.php", "permalink.php", "hashtag"},
         "instagram": {"p", "reel", "reels", "stories", "explore"},
         "x": {"intent", "share", "home", "search", "i"},
     }
@@ -210,69 +223,73 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
     return {"platform": platform, "url": f"https://{canonical_host}/{'/'.join(parts)}"}
 
 
+# Crawl targets by kind, in priority order. Each kind gets a share of the page budget so a
+# site with many "about" links still has its careers and news pages read.
+LINK_CATEGORIES: tuple[tuple[str, tuple[str, ...], int], ...] = (
+    ("careers", ("karriere", "stillinger", "ledige-stillinger", "jobb", "jobs", "career", "vacancies",
+                 "rekruttering", "bli-med-pa-laget", "jobb-hos-oss", "work-with-us", "join-us"), 2),
+    ("news", ("nyheter", "nyhet", "aktuelt", "news", "presse", "press", "pressemeldinger", "artikler",
+              "blogg", "blog", "nyhetsrom", "newsroom", "pressroom", "media", "kunngjoringer", "announcements"), 2),
+    ("about", ("om-oss", "om_oss", "about", "ledelse", "management", "team", "people"), 2),
+    ("contact", ("kontakt", "contact"), 1),
+    ("investors", ("investors", "investor", "investorer"), 1),
+    ("locations", ("locations", "lokasjoner", "avdelinger", "butikker"), 1),
+    ("events", ("events", "arrangementer"), 1),
+)
+NOT_A_PAGE = re.compile(r"\.(?:pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp4|mp3)$", re.IGNORECASE)
+NEWSLETTER = ("newsletter", "nyhetsbrev")
+
+
 def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[str]:
+    """Same-site pages worth reading: careers, news, about, contact, investors, locations, events.
+
+    Index pages (shorter paths) come before sub-pages, and every kind gets its share of the
+    budget before any kind gets a second page.
+    """
     base = urllib.parse.urlparse(base_url)
-    base_ext = tldextract.extract(base.netloc)
-    base_reg_domain = base_ext.registered_domain.lower()
-
-    candidates: dict[str, int] = {}
-    
-    t1_paths = {"om-oss", "om_oss", "about", "kontakt", "contact", "ledelse", "management",
-                "team", "people", "karriere", "stillinger", "jobb", "jobs", "career", "careers",
-                "nyheter", "aktuelt", "presse", "news", "artikler", "blogg", "blog",
-                "media", "investors", "events"}
-    
-    t2_sub_keywords = {"karriere", "jobb", "careers", "jobs", "stillinger", "news", "nyheter", "media", "press", "presse", "blog", "blogg"}
-    
-    ats_domains = {"finn.no", "jobbnorge.no", "webcruiter.com", "karrierestart.no", 
-                   "manpower.no", "adecco.no", "nav.no", "linkedin.com",
-                   "recman.no", "cruit.no", "easycruit.com", "hr-manager.net", 
-                   "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no", 
-                   "meyerhaugen.no", "cruitive.com", "smartrecruiters.com", 
-                   "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com"}
-
+    base_host = (base.hostname or "").casefold().removeprefix("www.")
+    base_reg = _registered_domain(base_url)
+    best: dict[str, tuple[int, tuple[int, int, int]]] = {}
     for anchor in soup.select("a[href]"):
         href = str(anchor.get("href") or "").strip()
-        if not href or href.startswith(("javascript:", "mailto:", "tel:")):
+        if not href or href.startswith(("javascript:", "mailto:", "tel:", "#")):
             continue
-            
         url = urllib.parse.urljoin(base_url, href)
         parsed = urllib.parse.urlparse(url)
-        if parsed.scheme not in {"http", "https"}:
+        if parsed.scheme not in {"http", "https"} or NOT_A_PAGE.search(parsed.path):
             continue
-            
-        clean = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path or "/", "", "", ""))
+        host = (parsed.hostname or "").casefold().removeprefix("www.")
+        same_host = host == base_host
+        # "askvvs.no/kontakt" linked from www.askvvs.no: fetch it on the host that answered.
+        netloc = base.netloc if same_host else parsed.netloc
+        clean = urllib.parse.urlunparse((parsed.scheme, netloc, parsed.path or "/", "", "", ""))
         if clean.rstrip("/") == base_url.rstrip("/"):
             continue
-            
-        target_netloc = parsed.netloc.lower()
-        target_ext = tldextract.extract(target_netloc)
-        target_reg_domain = target_ext.registered_domain.lower()
-        
-        haystack = (parsed.path + " " + anchor.get_text(" ", strip=True)).casefold()
-        rank = None
-        
-        # Tier 1: Same domain, high-value keyword match
-        if target_netloc == base.netloc.lower():
-            t1_rank = next((index for index, term in enumerate(PRIORITY_TERMS) if term in haystack), None)
-            if t1_rank is not None:
-                rank = t1_rank # 0 to len(PRIORITY_TERMS)
-                
-        # Tier 2: Same registered-domain, specific subdomains
-        elif target_reg_domain == base_reg_domain:
-            subdomain = target_ext.subdomain.lower()
-            if any(k in subdomain for k in t2_sub_keywords) or any(k in haystack for k in t2_sub_keywords):
-                rank = 100
-                
-        # Tier 3: ATS domains
-        elif target_reg_domain in ats_domains:
-            # ATS links are ranked slightly lower than internal subdomains to prefer 1st party, but high enough to be fetched
-            rank = 150
-            
-        if rank is not None:
-            candidates[clean] = min(rank, candidates.get(clean, rank))
-            
-    return [url for url, _ in sorted(candidates.items(), key=lambda item: (item[1], item[0]))[:limit]]
+        if not same_host and _registered_domain(url) != base_reg:
+            continue
+        path = parsed.path.casefold()
+        text = anchor.get_text(" ", strip=True).casefold()
+        if any(word in path or word in text for word in NEWSLETTER):
+            continue
+        subdomain = "" if same_host else host.split(".")[0]
+        for index, (_, terms, _) in enumerate(LINK_CATEGORIES):
+            in_path = any(term in path or (subdomain and term in subdomain) for term in terms)
+            in_text = any(term.replace("-", " ").replace("_", " ") in text for term in terms)
+            if in_path or in_text:
+                depth = len([segment for segment in path.split("/") if segment])
+                rank = (index, (0 if in_path else 1, depth, len(path)))
+                if clean not in best or rank < best[clean]:
+                    best[clean] = rank
+                break
+
+    by_kind = {index: sorted((url for url, rank in best.items() if rank[0] == index), key=lambda url: (best[url][1], url)) for index in range(len(LINK_CATEGORIES))}
+    chosen: list[str] = []
+    for round_ in range(max(quota for _, _, quota in LINK_CATEGORIES)):
+        for index, (_, _, quota) in enumerate(LINK_CATEGORIES):
+            if round_ < quota and len(by_kind[index]) > round_:
+                chosen.append(by_kind[index][round_])
+    chosen.extend(url for url in sorted(best, key=lambda url: (best[url], url)) if url not in chosen)
+    return chosen[:limit]
 
 
 def safe_decompress_body(raw: bytes, encoding: str = "", max_bytes: int = 2_000_000) -> tuple[bytes, str | None]:
@@ -319,6 +336,145 @@ def _footer_identity_text(soup: BeautifulSoup) -> str:
     return " ".join(dict.fromkeys(parts))[:3000]
 
 
+PUBLISHED_META = (
+    'meta[property="article:published_time"]', 'meta[property="og:article:published_time"]',
+    'meta[name="article:published_time"]', 'meta[itemprop="datePublished"]', 'meta[name="pubdate"]',
+    'meta[name="publishdate"]', 'meta[name="publish_date"]', 'meta[name="publication_date"]',
+    'meta[name="dc.date.issued"]', 'meta[name="DC.date.issued"]', 'meta[name="dcterms.created"]', 'meta[name="date"]',
+)
+PUBLISHED_LABEL = re.compile(
+    r"(?:publisert|published|posted|lagt ut|pressemelding)\s*:?\s*(?:den\s+|on\s+)?"
+    r"(\d{1,2}[./-]\d{1,2}[./-]\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\.?\s+[a-zæøå]+\.?\s+\d{4}|[a-z]+\s+\d{1,2},?\s+\d{4})",
+    re.IGNORECASE,
+)
+PUBLISHED_JSON_KEY = re.compile(r'"(?:datePublished|publishDate|publishedDate|publicationDate|publishedAt|published_at|date)"\s*:\s*"([^"]{8,32})"')
+
+
+def _jsonld_date_published(structured: dict[str, Any]) -> str | None:
+    from .jobs import normalize_date_string
+
+    found: list[str] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            if node.get("datePublished"):
+                value = normalize_date_string(str(node["datePublished"]))
+                if value:
+                    found.append(value)
+            for child in node.values():
+                walk(child)
+        elif isinstance(node, list):
+            for child in node:
+                walk(child)
+
+    walk(structured.get("json-ld") or [])
+    return found[0] if found else None
+
+
+def page_publication_date(html: str, soup: BeautifulSoup, structured: dict[str, Any]) -> tuple[str | None, str | None]:
+    """The page's own publication date and where it came from, or (None, None).
+
+    Only dates the page states about itself count: structured data, publish meta tags, a lone
+    <time> element, a "Publisert:" label, or a single publish date in the page's own data.
+    A date merely mentioned in the text is not the publication date.
+    """
+    from .jobs import normalize_date_string
+
+    value = _jsonld_date_published(structured)
+    if value:
+        return value, "json_ld_date_published"
+    for selector in PUBLISHED_META:
+        tag = soup.select_one(selector)
+        value = normalize_date_string(str(tag.get("content") or "")) if tag else None
+        if value:
+            return value, "meta_published_time"
+    scoped = soup.select("article time[datetime], main time[datetime], header time[datetime]")
+    times = scoped or soup.select("time[datetime]")
+    if len(times) == 1 or scoped:
+        value = normalize_date_string(str(times[0].get("datetime") or ""))
+        if value:
+            return value, "time_element"
+    match = PUBLISHED_LABEL.search(soup.get_text(" ", strip=True)[:20000])
+    if match:
+        value = normalize_date_string(match.group(1)) or _english_date(match.group(1))
+        if value:
+            return value, "published_label"
+    embedded = {normalize_date_string(raw) for raw in PUBLISHED_JSON_KEY.findall(html)} - {None}
+    if len(embedded) == 1:
+        return embedded.pop(), "embedded_page_data"
+    return None, None
+
+
+def _english_date(text: str) -> str | None:
+    """'September 22, 2025' -> '2025-09-22'."""
+    from .jobs import MONTH_MAP
+
+    match = re.match(r"([a-z]+)\s+(\d{1,2}),?\s+(\d{4})", text.strip(), re.IGNORECASE)
+    if not match:
+        return None
+    month = MONTH_MAP.get(match.group(1).casefold())
+    day, year = int(match.group(2)), int(match.group(3))
+    return f"{year:04d}-{month}-{day:02d}" if month and 1 <= day <= 31 and 2000 <= year <= 2100 else None
+
+
+def _headline(soup: BeautifulSoup) -> str:
+    tag = soup.select_one('meta[property="og:title"]')
+    if tag and str(tag.get("content") or "").strip():
+        return str(tag["content"]).strip()[:300]
+    h1 = soup.select_one("h1")
+    return h1.get_text(" ", strip=True)[:300] if h1 else ""
+
+
+def _job_board_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
+    """Links and embeds that open the company's applicant-tracking job board.
+
+    A bare recruiter homepage (finn.no, nav.no) or a LinkedIn company page is not a job board.
+    """
+    from .jobs import job_board_url
+
+    found: dict[str, dict[str, str]] = {}
+    for node in soup.select("a[href], iframe[src], script[src]"):
+        raw = str(node.get("href") or node.get("src") or "").strip()
+        if not raw or raw.startswith(("javascript:", "mailto:", "tel:", "#")):
+            continue
+        url = urllib.parse.urljoin(base_url, raw)
+        board = job_board_url(url)
+        if board and board not in found:
+            found[board] = {
+                "url": board,
+                "text": node.get_text(" ", strip=True)[:160] if node.name == "a" else "",
+                "kind": "link" if node.name == "a" else "embed",
+            }
+    return list(found.values())[:10]
+
+
+def _feed_links(base_url: str, soup: BeautifulSoup) -> list[str]:
+    """RSS/Atom feeds the page advertises on its own registered domain (comment feeds excluded)."""
+    feeds: list[str] = []
+    for tag in soup.select('link[rel~="alternate"][href]'):
+        kind = str(tag.get("type") or "").casefold()
+        if "rss" not in kind and "atom" not in kind:
+            continue
+        url = urllib.parse.urljoin(base_url, str(tag["href"]))
+        label = (str(tag.get("title") or "") + " " + url).casefold()
+        if "comment" in label or "kommentar" in label or _registered_domain(url) != _registered_domain(base_url):
+            continue
+        if url not in feeds:
+            feeds.append(url)
+    return feeds[:3]
+
+
+def _page_signals(html: str, soup: BeautifulSoup, structured: dict[str, Any], final_url: str) -> dict[str, Any]:
+    """Facts read from the full page before it is cut down for storage."""
+    published, method = page_publication_date(html, soup, structured)
+    return {
+        "published_date": published,
+        "published_date_method": method,
+        "headline": _headline(soup),
+        "job_board_links": _job_board_links(final_url, soup),
+    }
+
+
 def _bounded_html(soup: BeautifulSoup) -> str:
     """Return a highly minimal HTML fragment preserving only structural layout and date/identity metadata."""
     for tag in soup.find_all(["style", "svg", "nav", "footer", "form", "iframe", "canvas", "img", "video", "audio", "noscript"]):
@@ -335,9 +491,22 @@ def _bounded_html(soup: BeautifulSoup) -> str:
     return str(soup)[:150000]
 
 
+def _decode(raw: bytes, content_type: str) -> str:
+    match = re.search(r"charset=([\w-]+)", content_type or "", re.IGNORECASE)
+    try:
+        return raw.decode(match.group(1) if match else "utf-8", errors="replace")
+    except LookupError:
+        return raw.decode("utf-8", errors="replace")
+
+
 def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:
-    if not _robots_allowed(url, timeout):
-        return None, [], 1, 0, 0, "robots.txt disallows page"
+    robots_requests = 0 if robots_cached(url) else 1
+    try:
+        if not _robots_allowed(url, timeout):
+            return None, [], robots_requests, 0, 0, "robots.txt disallows page"
+    except ValueError as exc:  # the page's host does not resolve or is not public: skip the page, keep the site
+        return None, [], 0, 0, 0, f"{type(exc).__name__}: {str(exc)[:120]}"
+    requests = robots_requests + 1
     started = time.monotonic()
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
     try:
@@ -348,29 +517,38 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
             elapsed = int((time.monotonic() - started) * 1000)
             final_url = response.geturl()
             if len(raw) > max_bytes or "html" not in content_type.lower():
-                return None, [], 2, len(raw), elapsed, "unsupported or oversized page"
+                return None, [], requests, len(raw), elapsed, "unsupported or oversized page"
             if _registered_domain(final_url) != homepage_domain:
-                return None, [], 2, len(raw), elapsed, "redirected outside registered domain"
+                return None, [], requests, len(raw), elapsed, "redirected outside registered domain"
         decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
         if len(decompressed_raw) > max_bytes:
-            return None, [], 2, len(raw), elapsed, "decompressed page exceeds byte limit"
-        page_html = decompressed_raw.decode("utf-8", errors="replace")
+            return None, [], requests, len(raw), elapsed, "decompressed page exceeds byte limit"
+        page_html = _decode(decompressed_raw, content_type)
         page_soup = BeautifulSoup(page_html, "lxml")
         structured = extruct.extract(page_html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         page_text = trafilatura.extract(page_html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
         meta_identity = " ".join(filter(None, [_extract_metadata_identity_text(structured, page_soup), _footer_identity_text(page_soup)]))
+        # Read links and page facts before _bounded_html strips nav, footer, scripts and iframes.
+        social = _social_links(final_url, page_soup) + structured_social_links(structured.get("json-ld"), final_url)
         page = {
             "url": final_url,
             "title": page_soup.title.get_text(" ", strip=True)[:500] if page_soup.title else "",
             "main_text_excerpt": page_text[:5000],
             "identity_text_excerpt": meta_identity,
             "content_sha256": __import__("hashlib").sha256(decompressed_raw).hexdigest(),
-            "html": _bounded_html(page_soup),
-            "_raw": decompressed_raw,
+            **_page_signals(page_html, page_soup, structured, final_url),
         }
-        return page, _social_links(final_url, page_soup), 2, len(raw), elapsed, None
+        page["html"] = _bounded_html(page_soup)
+        page["_raw"] = decompressed_raw
+        return page, social, requests, len(raw), elapsed, None
     except Exception as exc:
-        return None, [], 2, 0, int((time.monotonic() - started) * 1000), f"{type(exc).__name__}: {str(exc)[:120]}"
+        return None, [], requests, 0, int((time.monotonic() - started) * 1000), f"{type(exc).__name__}: {str(exc)[:120]}"
+
+
+def fetch_site_page(url: str, *, homepage_domain: str, timeout: float = 15.0, max_bytes: int = 1_000_000) -> tuple[dict[str, Any] | None, list[dict[str, str]], dict[str, Any]]:
+    """Fetch one more page of an already verified site (robots.txt respected, same registered domain)."""
+    page, social, requests, size, elapsed, error = _fetch_secondary_page(url, homepage_domain=homepage_domain, timeout=timeout, max_bytes=max_bytes)
+    return page, social, {"requests": requests, "bytes": size, "latencies_ms": [elapsed] if elapsed else [], "error": error}
 
 
 def _jsonld_organisations(metadata: dict[str, Any]) -> list[dict[str, Any]]:
@@ -470,7 +648,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
         if len(decompressed_raw) > max_bytes:
             return evidence("website", "source_error", "registry_linked_company_website", normalized, note="Decompressed homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}
-        html = decompressed_raw.decode("utf-8", errors="replace")
+        html = _decode(decompressed_raw, content_type)
         soup = BeautifulSoup(html, "lxml")
         structured = extruct.extract(html, base_url=final_url, syntaxes=["json-ld", "microdata", "opengraph"])
         text = trafilatura.extract(html, url=final_url, include_links=False, include_tables=False, favor_precision=True) or ""
@@ -486,19 +664,26 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             "description": description[:2000],
             "main_text_excerpt": text[:5000],
             "identity_text_excerpt": meta_identity,
-            "social_links": _social_links(final_url, soup),
+            "social_links": _social_links(final_url, soup) + structured_social_links(structured.get("json-ld"), final_url),
+            "feed_links": _feed_links(final_url, soup),
+            "wordpress": "/wp-content/" in html or "/wp-includes/" in html,
             "structured_organisations": _jsonld_organisations(structured),
             "content_sha256": __import__("hashlib").sha256(raw).hexdigest(),
             "extraction_state": _extraction_state(text, soup),
         }
-        pages = [{"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "identity_text_excerpt": meta_identity, "content_sha256": value["content_sha256"], "html": _bounded_html(soup), "_raw": decompressed_raw}]
+        # Read links and page facts before _bounded_html strips nav, footer, scripts and iframes.
+        crawl_targets = _priority_links(final_url, soup)
+        homepage = {"url": final_url, "title": title[:500], "main_text_excerpt": text[:5000], "identity_text_excerpt": meta_identity, "content_sha256": value["content_sha256"], **_page_signals(html, soup, structured, final_url)}
+        homepage["html"] = _bounded_html(soup)
+        homepage["_raw"] = decompressed_raw
+        pages = [homepage]
         social = value["social_links"]
         crawl_errors = []
         requests = 2
         bytes_received = len(raw)
         page_latencies = [elapsed]
         homepage_domain = value["registered_domain"]
-        for page_url in _priority_links(final_url, soup):
+        for page_url in crawl_targets:
             page, page_social, page_requests, page_bytes, page_elapsed, page_error = _fetch_secondary_page(
                 page_url,
                 homepage_domain=homepage_domain,

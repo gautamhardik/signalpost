@@ -131,9 +131,12 @@ def company_view(profile: dict[str, Any]) -> dict[str, Any]:
                 extract = f"{extract}\nDeadline: {metrics['deadline']}"
             facts.append(_fact("jobs", metrics.get("job_title") or "Job posting", obs.get("source_url"), obs,
                                date=metrics.get("published_at"), date_label="Posted", identity=_proof_reason(obs), extract=extract))
+        elif obs.get("signal_type") == "hiring_signal":
+            facts.append(_fact("jobs", "Job board", metrics.get("job_board_url"), obs,
+                               identity=_proof_reason(obs), extract=obs.get("evidence_span")))
         elif platform == "news":
             facts.append(_fact("news", metrics.get("title") or "News", obs.get("source_url"), obs,
-                               date=metrics.get("activity_date"), date_label="Published", identity=_proof_reason(obs), extract=obs.get("evidence_span")))
+                               date=metrics.get("activity_date"), date_label="Event date" if metrics.get("activity_type") == "event" else "Published", identity=_proof_reason(obs), extract=obs.get("evidence_span")))
 
     modules = {}
     for module, label in MODULE_LABELS.items():
@@ -160,6 +163,7 @@ def company_view(profile: dict[str, Any]) -> dict[str, Any]:
             "runs": synthesis.get("who_runs_it"),
         },
         "changed": synthesis.get("what_changed") or [],
+        "growth": synthesis.get("growth_signals") or {},
         "unknown": synthesis.get("what_is_unknown") or [],
         "modules": modules,
         "facts": facts,
@@ -304,6 +308,13 @@ td.src{color:var(--muted)}
 .b-violet{background:rgba(167,139,250,.1);color:var(--violet)}.b-brand{background:var(--brand-10);color:var(--brand)}.b-muted{background:rgba(255,255,255,.06);color:var(--ink-3)}
 .states{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
 .gap{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.growth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.growth h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px;font-weight:600}
+.sig{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--panel)}
+.sig .t{color:var(--ink-2);font-size:12px}.sig .v{color:#f5f5f5;margin:4px 0 6px;word-break:break-word}
+.sig.inf{border-style:dashed;background:transparent}
+.sig .basis{font-size:11px;color:var(--muted);margin-top:4px}
+.tag-inf{display:inline-block;font:500 10px var(--mono);color:var(--amber);border:1px solid rgba(251,191,36,.4);border-radius:999px;padding:1px 8px;margin-right:6px}
 .gap:last-child{border-bottom:0}
 .gap .k{min-width:150px;color:var(--ink-2);font-weight:500}
 .gap .r{color:var(--ink-3);font-size:13px}
@@ -387,6 +398,7 @@ td.src{color:var(--muted)}
   tr{border-bottom:1px solid var(--line);padding:8px 0}
   td{border:0;padding:3px 16px}
   .gap{flex-direction:column;gap:4px}
+  .growth{grid-template-columns:minmax(0,1fr)}
   .gap .k{min-width:0}
   body.compare.picked #cmpGo{display:block}
 }
@@ -507,8 +519,8 @@ function summaryText(c) {
   if (size.employees != null) scale.push(`${num(size.employees)} registered employees`);
   if (size.revenue != null) scale.push(`revenue of ${esc(money(size.revenue, size.currency))}${size.reporting_period && size.reporting_period.tilDato ? ` for the period ending ${esc(size.reporting_period.tilDato)}` : ""}`);
   parts.push(`<p>${scale.length ? `It reports ${scale.join(" and ")}.` : "Its size could not be established from filed accounts."}${runs.ceo && runs.ceo !== "Not registered" ? ` ${esc(runs.ceo)} is registered as CEO` : " No CEO is registered"}${runs.board_chair && runs.board_chair !== "Not registered" ? ` and ${esc(runs.board_chair)} as board chair.` : "."}</p>`);
-  const n = facts(c, "news").length, j = facts(c, "jobs").length;
-  if (c.website_state === "available" || n || j) parts.push(`<p>${c.website_state === "available" ? "Its official website is verified against the register." : ""}${n ? ` ${n} dated news item${n > 1 ? "s" : ""} found.` : ""}${j ? ` ${j} open position${j > 1 ? "s" : ""} found.` : ""}</p>`);
+  const n = facts(c, "news").length, j = facts(c, "jobs").filter(f => f.label !== "Job board").length, board = facts(c, "jobs").some(f => f.label === "Job board");
+  if (c.website_state === "available" || n || j || board) parts.push(`<p>${c.website_state === "available" ? "Its official website is verified against the register." : ""}${n ? ` ${n} dated news item${n > 1 ? "s" : ""} found.` : ""}${j ? ` ${j} job posting${j > 1 ? "s" : ""} found.` : ""}${board ? " The website links to the company's job board." : ""}</p>`);
   return parts.join("");
 }
 
@@ -549,6 +561,14 @@ function renderCompany(org) {
       return `<div class="ti"><div class="d">${esc(e.date)} · ${esc(changeLabel(e.type))}</div><div class="t">${esc(e.description)}</div><button class="link" data-ev="${i}">View evidence →</button></div>`;
     }).join("")}</div>`;
   } else html += `<div class="italic">No dated changes found in the checked sources.</div>`;
+  const g = c.growth || {}, supported = g.supported || [], inferred = g.inferred || [];
+  const sigName = Object.fromEntries(supported.map(x => [x.id, x.signal]));
+  html += `</section><section><h2>Growth Signals</h2><div class="growth"><div><h3>Supported by a source</h3>${supported.length ? supported.map(x => {
+      const i = ev({kind: "change", label: x.signal, value: x.value, date: x.date, date_label: "Date", source_url: x.source_url, retrieved_at: x.retrieved_at, sha: x.snapshot_sha256 || x.content_sha256, identity: "Read from the cited source", extract: x.value});
+      return `<div class="sig"><div class="t">${esc(x.signal)}</div><div class="v">${esc(x.value)}</div><button class="link" data-ev="${i}">View evidence →</button></div>`;
+    }).join("") : `<div class="italic">No growth signal found in the checked sources.</div>`}</div>
+    <div><h3>Inferred, not a sourced fact</h3>${inferred.length ? inferred.map(x => `<div class="sig inf"><div class="v"><span class="tag-inf">INFERENCE · ${esc(x.confidence)}</span>${esc(x.statement)}</div><div class="basis">Based on: ${esc((x.basis || []).map(b => sigName[b] || b).join("; "))}</div></div>`).join("") : `<div class="italic">Nothing inferred: no supported signal to draw on.</div>`}
+    ${g.note ? `<div class="hint">${esc(g.note)}</div>` : ""}</div></div>`;
   html += `</section><section class="two"><div><h2>Digital Footprint</h2>`;
   if (web) {
     const i = ev(web);
@@ -564,13 +584,18 @@ function renderCompany(org) {
   else html += `<div class="hint">${esc(unknown("social profiles") || "No verified social profiles.")}</div>`;
   html += `</div><div><h2>Hiring Signals</h2>`;
   if (jobs.length) {
-    html += `<div style="font-weight:700;color:#f5f5f5;margin-bottom:16px">${jobs.length} VERIFIED</div><div class="stack">${jobs.map(f => `<div class="card">
+    const posts = jobs.filter(f => f.label !== "Job board"), boards = jobs.filter(f => f.label === "Job board");
+    html += `<div style="font-weight:700;color:#f5f5f5;margin-bottom:16px">${posts.length} POSTING${posts.length === 1 ? "" : "S"}${boards.length ? " · JOB BOARD LINKED" : ""}</div><div class="stack">${posts.map(f => `<div class="card">
       <div class="d mono" style="font-size:10px;color:var(--muted)">${f.date ? `Posted ${esc(day(f.date))}` : "Open position"}</div>
       <div style="font-weight:600;color:#f5f5f5;margin:4px 0">${esc(f.label)}</div>
       <div class="ok" style="margin:6px 0 10px">${ICON_OK}<span>Identity verified</span></div>
+      <button class="link" data-ev="${ev(f)}">Inspect →</button></div>`).join("")}${boards.map(f => `<div class="card">
+      <div class="d mono" style="font-size:10px;color:var(--muted)">Apply action on ${esc(host(f.source_url))}</div>
+      <div style="font-weight:600;color:#f5f5f5;margin:4px 0;word-break:break-all">${esc(host(f.value))}</div>
+      <div class="ok" style="margin:6px 0 10px">${ICON_OK}<span>Linked from the verified website</span></div>
       <button class="link" data-ev="${ev(f)}">Inspect →</button></div>`).join("")}</div>`;
   } else {
-    html += `<div class="italic">No verified hiring signal found.</div><div class="hint">${esc(unknown("hiring") || "")}<br>Careers pages alone are not counted; only individual postings are.</div>`;
+    html += `<div class="italic">No verified hiring signal found.</div><div class="hint">${esc(unknown("hiring") || "")}<br>A careers page alone is not counted; individual postings and links to the company's job board are.</div>`;
   }
   html += `</div></section>`;
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import hashlib
 import json
 import re
@@ -56,6 +57,7 @@ class ActivityRecord:
 URL_DATE_PATTERNS = (
     re.compile(r"/(20\d{2})/([01]?\d)/([0-3]?\d)(?:/|$)"),
     re.compile(r"(?:^|[/_-])(20\d{2})-([01]\d)-([0-3]\d)(?:[/_-]|$)"),
+    re.compile(r"/(20\d{2})([01]\d)([0-3]\d)(?:[-_]|/|$)"),  # /news/20260512-5000-oil-cargoes
 )
 
 # Path segments that mark a listing, archive or author page rather than one article.
@@ -74,11 +76,32 @@ NON_ARTICLE_SEGMENTS = {
     "produkt", "product", "shop", "butikk", "nettbutikk", "register", "registrer", "bli-medlem", "medlemskap",
     "login", "logg-inn", "min-side", "checkout", "cart", "handlekurv", "kasse",
 }
-ARTICLE_PATH_HINTS = (
-    "nyhet", "news", "aktuelt", "artikkel", "artikler", "article", "blog", "presse", "press",
-    "pressemelding", "event", "arrangement", "kunngjoring", "siste-nytt", "media", "investor",
+# A news word at the start of a path segment or after a hyphen: "/nyheter-rkr/", "/blog/",
+# "/press-releases/", but not "/express-fjord-road-trip/" or "/multimedia/".
+ARTICLE_PATH_WORD = re.compile(
+    r"(?:^|[-_])(?:nyhet|news|aktuelt|artikkel|artikler|article|blog|presse|press|pressemelding|event|arrangement|kunngjoring|siste-nytt|media|investor)",
 )
+ACTIVITY_PATH_WORD = re.compile(r"(?:^|[-_])(?:nyhet|aktuelt|presse|news|press|blog|event|artikkel)")
+
+
+def has_path_word(path: str, pattern: re.Pattern[str] = ARTICLE_PATH_WORD) -> bool:
+    return any(pattern.search(segment) for segment in path.casefold().split("/") if segment)
+
+
 NON_ARTICLE_TITLE = re.compile(r"^(?:kontakt|contact|om oss|about|personvern|privacy|cookies|bli medlem|meld deg|logg inn|log in|sign up|registrer|handlekurv|nettbutikk)\b", re.IGNORECASE)
+# Sample posts that site builders create (WordPress "Hello world!", Wix's lorem-ipsum posts).
+PLACEHOLDER_TITLE = re.compile(
+    r"^(?:hello world|hei verden|hallo verden|lorem ipsum|hvor kommer det fra|hvorfor bruker vi det|hva er lorem ipsum|"
+    r"sample page|sample post|eksempelside|eksempelinnlegg|my first blog post|welcome to wordpress|untitled|blog post title|post title)\b",
+    re.IGNORECASE,
+)
+# Headlines about criminal charges or convictions name or concern individuals; that is
+# sensitive personal data, not news about the company, and is never republished.
+CRIMINAL_MATTER = re.compile(
+    r"\b(?:dømt|domfelt|straffedømt|voldtekt\w*|overgrep\w*|seksuell\w* omgang|drap\w*|siktet|tiltalt|"
+    r"fengsel\w*|pedofil\w*|convicted|sentenced|rape|sexual assault)\b",
+    re.IGNORECASE,
+)
 LINK_TEXT_TITLES = {
     "les mer", "read more", "les hele saken", "se alle", "se mer", "mer", "more", "vis alle",
     "flere nyheter", "flere prosjekter", "alle nyheter", "all news", "neste", "forrige",
@@ -120,8 +143,10 @@ def is_publishable_news(act: "ActivityRecord", today: date | None = None) -> boo
     title = act.title.casefold().strip()
     if len(title) < 8 or title in LINK_TEXT_TITLES or NON_ARTICLE_TITLE.search(title):
         return False
+    if PLACEHOLDER_TITLE.search(title) or CRIMINAL_MATTER.search(title):
+        return False
     page_itself = bool(act.found_on_url) and act.source_url.split("#", 1)[0].rstrip("/") == act.found_on_url.split("#", 1)[0].rstrip("/")
-    if page_itself and not date_from_url(act.source_url) and not any(hint in parsed.path.casefold() for hint in ARTICLE_PATH_HINTS):
+    if page_itself and not date_from_url(act.source_url) and not has_path_word(parsed.path):
         return False  # an ordinary page carrying a publish date is not an article
     return True
 
@@ -134,6 +159,7 @@ TITLE_DATE_PREFIX = re.compile(
     r"(?:,?\s*(?:kl\.?\s*)?\d{1,2}[:.]\d{2})?\s*[|·•–—-]?\s*",
     re.IGNORECASE,
 )
+TITLE_TIME_PREFIX = re.compile(r"^(?:kl\.?\s*)?\d{1,2}[:.]\d{2}\s*(?:\((?:CEST|CET|UTC|GMT|BST)\)|CEST|CET|UTC|GMT)?\s*[|·•–—-]?\s+(?=\S)", re.IGNORECASE)
 TITLE_SECTION_PREFIX = re.compile(r"^(?:nyheter|nyhet|news|aktuelt|pressemelding|press release|blogg|blog|artikkel)\s*[|·:–—-]?\s+(?=\S)", re.IGNORECASE)
 
 
@@ -142,18 +168,36 @@ def clean_activity_title(title: str | None) -> str | None:
         return None
     cleaned = re.sub(r"\s+", " ", str(title)).strip()
     cleaned = TITLE_DATE_PREFIX.sub("", cleaned)
+    cleaned = TITLE_TIME_PREFIX.sub("", cleaned)
     cleaned = re.sub(r"^\s*\|?\s*regulatory information\s*", "", cleaned, flags=re.IGNORECASE)
     cleaned = TITLE_SECTION_PREFIX.sub("", cleaned)
     # trailing "13.04.2021 - Publisert av ..." bylines
     cleaned = re.sub(r"\s*\d{1,2}\.\d{1,2}\.\d{4}\s*[-–]?\s*(?:publisert|oppdatert|published).*$", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s*[-–|]\s*(?:publisert|published) av .*$", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"^[-–—•*|:]+\s*", "", cleaned)
+    cleaned = re.sub(r"^[-–—•*|:/]+\s*", "", cleaned)
     cleaned = re.sub(r"\s*[-–—•*|:]+$", "", cleaned).strip()
     if not cleaned or len(cleaned) < 4:
         return None
     if cleaned.casefold() in GENERIC_NAV_TITLES:
         return None
     return cleaned[:300]
+
+
+SITE_SUFFIX = re.compile(r"^(?P<title>.{8,}?)\s+[-–—|·]\s+(?P<site>[^-–—|·]{2,60})$")
+
+
+def strip_site_suffix(title: str, site_root: str, name: str | None) -> str:
+    """Drop a trailing site name ("Bedre sosial funksjon - Sunnaas sykehus HF" -> "Bedre sosial funksjon")."""
+    match = SITE_SUFFIX.match(title or "")
+    if not match:
+        return title
+    suffix = re.sub(r"[^a-z0-9]", "", " ".join(_tokens(match.group("site"))))
+    markers = [token for token in _tokens(name) if len(token) >= 4] + ([site_root] if len(site_root or "") >= 3 else [])
+    head, site = match.group("title").strip(), match.group("site").strip()
+    # A site name is short and shorter than the headline; "Siste nytt - Sunnaas åpner nytt bygg" keeps its words.
+    if len(site.split()) > 5 or len(head.split()) <= len(site.split()):
+        return title
+    return head if suffix and any(marker in suffix for marker in markers) else title
 
 
 def classify_activity_type(title: str, text: str) -> str:
@@ -453,14 +497,23 @@ def extract_activity_from_html_articles(
         return records
 
     for card in cards:
-        title_el = card.select_one("h1, h2, h3, h4, .title, .headline, a")
+        # The headline itself, not a link that wraps headline and teaser together.
+        title_el = card.select_one("h1, h2, h3, h4, h5, .title, .headline") or card.select_one("a")
         if not title_el:
             continue
         title = clean_activity_title(title_el.get_text(" ", strip=True))
         if not title:
             continue
 
-        link_el = card.select_one("a[href]") or (title_el if title_el.name == "a" and title_el.get("href") else None)
+        # The card's URL is the headline's own link. A card holding the page's h1 is the page's
+        # own article; its other links (tags, topics, related pages) are not its address.
+        link_el = (
+            (title_el if title_el.name == "a" and title_el.get("href") else None)
+            or title_el.find_parent("a", href=True)
+            or title_el.select_one("a[href]")
+        )
+        if link_el is None and title_el.name != "h1" and len({a.get("href") for a in card.select("a[href]")}) == 1:
+            link_el = card.select_one("a[href]")
         item_url = urljoin(base_url, link_el.get("href")) if link_el else base_url
 
         card_text = card.get_text(" ", strip=True)
@@ -502,6 +555,46 @@ def extract_activity_from_html_articles(
     return records
 
 
+def child_link_count(html: str, url: str) -> int:
+    """How many distinct pages below this page's own path it links to (/news/blog/design/<slug>)."""
+    base = urlparse(url)
+    prefix = base.path.rstrip("/") + "/"
+    children = set()
+    for anchor in BeautifulSoup(html or "", "lxml").select("a[href]"):
+        target = urlparse(urljoin(url, str(anchor.get("href") or "")))
+        if target.netloc == base.netloc and target.path.startswith(prefix) and target.path.rstrip("/") != base.path.rstrip("/"):
+            children.add(target.path.rstrip("/"))
+    return len(children)
+
+
+def _activities_from_feed(profile: dict[str, Any], page: dict[str, Any]) -> list[ActivityRecord]:
+    """Articles listed in the site's own RSS/Atom feed, each with the feed's publication date."""
+    org_nr = str(profile.get("organisation_number") or "")
+    records: list[ActivityRecord] = []
+    for item in page.get("feed_items") or []:
+        title = clean_activity_title(item.get("title"))
+        if not title or not item.get("published"):
+            continue
+        id_assessment = verify_activity_identity(profile, {"title": title}, item["url"])
+        if not id_assessment["verified"]:
+            continue
+        content_sha = hashlib.sha256(f"{title}|{item['url']}|{item['published']}".encode("utf-8")).hexdigest()
+        records.append(ActivityRecord(
+            activity_id=f"act-{org_nr}-{content_sha[:12]}",
+            company_orgnr=org_nr,
+            activity_type=classify_activity_type(title, ""),
+            title=title,
+            description=None,
+            activity_date=item["published"],
+            source_url=item["url"],
+            retrieved_at=utc_now(),
+            content_sha256=content_sha,
+            identity_assessment={**id_assessment, "method": "verified_site_news_feed"},
+            found_on_url=page.get("url"),
+        ))
+    return records
+
+
 def extract_activity_from_crawl_material(
     profile: dict[str, Any],
     website_material: dict[str, Any],
@@ -516,8 +609,13 @@ def extract_activity_from_crawl_material(
 
     all_activities: dict[str, ActivityRecord] = {}
 
+    org_nr = str(profile.get("organisation_number") or "")
     for page in pages:
         p_url = page.get("url") or final_url
+        if page.get("kind") == "feed":
+            for act in _activities_from_feed(profile, page):
+                all_activities.setdefault(act.activity_id, act)
+            continue
         p_html = page.get("html") or ""
         p_text = page.get("main_text_excerpt") or ""
 
@@ -532,39 +630,46 @@ def extract_activity_from_crawl_material(
 
         # 2. Fallback: HTML cards / links
         p_path = urlparse(p_url).path.casefold()
-        is_activity_url = any(k in p_path for k in ("nyhet", "aktuelt", "presse", "news", "press", "blog", "event", "artikkel"))
+        is_activity_url = has_path_word(p_path, ACTIVITY_PATH_WORD)
+        html_activities: list[ActivityRecord] = []
         if is_activity_url or not jsonld_activities:
             html_activities = [replace(act, found_on_url=p_url) for act in extract_activity_from_html_articles(p_html, p_url, profile)]
             for act in html_activities:
                 if act.activity_id not in all_activities:
                     all_activities[act.activity_id] = act
 
-            # 3. If the page itself is a dedicated article/event page (not an empty archive) and no sub-cards were found:
-            if not html_activities and is_activity_url:
-                p_title = clean_activity_title(page.get("title"))
-                if p_title and len(p_text.strip()) > 40:
-                    act_date = date_from_url(p_url) or extract_activity_date_from_text(p_text[:400])
-                    act_type = classify_activity_type(p_title, p_text)
-                    id_assessment = verify_activity_identity(profile, {"title": p_title, "description": p_text}, p_url)
-                    if id_assessment["verified"]:
-                        content_sha = hashlib.sha256(f"{p_title}|{p_url}|{act_date}".encode("utf-8")).hexdigest()
-                        org_nr = str(profile.get("organisation_number") or "")
-                        act_id = f"act-{org_nr}-{content_sha[:12]}"
-                        standalone_act = ActivityRecord(
-                            activity_id=act_id,
-                            company_orgnr=org_nr,
-                            activity_type=act_type,
-                            title=p_title,
-                            description=p_text[:500],
-                            activity_date=act_date,
-                            source_url=p_url,
-                            retrieved_at=utc_now(),
-                            content_sha256=content_sha,
-                            identity_assessment=id_assessment,
-                            found_on_url=p_url,
-                        )
-                        if act_id not in all_activities:
-                            all_activities[act_id] = standalone_act
+        # 3. The page itself as one article: a page the sitemap listed as an article, or an
+        #    article-like page with no cards of its own. Its date must be one the page states
+        #    about itself (structured data, publish meta, "Publisert:"), or the URL's date.
+        from_sitemap = page.get("discovered_via") == "sitemap"
+        if not (from_sitemap or (is_activity_url and not html_activities)):
+            continue
+        if child_link_count(p_html, p_url) >= 2:
+            continue  # it links to pages below itself: a section or category index, not one article
+        p_title = clean_activity_title(page.get("headline") or page.get("title"))
+        if not p_title or (len(p_text.strip()) <= 40 and not from_sitemap):
+            continue
+        act_date = page.get("published_date") or date_from_url(p_url) or (None if from_sitemap else extract_activity_date_from_text(p_text[:400]))
+        if act_date and act_date > datetime.now(timezone.utc).date().isoformat():
+            act_date = None  # a page cannot have been published in the future: that is an event date
+        id_assessment = verify_activity_identity(profile, {"title": p_title, "description": p_text}, p_url)
+        if not id_assessment["verified"]:
+            continue
+        content_sha = hashlib.sha256(f"{p_title}|{p_url}|{act_date}".encode("utf-8")).hexdigest()
+        act_id = f"act-{org_nr}-{content_sha[:12]}"
+        all_activities.setdefault(act_id, ActivityRecord(
+            activity_id=act_id,
+            company_orgnr=org_nr,
+            activity_type=classify_activity_type(p_title, p_text),
+            title=p_title,
+            description=p_text[:500],
+            activity_date=act_date,
+            source_url=p_url,
+            retrieved_at=utc_now(),
+            content_sha256=content_sha,
+            identity_assessment=id_assessment,
+            found_on_url=p_url,
+        ))
 
     return list(all_activities.values())
 
@@ -618,14 +723,26 @@ def extract_activity_evidence(
     )
 
 
+# Newspapers, magazines, broadcasters and news agencies (NACE 58.13, 58.14, 60.1, 60.2, 63.91):
+# the articles on their sites are their editorial product, not news about the company.
+NEWS_PUBLISHER_CODES = ("58.13", "58.14", "60.1", "60.2", "63.91")
+
+
+def is_news_publisher(profile: dict[str, Any]) -> bool:
+    return str(profile.get("industry_code") or "").startswith(NEWS_PUBLISHER_CODES)
+
+
 def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
     """Convert verified activity records into external footprint observations."""
     org = str(profile.get("organisation_number") or "")
     website = profile.get("evidence", {}).get("website", {})
-    if not org or website.get("status") != "available":
+    if not org or website.get("status") != "available" or is_news_publisher(profile):
         return []
 
     activities = extract_activity_from_crawl_material(profile, website)
+    # Where a listing card and the article page itself describe the same URL, the article
+    # page's own title and date win.
+    activities.sort(key=lambda act: 0 if act.found_on_url and act.source_url.split("#", 1)[0].rstrip("/") == act.found_on_url.split("#", 1)[0].rstrip("/") else 1)
     observations: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
 
@@ -634,10 +751,9 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
     scope = (web_value.get("identity_assessment") or {}).get("site_scope")
     site_root = (urlparse(web_value.get("final_url") or "").hostname or "").removeprefix("www.").split(".")[0]
     for act in activities:
-        if site_root:
-            stripped = re.sub(rf"\s*[-–|]\s*{re.escape(site_root)}\s*$", "", act.title, flags=re.IGNORECASE)
-            if stripped != act.title and len(stripped) >= 8:
-                act = replace(act, title=stripped)
+        stripped = strip_site_suffix(act.title, site_root, profile.get("name"))
+        if stripped != act.title and len(stripped) >= 8:
+            act = replace(act, title=stripped)
         if not is_publishable_news(act):
             continue
         if not within_site_scope(act.source_url, web_value.get("final_url"), scope):
@@ -645,7 +761,10 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
             title_compact = re.sub(r"[^a-z0-9]", "", " ".join(_tokens(act.title)))
             if not specific or not all(token in title_compact for token in specific):
                 continue  # article belongs to the wider site, not this company's section
-        canonical = act.source_url.split("#", 1)[0].rstrip("/")
+        clean_url = re.sub(r"(?<!:)/{2,}", "/", act.source_url)
+        if clean_url != act.source_url:
+            act = replace(act, source_url=clean_url)
+        canonical = clean_url.split("#", 1)[0].rstrip("/")
         title_key = f"{act.title.casefold()}|{act.activity_date}"
         if canonical in seen_urls or title_key in seen_urls:
             continue
@@ -674,4 +793,10 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
         }
         observations.append(obs)
 
-    return observations
+    # Several one- or two-word "posts" published on the same day ("Forretningsplan",
+    # "Foredrag", "Styreverv") are a site's service pages set up as posts, not news.
+    per_day = collections.Counter(obs["metrics"]["activity_date"] for obs in observations)
+    return [
+        obs for obs in observations
+        if not (per_day[obs["metrics"]["activity_date"]] >= 3 and len(str(obs["metrics"]["title"]).split()) <= 2)
+    ]

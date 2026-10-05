@@ -36,7 +36,7 @@ uv run pytest tests/ -q
 ```
 
 ## Operational Profile
-- **Outbound HTTP requests**: official registry calls plus at most 30 website requests per company (configurable)
+- **Outbound HTTP requests**: official registry calls plus at most 40 website requests per company (configurable)
 - **API Cost**: $0.00 (Pure deterministic discovery & open sector registries)
 - **Model Usage**: 0 token / 0 LLM cost for core identity resolution
 - **Runtime**: about 3.5 minutes per 100 companies on 12 workers (measured on a 100-company sample)

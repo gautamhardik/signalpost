@@ -46,12 +46,14 @@ class SocialProfilesAdapter(BaseSourceAdapter):
                                 "score": link.get("identity_score"),
                                 "method": link.get("method"),
                                 "matched_tokens": link.get("matched_tokens"),
+                                "reason": f"Linked from the verified company website; {link.get('reason')}" if link.get("reason") else None,
                             }
                         ],
                         "acquisition_mode": "permitted_public_page",
                         "rights_status": "approved",
                         "source_class": "company_social",
-                        "evidence_span": f"Verified {platform} social profile matching legal entity {profile.get('name')}",
+                        "evidence_span": f"{platform.capitalize()} profile linked from the verified website of {profile.get('name')}: {link.get('reason')}",
+                        "found_on_url": link.get("found_on") or None,
                         "metrics": {"platform": platform, "url": url},
                     }
                     observations.append(obs)
@@ -170,10 +172,10 @@ class HiringAdapter(BaseSourceAdapter):
         if not org or not is_publishable:
             return observations
 
-        # Only discrete postings (a role with its own listing, feed item or apply action)
-        # count as hiring. A careers page by itself is not a hiring fact.
-        from ..jobs import extract_job_observations
-        return extract_job_observations(profile)
+        # Individual postings, plus one hiring signal when the verified site opens the company's
+        # job board (an apply action). A careers page by itself is not a hiring fact.
+        from ..jobs import extract_hiring_signal_observations, extract_job_observations
+        return extract_job_observations(profile) + extract_hiring_signal_observations(profile)
 
 
 class SiteNewsAdapter(BaseSourceAdapter):

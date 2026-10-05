@@ -97,6 +97,54 @@ def _registered_domain(url: str) -> str:
     return tldextract.extract(urlparse(url).hostname or "").top_domain_under_public_suffix or ""
 
 
+# Applicant-tracking systems that host one employer's job board under its own path or
+# subdomain. Staffing agencies (Manpower, Adecco) are not the company's own board.
+JOB_BOARD_DOMAINS = {
+    "webcruiter.com", "webcruiter.no", "jobbnorge.no", "recman.no", "recman.page", "cruit.no",
+    "easycruit.com", "hr-manager.net", "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no",
+    "smartrecruiters.com", "myworkdayjobs.com", "workday.com", "taleo.net", "successfactors.eu",
+    "successfactors.com", "icims.com", "greenhouse.io", "lever.co", "personio.de", "personio.com",
+    "recruitee.com", "workable.com", "homerun.co", "varbi.com", "emply.com", "karrierestart.no",
+    "finn.no", "nav.no", "linkedin.com",
+}
+NON_TENANT_SUBDOMAINS = {"", "www", "cdn", "static", "assets", "media", "img", "images", "help", "support", "blog"}
+
+
+def job_board_url(url: str) -> str | None:
+    """The URL when it opens one employer's job board on an applicant-tracking system, else None.
+
+    A recruiter's own homepage, a LinkedIn company page or a general job portal is not a job
+    board; finn.no, nav.no and LinkedIn count only through their job listing paths.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return None
+    ext = tldextract.extract(parsed.hostname or "")
+    domain = ext.top_domain_under_public_suffix or ""
+    if domain not in JOB_BOARD_DOMAINS:
+        return None
+    path = (parsed.path or "/").casefold()
+    if re.search(r"\.(?:js|css|png|jpe?g|svg|gif|webp|ico)$", path):
+        return None
+    subdomain = ext.subdomain.casefold()
+    if domain == "linkedin.com":
+        tenant = "/jobs" in path and path.startswith("/company/")
+    elif domain == "finn.no":
+        tenant = path.startswith("/job/") and bool(parsed.query or path.count("/") > 2)
+    elif domain == "nav.no":
+        tenant = subdomain.endswith("arbeidsplassen") and path.startswith(("/stillinger/", "/stilling/"))
+    elif subdomain in NON_TENANT_SUBDOMAINS:
+        # The provider's own site ("Powered by Teamtailor") unless the path names one employer or ad.
+        tenant = bool(re.search(r"\d{3,}|/(?:arbeidsgiver|employers?|bedrift|company|companies|stilling|job)s?/", path))
+    elif subdomain in {"boards", "job-boards", "jobs", "apply", "candidate", "careers"} or re.fullmatch(r"career\d*", subdomain):
+        tenant = path.strip("/") != "" or bool(parsed.query)  # shared host: the path or query names the employer
+    else:
+        tenant = True  # employer's own subdomain (acme.teamtailor.com, equinor.wd3.myworkdayjobs.com)
+    if not tenant:
+        return None
+    return parsed._replace(fragment="").geturl()
+
+
 def posting_evidence_for(job_url: str, context_text: str, deadline: str | None) -> tuple[str, ...]:
     """Collect concrete signs that a link is one job posting rather than a careers landing page."""
     found: list[str] = []
@@ -625,3 +673,66 @@ def extract_job_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
 
     return observations
 
+
+CAREER_PATH_HINTS = ("karriere", "career", "jobb", "jobs", "stilling", "rekruttering", "vacanc", "work-with-us", "join-us")
+
+
+def extract_hiring_signal_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
+    """One hiring signal per company: a page on its verified site that opens its job board.
+
+    This is an apply action (a link or embed into the company's applicant-tracking job board),
+    not a careers page by itself; individual postings are published separately.
+    """
+    org = str(profile.get("organisation_number") or "")
+    website = profile.get("evidence", {}).get("website", {})
+    if not org or website.get("status") != "available":
+        return []
+    from .identity import within_site_scope
+
+    value = website.get("value") or {}
+    homepage = value.get("final_url") or ""
+    scope = (value.get("identity_assessment") or {}).get("site_scope")
+    candidates: list[tuple[int, int, dict[str, Any], dict[str, Any]]] = []
+    for order, page in enumerate(value.get("pages") or []):
+        page_url = page.get("url") or ""
+        if page.get("kind") == "feed" or not within_site_scope(page_url, homepage, scope):
+            continue
+        path = urlparse(page_url).path.casefold()
+        rank = 0 if any(hint in path for hint in CAREER_PATH_HINTS) else 1 if page_url.rstrip("/") == homepage.rstrip("/") else 2
+        for link in page.get("job_board_links") or []:
+            candidates.append((rank, order, page, link))
+    if not candidates:
+        return []
+    candidates.sort(key=lambda item: (item[0], item[1]))
+    _, _, page, link = candidates[0]
+    boards = list(dict.fromkeys(item[3]["url"] for item in candidates if item[2] is page))
+    board_domain = _registered_domain(link["url"])
+    label = f' ("{link["text"]}")' if link.get("text") else ""
+    return [{
+        "id": f"hiring-signal-{org}",
+        "organisation_number": org,
+        "platform": "job_board",
+        "signal_type": "hiring_signal",
+        "source_url": page.get("url"),
+        "found_on_url": page.get("url"),
+        "retrieved_at": website.get("retrieved_at") or utc_now(),
+        "content_sha256": page.get("content_sha256"),
+        "exact_entity": True,
+        "identity_proof": [{
+            "type": "verified_site_job_board_link",
+            "method": "job_board_linked_from_verified_site",
+            "reason": "The company's verified website links to this job board",
+        }],
+        "acquisition_mode": "permitted_public_page",
+        "rights_status": "approved",
+        "source_class": "company_careers",
+        "evidence_span": f"Careers page links to the company's job board on {board_domain}{label}",
+        "posting_evidence": ["job_board_" + link.get("kind", "link")],
+        "metrics": {
+            "job_board_url": link["url"],
+            "job_board": board_domain,
+            "job_board_urls": boards[:5],
+            "link_text": link.get("text") or None,
+            "page_title": page.get("title"),
+        },
+    }]

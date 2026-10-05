@@ -41,15 +41,17 @@ Every module of every company carries exactly one of:
 
 ## Publication rules
 - **Website**: published only after the identity check ties it to the company: organisation number on the site, the registry's own website and e-mail domain, or the company name together with the registered address, postcode, city, phone or a registered CEO/board member named on the site. A name match alone on an unrelated domain is `ambiguous`.
-- **Hiring**: only individual postings, meaning a structured `JobPosting`, or a role-specific listing with a deadline, posting terms or an applicant-tracking link. A careers page by itself is never a hiring fact.
-- **News**: only individual, dated articles from the verified company site. Index pages, menus and undated pages are not published.
+- **Social profiles**: linked from the verified site, with a handle that carries the company's legal name or is the site's own name. A local branch on a parent organisation's site does not inherit the parent's profiles.
+- **Hiring**: individual postings (a structured `JobPosting`, or a role-specific listing with a deadline, posting terms or an applicant-tracking link), plus one hiring signal when the verified site links into the company's own job board on an applicant-tracking system (an apply action). A careers page by itself is never a hiring fact.
+- **News**: only individual, dated articles from the verified company site, found on its pages, its sitemap or its RSS/Atom feed. The date is the one the article states about itself (structured data, publish meta tags, a "Publisert" label) or the one in its URL; a page is never dated in the future. Index pages, menus, undated pages and a news publisher's editorial articles are not published.
+- **Growth signals**: sourced facts (revenue trend, registered employees, postings or job board, recent articles, management changes) are kept apart from inferences drawn from them, which are labelled as such.
 - **Evidence**: every published website, social profile, job and news item links to the stored page it was read from (`snapshot_sha256`, `snapshot_path`).
 
 ## Options
 | Option | Default | Purpose |
 |:---|:---|:---|
 | `--workers` | 12 | Companies researched in parallel |
-| `--web-requests-per-company` | 30 | Cap on website and search requests per company (registry calls are not capped) |
+| `--web-requests-per-company` | 40 | Cap on website and search requests per company (registry calls are not capped) |
 | `--budget` | none | Optional run-wide ceiling on website and search requests |
 | `--previous <profiles.jsonl>` | none | Refresh: record changes since that run and carry forward evidence a source no longer returns |
 | `--resume` | off | Continue an interrupted run in the same output directory |
@@ -69,5 +71,5 @@ uv run pytest -q
 
 ## Operational profile
 - **External API cost**: $0.00. No paid APIs, LLM tokens or credentialed services.
-- **Sources**: Brønnøysund open APIs (NLOD) and the company's own public website, respecting robots.txt.
+- **Sources**: Brønnøysund open APIs (NLOD) and the company's own public website (pages, sitemap, RSS/Atom feed), respecting robots.txt.
 - **Failure handling**: an error on one company marks that company `failed` and the run continues; no input is dropped.

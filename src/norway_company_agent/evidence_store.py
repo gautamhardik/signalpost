@@ -70,7 +70,7 @@ def snapshot_website_pages(store: EvidenceStore, website_record: dict[str, Any])
         body = raw if isinstance(raw, (bytes, bytearray)) else (html.encode("utf-8") if isinstance(html, str) else None)
         if not body:
             continue
-        ref = store.put(bytes(body))
+        ref = store.put(bytes(body), kind=page.pop("snapshot_kind", None) or "html")
         page.update(ref)
         refs[_canonical(page.get("url"))] = ref
     homepage = refs.get(_canonical(value.get("final_url")))
