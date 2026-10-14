@@ -94,7 +94,7 @@ RECRUITER_DOMAINS = {
 
 
 def _registered_domain(url: str) -> str:
-    return tldextract.extract(urlparse(url).hostname or "").top_domain_under_public_suffix or ""
+    return tldextract.extract(urlparse(url).hostname or "").registered_domain or ""
 
 
 # Applicant-tracking systems that host one employer's job board under its own path or
@@ -120,7 +120,7 @@ def job_board_url(url: str) -> str | None:
     if parsed.scheme not in {"http", "https"}:
         return None
     ext = tldextract.extract(parsed.hostname or "")
-    domain = ext.top_domain_under_public_suffix or ""
+    domain = ext.registered_domain or ""
     if domain not in JOB_BOARD_DOMAINS:
         return None
     path = (parsed.path or "/").casefold()
@@ -255,7 +255,7 @@ def verify_job_identity(
 
     parsed_job_url = urlparse(source_url)
     job_domain_ext = tldextract.extract(parsed_job_url.hostname or "")
-    job_reg_domain = job_domain_ext.top_domain_under_public_suffix
+    job_reg_domain = job_domain_ext.registered_domain
 
     same_domain = bool(verified_registered_domain and job_reg_domain == verified_registered_domain)
 

@@ -261,7 +261,7 @@ def verify_activity_identity(
 
     parsed_url = urlparse(source_url)
     domain_ext = tldextract.extract(parsed_url.hostname or "")
-    candidate_reg_domain = domain_ext.top_domain_under_public_suffix
+    candidate_reg_domain = domain_ext.registered_domain
 
     same_domain = bool(verified_registered_domain and candidate_reg_domain == verified_registered_domain)
 
