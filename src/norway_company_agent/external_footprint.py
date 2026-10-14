@@ -42,6 +42,7 @@ SIGNAL_TYPES = {
     "public_post",
     "public_mention",
     "buzz_metrics",
+    "relationship",
 }
 
 # “Experimental” means the connector can be benchmarked locally, but its output cannot be

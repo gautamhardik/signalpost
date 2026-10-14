@@ -298,9 +298,9 @@ def read_site_sources(
 
     # 1. News feed: titles and publication dates straight from the site's own feed.
     feeds = list(website_value.get("feed_links") or [])
-    if not feeds and website_value.get("wordpress"):
-        feeds = [origin + "/feed/"]
-    for feed_url in feeds[:1]:
+    if not feeds:
+        feeds = [origin + "/feed/", origin + "/rss.xml", origin + "/feed.xml"]
+    for feed_url in feeds[:2]:
         body, final_url = fetch_document(feed_url, MAX_FEED_BYTES)
         if not body:
             continue
@@ -318,6 +318,7 @@ def read_site_sources(
                 "discovered_via": "feed",
             })
             summary["feeds"].append({"url": final_url, "items": len(items)})
+            break
 
     # 2. Sitemap: the robots.txt declaration, else the conventional location.
     declared = [url for url in robots_sitemaps(homepage) if _registered_domain(url) == site_domain]

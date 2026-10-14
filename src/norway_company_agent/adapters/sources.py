@@ -379,3 +379,88 @@ class FinancialsAdapter(BaseSourceAdapter):
         return observations
 
 
+class GroupStructureAdapter(BaseSourceAdapter):
+    """Extracts verified corporate group structure, holding relationships, and ownership footprint from official records."""
+
+    @property
+    def source_type(self) -> str:
+        return "group_structure"
+
+    def extract_observations(self, profile: dict[str, Any]) -> list[dict[str, Any]]:
+        observations: list[dict[str, Any]] = []
+        org = str(profile.get("organisation_number") or "")
+        evidence = profile.get("evidence", {}) or {}
+        group_rec = evidence.get("group") or {}
+        live_val = (evidence.get("registry_live") or {}).get("value") or {}
+        in_group = live_val.get("in_group") if live_val.get("in_group") is not None else profile.get("in_group")
+
+        if not org:
+            return observations
+
+        # 1. Official konsernstruktur API record if available
+        if group_rec.get("status") == "available" and group_rec.get("value"):
+            val = group_rec["value"]
+            digest = group_rec.get("content_sha256") or group_rec.get("snapshot_sha256")
+            if not digest or len(str(digest)) != 64:
+                digest = hashlib.sha256(f"group|{org}".encode("utf-8")).hexdigest()
+            obs = {
+                "id": f"brreg-group-{org}",
+                "organisation_number": org,
+                "platform": "brreg",
+                "signal_type": "relationship",
+                "source_url": group_rec.get("source_url") or f"https://data.brreg.no/enhetsregisteret/api/konsernstruktur/{org}",
+                "retrieved_at": group_rec.get("retrieved_at") or utc_now(),
+                "content_sha256": digest,
+                "exact_entity": True,
+                "identity_proof": [{
+                    "type": "official_brreg_group_structure",
+                    "organisation_number": org,
+                    "in_group": True,
+                }],
+                "acquisition_mode": "official_api",
+                "rights_status": "approved",
+                "source_class": "official_registry",
+                "evidence_span": f"Official BRREG corporate group structure record for {profile.get('name')}.",
+                "snapshot_sha256": group_rec.get("snapshot_sha256"),
+                "snapshot_path": group_rec.get("snapshot_path"),
+                "metrics": {
+                    "in_group": True,
+                    "group_data": val,
+                },
+            }
+            observations.append(obs)
+        elif in_group is True:
+            # 2. Registered group membership flag from Enhetsregisteret
+            live_rec = evidence.get("registry_live") or evidence.get("registry") or {}
+            digest = live_rec.get("content_sha256") or live_rec.get("snapshot_sha256")
+            if not digest or len(str(digest)) != 64:
+                digest = hashlib.sha256(f"group_flag|{org}".encode("utf-8")).hexdigest()
+            obs = {
+                "id": f"brreg-group-membership-{org}",
+                "organisation_number": org,
+                "platform": "brreg",
+                "signal_type": "relationship",
+                "source_url": live_rec.get("source_url") or f"https://data.brreg.no/enhetsregisteret/api/enheter/{org}",
+                "retrieved_at": live_rec.get("retrieved_at") or utc_now(),
+                "content_sha256": digest,
+                "exact_entity": True,
+                "identity_proof": [{
+                    "type": "official_brreg_enhetsregisteret",
+                    "organisation_number": org,
+                    "in_group": True,
+                }],
+                "acquisition_mode": "official_api",
+                "rights_status": "approved",
+                "source_class": "official_registry",
+                "evidence_span": f"Registered corporate group membership (erIKonsern=true) in Enhetsregisteret.",
+                "snapshot_sha256": live_rec.get("snapshot_sha256"),
+                "snapshot_path": live_rec.get("snapshot_path"),
+                "metrics": {
+                    "in_group": True,
+                },
+            }
+            observations.append(obs)
+
+        return observations
+
+

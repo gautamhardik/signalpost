@@ -22,7 +22,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     """Deterministic retrieval/answer layer; it never invents a missing field."""
     q = question.casefold()
     financial_terms = ("financial", "finance", "account", "revenue", "income", "profit", "result", "debt", "asset", "regnskap")
-    all_topics = not any(term in q for term in (*financial_terms, "lead", "role", "location", "where", "social", "sentiment", "employee"))
+    all_topics = not any(term in q for term in (*financial_terms, "lead", "role", "location", "where", "social", "sentiment", "employee", "group", "konsern", "structure", "owner", "parent", "relationship", "holding", "job", "hiring", "recruit", "career", "stilling"))
     evidence = row.get("evidence", {})
     facts: list[dict[str, Any]] = []
     unsupported: list[str] = []
@@ -143,6 +143,24 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
                         "source_class": obs.get("source_class") or plat,
                         "content_sha256": obs.get("content_sha256"),
                     })
+
+    jobs_rec = evidence.get("jobs", {})
+    if all_topics or any(term in q for term in ("job", "hiring", "recruit", "career", "stilling")):
+        job_val = jobs_rec.get("value") or {}
+        jobs_list = job_val.get("jobs") or []
+        for j in jobs_list[:12]:
+            facts.append(_claim("Open position", j.get("title") or j.get("job_title") or "Verified job posting", jobs_rec, "company_job_posting"))
+        if not jobs_list and jobs_rec.get("status") == "available":
+            unsupported.append("No active job postings were found on verified company channels.")
+
+    group_rec = evidence.get("group", {})
+    if all_topics or any(term in q for term in ("group", "konsern", "structure", "owner", "parent", "relationship", "holding")):
+        if group_rec.get("status") == "available" and group_rec.get("value"):
+            facts.append(_claim("Corporate group structure", group_rec["value"], group_rec, "official_group_structure"))
+        elif live.get("in_group"):
+            facts.append(_claim("Corporate group membership", "Member of corporate group (erIKonsern)", registry, "official_registry_fact"))
+        else:
+            unsupported.append("No official corporate group structure was recorded for this entity.")
 
     if "sentiment" in q:
         unsupported.append("Sentiment is not scored: no labelled Norwegian news/social evaluation corpus has been run, and company-owned pages are structurally promotional.")

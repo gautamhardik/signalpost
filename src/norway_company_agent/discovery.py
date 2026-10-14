@@ -29,8 +29,8 @@ GENERIC_EMAIL_DOMAINS = {
 }
 
 # Maximum candidate limits per entity to prevent budget exhaustion
-MAX_DOMAIN_CANDIDATES_PER_COMPANY = 10
-MAX_TOTAL_CANDIDATES_PER_COMPANY = 14
+MAX_DOMAIN_CANDIDATES_PER_COMPANY = 14
+MAX_TOTAL_CANDIDATES_PER_COMPANY = 18
 
 
 class CandidateRejectionReason(str, enum.Enum):
@@ -162,7 +162,10 @@ def _tokens(value: Any) -> list[str]:
     return [token for token in re.findall(r"[a-z0-9]+", text) if len(token) > 1]
 
 
-LEGAL_SUFFIX_TOKENS = {"as", "asa", "ans", "da", "enk", "nuf", "sa", "iks", "ks", "ba", "sf", "hf", "bbl", "brl", "esek", "fli", "sti"}
+LEGAL_SUFFIX_TOKENS = {
+    "as", "asa", "ans", "da", "enk", "nuf", "sa", "iks", "ks", "ba", "sf", "hf", "bbl", "brl", "esek", "fli", "sti",
+    "aksjeselskap", "allmennaksjeselskap", "borettslag", "boligbyggelag", "enkeltpersonforetak", "stiftelse", "forening", "sameie",
+}
 
 
 def _full_name_tokens(name: str) -> list[str]:
@@ -176,7 +179,7 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
     """Generate high-confidence candidate domain URLs derived from clean legal name tokens.
     
     Constraint: Conservative generation. No speculative arbitrary industry tokens.
-    Supports clean token combinations (.no, .com, -as.no).
+    Supports clean token combinations (.no, .com, -as.no, as.no).
     """
     name = " ".join(str(profile.get("name") or "").split())
     if not name:
@@ -201,8 +204,10 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
         if without_og != full:
             raw_candidates.append(f"https://{''.join(without_og)}.no/")
         raw_candidates.append(f"https://{joined}-as.no/")
+        raw_candidates.append(f"https://{joined}as.no/")
         if len(full) > 1:
             raw_candidates.append(f"https://{'-'.join(full)}-as.no/")
+            raw_candidates.append(f"https://{''.join(full)}as.no/")
 
         if any(c in name for c in ("å", "Å", "ø", "Ø", "æ", "Æ")):
             text_aa = name.translate(str.maketrans({"ø": "oe", "å": "aa", "æ": "ae", "Ø": "OE", "Å": "AA", "Æ": "AE", "&": " "}))
@@ -225,6 +230,9 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
                 f"https://{t1}.no/",
                 f"https://{t1}.com/",
                 f"https://{t1}-as.no/",
+                f"https://{t1}as.no/",
+                f"https://{t1}norge.no/",
+                f"https://{t1}-norge.no/",
                 f"https://{t1}group.no/",
                 f"https://{t1}group.com/",
             ])
@@ -235,6 +243,8 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
             f"https://{t1}{t2}.no/",
             f"https://{t1}{t2}.com/",
             f"https://{t1}-{t2}.no/",
+            f"https://{t1}{t2}-as.no/",
+            f"https://{t1}{t2}as.no/",
             f"https://{t1}group.no/",
             f"https://{t1}gruppen.no/",
             f"https://{t1}group.com/",
@@ -248,6 +258,8 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
             f"https://{t1}{t2}{t3}.no/",
             f"https://{t1}{t2}{t3}.com/",
             f"https://{t1}-{t2}-{t3}.no/",
+            f"https://{t1}{t2}{t3}-as.no/",
+            f"https://{t1}{t2}{t3}as.no/",
             f"https://{t1}group.no/",
             f"https://{t1}gruppen.no/",
         ])

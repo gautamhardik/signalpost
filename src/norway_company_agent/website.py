@@ -23,7 +23,7 @@ import trafilatura
 
 from .evidence import evidence
 
-USER_AGENT = "builderr-signalpost-poc/0.1 (+https://builderr.ai)"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; SignalpostBot/1.0; +https://signalpost.no)"
 SOCIAL_HOSTS = {
     "linkedin.com": "linkedin",
     "facebook.com": "facebook",
@@ -57,13 +57,25 @@ class UnresolvableHost(ValueError):
     """The hostname has no DNS record: the site does not exist, nothing refused us."""
 
 
+import ssl
+
+
 class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str) -> Any:
         assert_public_url(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-SAFE_OPENER = urllib.request.build_opener(SafeRedirectHandler())
+def _build_safe_opener() -> urllib.request.OpenerDirector:
+    try:
+        import certifi
+        ctx = ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        ctx = ssl.create_default_context()
+    return urllib.request.build_opener(SafeRedirectHandler(), urllib.request.HTTPSHandler(context=ctx))
+
+
+SAFE_OPENER = _build_safe_opener()
 
 
 def normalize_homepage(value: str | None) -> str | None:

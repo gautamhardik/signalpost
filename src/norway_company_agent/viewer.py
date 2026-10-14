@@ -137,6 +137,9 @@ def company_view(profile: dict[str, Any]) -> dict[str, Any]:
         elif platform == "news":
             facts.append(_fact("news", metrics.get("title") or "News", obs.get("source_url"), obs,
                                date=metrics.get("activity_date"), date_label="Event date" if metrics.get("activity_type") == "event" else "Published", identity=_proof_reason(obs), extract=obs.get("evidence_span")))
+        elif obs.get("signal_type") == "relationship":
+            facts.append(_fact("registry", "Corporate group", obs.get("source_url"), obs,
+                               identity=_proof_reason(obs), extract=obs.get("evidence_span")))
 
     modules = {}
     for module, label in MODULE_LABELS.items():

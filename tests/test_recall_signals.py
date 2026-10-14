@@ -497,3 +497,106 @@ def test_identity_phone_and_role_normalization():
     assert reg_id["person_match"] == "Kari Helene Moe Hansen"
     assert assessment["publishable"] is True
     assert assessment["score"] >= 0.90
+
+
+def test_group_structure_adapter_extracts_observations():
+    from norway_company_agent.adapters.sources import GroupStructureAdapter
+
+    adapter = GroupStructureAdapter()
+
+    # 1. Profile with official group structure
+    p1 = {
+        "organisation_number": "912345678",
+        "name": "EQUINOR ASA",
+        "evidence": {
+            "group": {
+                "status": "available",
+                "value": {"morEnhet": "912345678", "datterEnheter": ["987654321"]},
+                "source_url": "https://data.brreg.no/enhetsregisteret/api/konsernstruktur/912345678",
+                "content_sha256": "a" * 64,
+            }
+        }
+    }
+    obs1 = adapter.extract_observations(p1)
+    assert len(obs1) == 1
+    assert obs1[0]["signal_type"] == "relationship"
+    assert obs1[0]["exact_entity"] is True
+    assert obs1[0]["metrics"]["in_group"] is True
+    assert len(obs1[0]["content_sha256"]) == 64
+
+    # 2. Profile with erIKonsern / in_group flag
+    p2 = {
+        "organisation_number": "987654321",
+        "name": "TEST SUBSIDIARY AS",
+        "evidence": {
+            "registry_live": {
+                "status": "available",
+                "value": {"in_group": True},
+                "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/987654321",
+                "content_sha256": "b" * 64,
+            }
+        }
+    }
+    obs2 = adapter.extract_observations(p2)
+    assert len(obs2) == 1
+    assert obs2[0]["signal_type"] == "relationship"
+    assert obs2[0]["exact_entity"] is True
+    assert obs2[0]["metrics"]["in_group"] is True
+
+
+def test_answer_profile_corporate_group_and_hiring_facts():
+    from norway_company_agent.research import answer_profile
+
+    profile = {
+        "organisation_number": "912345678",
+        "name": "NORDIC TECH GROUP AS",
+        "evidence": {
+            "group": {
+                "status": "available",
+                "value": {"parent": "Nordic Holding AS", "subsidiaries_count": 4},
+                "source_url": "https://data.brreg.no/enhetsregisteret/api/konsernstruktur/912345678",
+                "content_sha256": "c" * 64,
+            },
+            "jobs": {
+                "status": "available",
+                "value": {
+                    "jobs": [
+                        {"title": "Senior Cloud Engineer", "url": "https://nordictech.no/careers/cloud"},
+                        {"title": "Data Platform Architect", "url": "https://nordictech.no/careers/data"}
+                    ]
+                },
+                "source_url": "https://nordictech.no/careers",
+                "content_sha256": "d" * 64,
+            }
+        }
+    }
+
+    # All topics inquiry
+    res_all = answer_profile(profile, "all")
+    claims_all = {c["claim"] for c in res_all["facts"]}
+    assert "Corporate group structure" in claims_all
+    assert "Open position" in claims_all
+
+    # Specific group question
+    res_group = answer_profile(profile, "Does this company belong to a corporate group or holding structure?")
+    assert any(c["claim"] == "Corporate group structure" for c in res_group["facts"])
+
+
+def test_expanded_suffix_and_domain_generation():
+    from norway_company_agent.discovery import generate_deterministic_domain_candidates
+
+    # Borettslag suffix stripped
+    cands_bor = generate_deterministic_domain_candidates({"name": "Godlia Borettslag"})
+    assert "https://godlia.no/" in cands_bor
+
+    # Aksjeselskap suffix stripped and unhyphenated as.no produced
+    cands_aks = generate_deterministic_domain_candidates({"name": "Aktiv Bygg Aksjeselskap"})
+    assert "https://aktivbygg.no/" in cands_aks
+    assert "https://aktivbyggas.no/" in cands_aks
+
+    # Single word brand with norge.no and as.no
+    cands_brand = generate_deterministic_domain_candidates({"name": "Komplett AS"})
+    assert "https://komplett.no/" in cands_brand
+    assert "https://komplettas.no/" in cands_brand
+    assert "https://komplettnorge.no/" in cands_brand
+
