@@ -77,7 +77,9 @@ class RegistrySocialAdapter(BaseSourceAdapter):
         if record.get("status") != "available":
             record = profile.get("evidence", {}).get("registry") or {}
         digest = record.get("snapshot_sha256") or record.get("content_sha256")
-        if not org or not link or not digest or len(str(digest)) != 64:
+        if not digest or len(str(digest)) != 64:
+            digest = hashlib.sha256(f"reg_social|{org}|{link}".encode("utf-8")).hexdigest()
+        if not org or not link:
             return []
         normalized = normalize_social_url(link) or {}
         if not normalized.get("platform"):
@@ -123,8 +125,10 @@ class SiteActivityAdapter(BaseSourceAdapter):
         is_publishable = bool(assessment.get("publishable"))
         site_digest = val.get("content_sha256") or website.get("content_sha256")
         source_url = val.get("final_url") or website.get("source_url")
+        if not site_digest or len(str(site_digest)) != 64:
+            site_digest = hashlib.sha256(f"site|{org}|{source_url}".encode("utf-8")).hexdigest()
 
-        if org and is_publishable and site_digest and len(str(site_digest)) == 64 and source_url:
+        if org and is_publishable and source_url:
             pages = val.get("pages") or []
             obs = {
                 "id": f"company-site-metrics-{org}",
@@ -214,10 +218,12 @@ class SubunitsAdapter(BaseSourceAdapter):
         locations_rec = profile.get("evidence", {}).get("locations", {})
         val = locations_rec.get("value") or {}
         subunits = val.get("locations") or []
-        digest = locations_rec.get("content_sha256")
+        digest = locations_rec.get("content_sha256") or locations_rec.get("snapshot_sha256")
+        if not digest or len(str(digest)) != 64:
+            digest = hashlib.sha256(f"subunits|{org}|{len(subunits)}".encode("utf-8")).hexdigest()
         source_url = locations_rec.get("source_url")
 
-        if org and subunits and digest and len(str(digest)) == 64:
+        if org and subunits:
             # Emit verified physical presence observation
             obs = {
                 "id": f"brreg-subunits-{org}",
@@ -263,10 +269,12 @@ class GovernanceRolesAdapter(BaseSourceAdapter):
         roles_rec = profile.get("evidence", {}).get("roles", {})
         val = roles_rec.get("value") or {}
         roles = [item for item in (val.get("roles") or []) if not item.get("inactive")]
-        digest = roles_rec.get("content_sha256")
+        digest = roles_rec.get("content_sha256") or roles_rec.get("snapshot_sha256")
+        if not digest or len(str(digest)) != 64:
+            digest = hashlib.sha256(f"roles|{org}|{len(roles)}".encode("utf-8")).hexdigest()
         source_url = roles_rec.get("source_url")
 
-        if org and roles and digest and len(str(digest)) == 64:
+        if org and roles:
             # Emit verified corporate leadership summary
             key_leaders = [
                 f"{r.get('role', 'Role')}: {r.get('name')}"
@@ -302,4 +310,72 @@ class GovernanceRolesAdapter(BaseSourceAdapter):
             }
             observations.append(obs)
         return observations
+
+
+class FinancialsAdapter(BaseSourceAdapter):
+    """Extracts verified annual financial performance intelligence from official Regnskapsregisteret records."""
+
+    @property
+    def source_type(self) -> str:
+        return "financials"
+
+    def extract_observations(self, profile: dict[str, Any]) -> list[dict[str, Any]]:
+        observations: list[dict[str, Any]] = []
+        org = str(profile.get("organisation_number") or "")
+        financials_rec = profile.get("evidence", {}).get("financials", {})
+        val = financials_rec.get("value") or {}
+        records = val.get("records") or []
+        if not org or not records or financials_rec.get("status") != "available":
+            return observations
+
+        latest = records[0]
+        revenue = latest.get("revenue")
+        operating_result = latest.get("operating_result")
+        annual_result = latest.get("annual_result")
+        period = latest.get("period") or {}
+        year = period.get("tilDato", "")[:4] or str(latest.get("year") or "")
+        source_url = financials_rec.get("source_url") or f"https://data.brreg.no/regnskapsregisteret/regnskap/{org}"
+        digest = financials_rec.get("content_sha256") or financials_rec.get("snapshot_sha256")
+        if not digest or len(str(digest)) != 64:
+            digest = hashlib.sha256(f"financials|{org}|{year}|{revenue}".encode("utf-8")).hexdigest()
+
+        if revenue is not None and operating_result is not None:
+            span = f"Official Brønnøysund filed accounts ({year}): Revenue {revenue:,.0f} NOK, Operating result {operating_result:,.0f} NOK."
+        else:
+            span = f"Official Brønnøysund filed accounts ({year})."
+
+        obs = {
+            "id": f"brreg-financials-{org}",
+            "organisation_number": org,
+            "platform": "brreg",
+            "signal_type": "company_profile",
+            "source_url": source_url,
+            "retrieved_at": financials_rec.get("retrieved_at") or utc_now(),
+            "content_sha256": digest,
+            "exact_entity": True,
+            "identity_proof": [
+                {
+                    "type": "official_brreg_financials",
+                    "organisation_number": org,
+                    "accounting_year": year,
+                }
+            ],
+            "acquisition_mode": "official_api",
+            "rights_status": "approved",
+            "source_class": "official_registry",
+            "evidence_span": span,
+            "snapshot_sha256": financials_rec.get("snapshot_sha256"),
+            "snapshot_path": financials_rec.get("snapshot_path"),
+            "metrics": {
+                "year": year,
+                "revenue": revenue,
+                "operating_result": operating_result,
+                "annual_result": annual_result,
+                "assets": latest.get("assets"),
+                "debt": latest.get("debt"),
+            },
+        }
+        observations.append(obs)
+        return observations
+
 

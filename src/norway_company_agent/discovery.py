@@ -29,8 +29,8 @@ GENERIC_EMAIL_DOMAINS = {
 }
 
 # Maximum candidate limits per entity to prevent budget exhaustion
-MAX_DOMAIN_CANDIDATES_PER_COMPANY = 8
-MAX_TOTAL_CANDIDATES_PER_COMPANY = 12
+MAX_DOMAIN_CANDIDATES_PER_COMPANY = 10
+MAX_TOTAL_CANDIDATES_PER_COMPANY = 14
 
 
 class CandidateRejectionReason(str, enum.Enum):
@@ -200,6 +200,19 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
         without_og = [token for token in full if token != "og"]
         if without_og != full:
             raw_candidates.append(f"https://{''.join(without_og)}.no/")
+        raw_candidates.append(f"https://{joined}-as.no/")
+        if len(full) > 1:
+            raw_candidates.append(f"https://{'-'.join(full)}-as.no/")
+
+        if any(c in name for c in ("å", "Å", "ø", "Ø", "æ", "Æ")):
+            text_aa = name.translate(str.maketrans({"ø": "oe", "å": "aa", "æ": "ae", "Ø": "OE", "Å": "AA", "Æ": "AE", "&": " "}))
+            text_aa = unicodedata.normalize("NFKD", text_aa).encode("ascii", "ignore").decode().casefold()
+            full_aa = [token for token in re.findall(r"[a-z0-9]+", text_aa) if token not in LEGAL_SUFFIX_TOKENS]
+            joined_aa = "".join(full_aa)
+            if joined_aa != joined and 3 <= len(joined_aa) <= 40:
+                raw_candidates.append(f"https://{joined_aa}.no/")
+                if len(full_aa) > 1:
+                    raw_candidates.append(f"https://{'-'.join(full_aa)}.no/")
 
     t1 = tokens[0] if len(tokens) > 0 else ""
     t2 = tokens[1] if len(tokens) > 1 else ""
@@ -405,7 +418,7 @@ def assess_candidate_funnel(
     fetch_fn: Callable[[str], tuple[dict[str, Any], dict[str, Any]]],
     identity_gate_fn: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]],
     *,
-    max_fetches: int = 4,
+    max_fetches: int = 7,
 ) -> dict[str, Any]:
     """Execute candidate funnel tracking every candidate through:
     GENERATED -> FETCHED -> PLAUSIBLE -> VERIFIED (or REJECTED with explicit reason).

@@ -274,7 +274,7 @@ def main() -> None:
                 if normalize_candidate_url(candidate.url) != normalize_candidate_url(website_url)
             ]
             # Guessed domains get a short timeout: a real company site answers quickly.
-            funnel = assess_candidate_funnel(profile, candidates, fetch_fn=lambda url: fetch(url, timeout=8.0), identity_gate_fn=apply_website_identity_gate, max_fetches=5)
+            funnel = assess_candidate_funnel(profile, candidates, fetch_fn=lambda url: fetch(url, timeout=8.0), identity_gate_fn=apply_website_identity_gate, max_fetches=7)
             profile["discovery_funnel"] = funnel.get("funnel_metrics")
             if funnel.get("verified_sources"):
                 verified_record, _ = fetch(funnel["verified_sources"][0]["url"])

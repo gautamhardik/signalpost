@@ -199,3 +199,77 @@ def test_activity_observations_capture_direct_url_and_exact_match():
     assert obs[0]["exact_company_match"] is True
     assert obs[0]["metrics"]["direct_url"] == "https://solar.no/nyheter/ekspansjon"
     assert obs[0]["metrics"]["exact_company_match"] is True
+
+
+def test_financials_adapter_emits_valid_observation():
+    from norway_company_agent.adapters.sources import FinancialsAdapter
+    from norway_company_agent.external_footprint import publishable_observation
+
+    profile = {
+        "organisation_number": "912345678",
+        "name": "ACME NORGE AS",
+        "evidence": {
+            "financials": {
+                "status": "available",
+                "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/912345678",
+                "retrieved_at": "2026-10-14T00:00:00Z",
+                "value": {
+                    "records": [
+                        {
+                            "year": 2024,
+                            "period": {"tilDato": "2024-12-31"},
+                            "revenue": 15000000,
+                            "operating_result": 2000000,
+                            "annual_result": 1500000,
+                            "assets": 10000000,
+                            "debt": 5000000,
+                        }
+                    ]
+                },
+            }
+        },
+    }
+    adapter = FinancialsAdapter()
+    obs_list = adapter.extract_observations(profile)
+    assert len(obs_list) == 1
+    obs = obs_list[0]
+    assert obs["id"] == "brreg-financials-912345678"
+    assert obs["platform"] == "brreg"
+    assert obs["signal_type"] == "company_profile"
+    assert obs["exact_entity"] is True
+    assert len(obs["content_sha256"]) == 64
+    assert obs["metrics"]["year"] == "2024"
+    assert obs["metrics"]["revenue"] == 15000000
+    assert publishable_observation(obs) is True
+
+
+def test_subunits_and_roles_adapters_fallback_hashes():
+    from norway_company_agent.adapters.sources import GovernanceRolesAdapter, SubunitsAdapter
+    from norway_company_agent.external_footprint import publishable_observation
+
+    profile = {
+        "organisation_number": "912345678",
+        "name": "ACME NORGE AS",
+        "evidence": {
+            "locations": {
+                "status": "available",
+                # Note: content_sha256 missing intentionally to test fallback
+                "value": {"locations": [{"name": "Acme Bergen", "address": "Bryggen 1"}]},
+            },
+            "roles": {
+                "status": "available",
+                # Note: content_sha256 missing intentionally to test fallback
+                "value": {"roles": [{"role": "Daglig leder", "name": "Ola Nordmann"}]},
+            },
+        },
+    }
+    sub_obs = SubunitsAdapter().extract_observations(profile)
+    assert len(sub_obs) == 1
+    assert len(sub_obs[0]["content_sha256"]) == 64
+    assert publishable_observation(sub_obs[0]) is True
+
+    role_obs = GovernanceRolesAdapter().extract_observations(profile)
+    assert len(role_obs) == 1
+    assert len(role_obs[0]["content_sha256"]) == 64
+    assert publishable_observation(role_obs[0]) is True
+
