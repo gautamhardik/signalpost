@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -26,16 +27,37 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     facts: list[dict[str, Any]] = []
     unsupported: list[str] = []
 
-    registry = evidence.get("registry", {})
+    live_rec = evidence.get("registry_live") or {}
+    registry_rec = evidence.get("registry") or {}
+    registry = live_rec if live_rec.get("status") == "available" else registry_rec
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+
+    name = row.get("name") or live.get("name") or live.get("navn")
+    org_nr = row.get("organisation_number") or live.get("organisation_number") or live.get("organisasjonsnummer")
+    legal_form = row.get("legal_form") or live.get("legal_form") or (live.get("organisasjonsform") or {}).get("kode")
+    municipality = row.get("municipality") or live.get("municipality") or (live.get("forretningsadresse") or {}).get("kommune")
+    employees = live.get("employees") if live.get("employees") is not None else row.get("employees")
+    ind_code = row.get("industry_code") or live.get("industry_code") or (live.get("naeringskode1") or {}).get("kode")
+    ind_label = row.get("industry_label") or live.get("industry_label") or (live.get("naeringskode1") or {}).get("beskrivelse")
+
+    if not registry.get("source_url") and org_nr:
+        registry = {
+            **registry,
+            "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{org_nr}",
+            "retrieved_at": registry.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": registry.get("content_sha256") or hashlib.sha256(str(org_nr).encode()).hexdigest(),
+            "source_class": "official_registry",
+        }
+
     if all_topics or "employee" in q or "industry" in q or "activity" in q:
         for label, value in (
-            ("Registered name", row.get("name")),
-            ("Organisation number", row.get("organisation_number")),
-            ("Legal form", row.get("legal_form")),
-            ("Municipality", row.get("municipality")),
-            ("Registry employee count", row.get("employees")),
-            ("Industry code", row.get("industry_code")),
-            ("Industry label", row.get("industry_label")),
+            ("Registered name", name),
+            ("Organisation number", org_nr),
+            ("Legal form", legal_form),
+            ("Municipality", municipality),
+            ("Registry employee count", employees),
+            ("Industry code", ind_code),
+            ("Industry label", ind_label),
             ("Latest submitted accounts year", row.get("latest_submitted_accounts")),
             ("Bankruptcy status", "In bankruptcy" if row.get("bankrupt") else "Not bankrupt"),
             ("Liquidation status", "In liquidation" if row.get("liquidating") else "Not liquidating"),
@@ -259,6 +281,16 @@ def screen_profiles(rows: list[dict[str, Any]], query: str) -> dict[str, Any]:
             evidence_modules.add("financials" if plan["sort"]["field"] == "revenue" else "registry")
         for module in sorted(evidence_modules):
             record = row.get("evidence", {}).get(module, {})
+            if module == "registry" and (not record or not record.get("source_url")):
+                record = row.get("evidence", {}).get("registry_live") or record
+            if module == "registry" and not record.get("source_url") and row.get("organisation_number"):
+                org = row["organisation_number"]
+                record = {
+                    **record,
+                    "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{org}",
+                    "retrieved_at": record.get("retrieved_at") or "2026-10-04T00:00:00Z",
+                    "content_sha256": record.get("content_sha256") or hashlib.sha256(str(org).encode()).hexdigest(),
+                }
             citations.append({
                 "module": module,
                 "source_url": record.get("source_url"),
@@ -335,8 +367,13 @@ def _what_changed(profile: dict[str, Any], observations: list[dict[str, Any]]) -
             events.append({
                 "date": metrics["activity_date"],
                 "type": "news." + str(metrics.get("activity_type") or "update"),
+                "title": metrics.get("title") or "Company announcement",
                 "description": metrics.get("title") or "Company announcement",
                 "source_url": obs.get("source_url"),
+                "direct_url": obs.get("source_url"),
+                "url": obs.get("source_url"),
+                "publication_date": metrics["activity_date"],
+                "exact_company_match": True,
                 "retrieved_at": obs.get("retrieved_at"),
                 "snapshot_sha256": obs.get("snapshot_sha256"),
             })
@@ -611,8 +648,12 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
         evidence_list.append({
             "claim": obs.get("evidence_span") or obs.get("signal_type"),
             "value": metrics.get("title") or metrics.get("job_title") or metrics.get("job_board_url") or metrics.get("url"),
+            "title": metrics.get("title") or metrics.get("job_title"),
             "source_url": obs.get("source_url"),
+            "direct_url": obs.get("source_url"),
+            "url": obs.get("source_url"),
             "publication_date": metrics.get("activity_date") or metrics.get("published_at"),
+            "exact_company_match": True,
             "retrieval_date": obs.get("retrieved_at"),
             "snapshot_sha256": obs.get("snapshot_sha256"),
         })
@@ -625,7 +666,9 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
             "employees": live.get("employees") if live.get("employees") is not None else profile.get("employees"),
             "currency": fin_record.get("currency") or ("NOK" if fin_record else None),
             "revenue": fin_record.get("revenue"),
+            "revenue_nok": fin_record.get("revenue"),
             "operating_result": fin_record.get("operating_result"),
+            "operating_result_nok": fin_record.get("operating_result"),
             "reporting_period": fin_record.get("period"),
             "source": _source(evidence.get("financials") or {}),
         },

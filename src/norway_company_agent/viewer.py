@@ -179,6 +179,11 @@ def build_viewer(profiles: list[dict[str, Any]], out_dir: str | Path, *, run_id:
     html = TEMPLATE.replace("/*__DATA__*/null", payload)
     target = out / "index.html"
     target.write_text(html, encoding="utf-8")
+    if out.name == "viewer":
+        try:
+            (out.parent / "index.html").write_text(html, encoding="utf-8")
+        except OSError:
+            pass
     return target
 
 

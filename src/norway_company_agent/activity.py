@@ -79,7 +79,7 @@ NON_ARTICLE_SEGMENTS = {
 # A news word at the start of a path segment or after a hyphen: "/nyheter-rkr/", "/blog/",
 # "/press-releases/", but not "/express-fjord-road-trip/" or "/multimedia/".
 ARTICLE_PATH_WORD = re.compile(
-    r"(?:^|[-_])(?:nyhet|news|aktuelt|artikkel|artikler|article|blog|presse|press|pressemelding|event|arrangement|kunngjoring|siste-nytt|media|investor)",
+    r"(?:^|[-_])(?:nyhet|news|aktuelt|artikkel|artikler|article|articles|blog|presse|press|pressemelding(?:er)?|event|arrangement|kunngjoring(?:er)?|siste-nytt|media|investor|innsikt|insight|insights|update|updates|fagstoff)",
 )
 ACTIVITY_PATH_WORD = re.compile(r"(?:^|[-_])(?:nyhet|aktuelt|presse|news|press|blog|event|artikkel)")
 
@@ -226,14 +226,14 @@ def extract_activity_date_from_text(text: str) -> str | None:
     """Extract explicit publication or event dates from article header or text context."""
     patterns = [
         # Explicit date prefixes in Norwegian / English
-        r"(?:publisert|oppdatert|dato|posted|published|date)\s*[:\-]?\s*([0-3]?\d[\./-][01]?\d[\./-]202\d)",
-        r"(?:publisert|oppdatert|dato|posted|published|date)\s*[:\-]?\s*([0-3]?\d\.?\s+[a-zA-ZæøåÆØÅ]+\s+202\d)",
+        r"(?:publisert|oppdatert|dato|posted|published|date)\s*[:\-]?\s*([0-3]?\d[\./-][01]?\d[\./-]20[12]\d)",
+        r"(?:publisert|oppdatert|dato|posted|published|date)\s*[:\-]?\s*([0-3]?\d\.?\s+[a-zA-ZæøåÆØÅ]+\s+20[12]\d)",
         # ISO format
-        r"\b(202\d-[01]\d-[0-3]\d)\b",
+        r"\b(20[12]\d-[01]\d-[0-3]\d)\b",
         # DD.MM.YYYY
-        r"\b([0-3]?\d[\./-][01]?\d[\./-]202\d)\b",
+        r"\b([0-3]?\d[\./-][01]?\d[\./-]20[12]\d)\b",
         # DD. Month YYYY
-        r"\b([0-3]?\d)\.?\s+([a-zA-ZæøåÆØÅ]+)\s+(202\d)\b",
+        r"\b([0-3]?\d)\.?\s+([a-zA-ZæøåÆØÅ]+)\s+(20[12]\d)\b",
     ]
     for pattern in patterns:
         m = re.search(pattern, text, re.IGNORECASE)
@@ -649,7 +649,12 @@ def extract_activity_from_crawl_material(
         p_title = clean_activity_title(page.get("headline") or page.get("title"))
         if not p_title or (len(p_text.strip()) <= 40 and not from_sitemap):
             continue
-        act_date = page.get("published_date") or date_from_url(p_url) or (None if from_sitemap else extract_activity_date_from_text(p_text[:400]))
+        act_date = (
+            page.get("published_date")
+            or date_from_url(p_url)
+            or extract_activity_date_from_text(p_text[:1200])
+            or page.get("sitemap_lastmod")
+        )
         if act_date and act_date > datetime.now(timezone.utc).date().isoformat():
             act_date = None  # a page cannot have been published in the future: that is an event date
         id_assessment = verify_activity_identity(profile, {"title": p_title, "description": p_text}, p_url)
@@ -775,9 +780,15 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
             "platform": "news",
             "signal_type": "public_post",
             "source_url": act.source_url,
+            "direct_url": act.source_url,
+            "url": act.source_url,
+            "title": act.title,
+            "publication_date": act.activity_date,
+            "published_at": act.activity_date,
+            "exact_entity": True,
+            "exact_company_match": True,
             "retrieved_at": act.retrieved_at,
             "content_sha256": act.content_sha256,
-            "exact_entity": True,
             "identity_proof": [act.identity_assessment],
             "acquisition_mode": "permitted_public_page",
             "rights_status": "approved",
@@ -788,7 +799,11 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
                 "activity_type": act.activity_type,
                 "title": act.title,
                 "activity_date": act.activity_date,
+                "publication_date": act.activity_date,
                 "published_at": act.activity_date,
+                "direct_url": act.source_url,
+                "url": act.source_url,
+                "exact_company_match": True,
             },
         }
         observations.append(obs)

@@ -35,7 +35,7 @@ from .website import (
 
 NEWS_SEGMENT = re.compile(
     r"(?:^|-)(?:nyhet|nyheter|news|aktuelt|artikkel|artikler|article|articles|blogg?|presse?|pressemelding(?:er)?|"
-    r"press-releases?|siste-nytt|kunngjoring(?:er)?|newsroom|pressroom)(?:-|$)"
+    r"press-releases?|siste-nytt|kunngjoring(?:er)?|newsroom|pressroom|innsikt|insights?|updates?|fagstoff)(?:-|$)"
 )
 OTHER_LANGUAGE = re.compile(r"^[a-z]{2}(?:-[a-z]{2})?$")
 OWN_LANGUAGES = {"no", "nb", "nn", "en", "nb-no", "no-nb", "nn-no", "no-no", "en-gb", "en-us"}
