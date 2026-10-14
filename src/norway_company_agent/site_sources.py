@@ -106,6 +106,33 @@ def is_careers_index(url: str) -> bool:
     return bool(segments) and len(segments) <= 2 and segments[-1] in CAREER_INDEX_SEGMENTS - {"en", "no", "nb"}
 
 
+JOB_SEGMENT = re.compile(
+    r"(?:^|-)(?:karriere|stillinger?|jobb(?:er)?|careers?|vacanc(?:y|ies)|ledige-stillinger)(?:-|$)",
+    re.IGNORECASE,
+)
+NON_JOB_SEGMENTS = {
+    "personvern", "privacy", "privacy-policy", "cookies", "cookie-policy",
+    "vilkar", "terms", "cart", "checkout", "login", "logg-inn", "handlekurv",
+    "nettbutikk", "shop", "products", "produkter", "author", "tag", "tags",
+}
+
+
+def is_job_posting_url(url: str) -> bool:
+    """A single job posting under a career section: /karriere/<slug>, /stillinger/<slug>, /careers/<slug>."""
+    segments = _segments(url)
+    if len(segments) < 2:
+        return False
+    if OTHER_LANGUAGE.match(segments[0]) and segments[0] not in OWN_LANGUAGES:
+        return False
+    job_at = next((index for index, segment in enumerate(segments) if JOB_SEGMENT.search(segment)), None)
+    if job_at is None or job_at == len(segments) - 1:
+        return False  # no career section, or the career index page itself
+    last = segments[-1]
+    if last in CAREER_INDEX_SEGMENTS or last.isdigit() or any(segment in NON_JOB_SEGMENTS for segment in segments):
+        return False
+    return len(last) >= 4
+
+
 def _news_section(url: str) -> str:
     """The path up to and including the news segment: /fag/.../nyheter-rkr for one section's articles."""
     segments = _segments(url)
@@ -343,4 +370,13 @@ def read_site_sources(
         for url in careers:
             if fetch_page(url, "sitemap"):
                 summary["careers_pages"].append(url)
+
+    # 5. Direct job postings listed in sitemap (fetch up to 3 most recently modified)
+    job_entries = [entry for entry in entries if is_job_posting_url(entry["loc"]) and entry["loc"].split("#", 1)[0].rstrip("/") not in seen]
+    job_entries.sort(key=lambda item: item.get("lastmod") or "", reverse=True)
+    summary["job_postings"] = []
+    for entry in job_entries[:3]:
+        page = fetch_page(entry["loc"], "sitemap_job")
+        if page:
+            summary["job_postings"].append(page["url"])
     return summary

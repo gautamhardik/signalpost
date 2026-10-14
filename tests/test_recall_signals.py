@@ -450,3 +450,50 @@ def test_norwegian_parking_page_is_not_a_website():
         "main_text_excerpt": "oyslebovel.no er parkert hos Domene.no. Domene.no er norsk domeneregistrar og leverandør av domenenavn.", "pages": []}}}}
     assessment = assess_website_identity(profile)
     assert not assessment["publishable"] and "parked" in assessment["reasons"][0]
+
+
+def test_identity_phone_and_role_normalization():
+    from norway_company_agent.identity import assess_website_identity
+
+    # Registry has +47 prefix on phone, apartment details on street, and middle name for board member
+    profile = {
+        "organisation_number": "912345678",
+        "name": "NORDIC HORIZON CONSULTING AS",
+        "evidence": {
+            "registry": {
+                "value": {
+                    "telefon": "+47 22 33 44 55",
+                    "forretningsadresse.adresse": "Dronningens gate 12, 4. etasje",
+                    "forretningsadresse.postnummer": "0152",
+                    "forretningsadresse.poststed": "OSLO",
+                }
+            },
+            "roles": {
+                "value": {
+                    "roles": [
+                        {"name": "Kari Helene Moe Hansen", "role": "Daglig leder"}
+                    ]
+                }
+            },
+            "website": {
+                "status": "available",
+                "source_url": "https://nordichorizon.no/",
+                "value": {
+                    "final_url": "https://nordichorizon.no/",
+                    "title": "Nordic Horizon Consulting | Rådgivning",
+                    # Website displays 8-digit phone without +47, clean street, and "Kari Moe Hansen"
+                    "main_text_excerpt": "Kontakt daglig leder Kari Moe Hansen på telefon 22 33 44 55 eller besøk oss i Dronningens gate 12, 0152 Oslo.",
+                    "pages": [],
+                }
+            }
+        }
+    }
+    assessment = assess_website_identity(profile)
+    reg_id = assessment["registry_identity"]
+    assert reg_id["phone_match"] is True
+    assert reg_id["street_match"] is True
+    assert reg_id["postcode_match"] is True
+    assert reg_id["city_match"] is True
+    assert reg_id["person_match"] == "Kari Helene Moe Hansen"
+    assert assessment["publishable"] is True
+    assert assessment["score"] >= 0.90

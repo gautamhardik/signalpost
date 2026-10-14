@@ -215,3 +215,58 @@ def test_extract_job_evidence_success(mock_profile):
     assert ev["value"]["jobs"][0]["deadline"] == "2026-10-15"
     assert ev["value"]["jobs"][0]["published_at"] == "2026-09-10"
     assert ev["content_sha256"] is not None
+
+
+def test_direct_posting_html_page_extraction(mock_profile):
+    from norway_company_agent.jobs import is_publishable_job
+
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Seniorkonsulent Cloud | Nordic Tech</title></head>
+    <body>
+      <main>
+        <h1>Seniorkonsulent Cloud</h1>
+        <div class="job-meta">
+          <span class="location">Oslo</span>
+          <span class="deadline">Søknadsfrist: 15.12.2026</span>
+        </div>
+        <div class="job-body">
+          <p>Vi tilbyr fast ansettelse og spennende prosjekter. Stillingsprosent: 100%.</p>
+          <p>Tiltredelse: Snarest.</p>
+        </div>
+      </main>
+    </body>
+    </html>
+    """
+    jobs = extract_jobs_from_html_cards(html, "https://nordictech.no/karriere/seniorkonsulent-cloud", mock_profile)
+    assert len(jobs) == 1
+    job = jobs[0]
+    assert job.job_title == "Seniorkonsulent Cloud"
+    assert job.deadline == "2026-12-15"
+    assert job.location == "Oslo"
+    assert job.extraction_method == "html_page"
+    assert "posting_terms" in job.posting_evidence or "deadline" in job.posting_evidence
+    assert is_publishable_job(job) is True
+
+
+def test_expanded_nordic_ats_job_board_urls():
+    from norway_company_agent.jobs import job_board_url
+
+    assert job_board_url("https://nordictech.talentech.com/careers")
+    assert job_board_url("https://nordictech.mojob.io/jobs")
+    assert job_board_url("https://jobs.ashbyhq.com/nordictech")
+    assert job_board_url("https://nordictech.bamboohr.com/careers")
+    assert job_board_url("https://candidatedna.com/jobs/nordictech")
+
+
+def test_sitemap_is_job_posting_url():
+    from norway_company_agent.site_sources import is_job_posting_url
+
+    assert is_job_posting_url("https://acme.no/karriere/prosjektleder")
+    assert is_job_posting_url("https://acme.no/stillinger/utvikler-12345")
+    assert is_job_posting_url("https://acme.no/careers/senior-architect")
+    assert not is_job_posting_url("https://acme.no/karriere/")
+    assert not is_job_posting_url("https://acme.no/karriere/ledige-stillinger")
+    assert not is_job_posting_url("https://acme.no/de/karriere/entwickler")
+    assert not is_job_posting_url("https://acme.no/personvern")

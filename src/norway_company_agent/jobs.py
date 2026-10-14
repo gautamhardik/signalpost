@@ -86,10 +86,16 @@ LINK_TEXT_PATTERN = re.compile(
 RECRUITER_DOMAINS = {
     "finn.no", "jobbnorge.no", "webcruiter.com", "webcruiter.no", "karrierestart.no",
     "manpower.no", "adecco.no", "nav.no", "linkedin.com",
-    "recman.no", "cruit.no", "easycruit.com", "hr-manager.net",
+    "recman.no", "recman.page", "cruit.no", "easycruit.com", "hr-manager.net",
     "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no",
     "meyerhaugen.no", "cruitive.com", "smartrecruiters.com",
-    "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "icims.com",
+    "workday.com", "myworkdayjobs.com", "taleo.net", "successfactors.eu", "successfactors.com", "icims.com",
+    "greenhouse.io", "lever.co", "personio.de", "personio.com", "recruitee.com", "workable.com",
+    "homerun.co", "varbi.com", "emply.com",
+    "talentech.com", "talentech.io", "mojob.io", "candidatedna.com",
+    "bamboohr.com", "breezy.hr", "zohorecruit.com", "freshteam.com",
+    "jobtoolz.com", "ashbyhq.com", "pinpointhq.com", "recright.com",
+    "grade.com", "intelliplan.eu", "intelliplan.se",
 }
 
 
@@ -106,6 +112,10 @@ JOB_BOARD_DOMAINS = {
     "successfactors.com", "icims.com", "greenhouse.io", "lever.co", "personio.de", "personio.com",
     "recruitee.com", "workable.com", "homerun.co", "varbi.com", "emply.com", "karrierestart.no",
     "finn.no", "nav.no", "linkedin.com",
+    "talentech.com", "talentech.io", "mojob.io", "candidatedna.com",
+    "bamboohr.com", "breezy.hr", "zohorecruit.com", "freshteam.com",
+    "jobtoolz.com", "ashbyhq.com", "pinpointhq.com", "recright.com",
+    "grade.com", "intelliplan.eu", "intelliplan.se",
 }
 NON_TENANT_SUBDOMAINS = {"", "www", "cdn", "static", "assets", "media", "img", "images", "help", "support", "blog"}
 
@@ -169,11 +179,13 @@ def is_publishable_job(job: "JobRecord") -> bool:
         return True
     segments = [seg for seg in urlparse(job.source_url).path.casefold().split("/") if seg]
     page = (job.found_on_url or "").split("#", 1)[0].rstrip("/")
+    page_segments = [seg for seg in urlparse(page).path.casefold().split("/") if seg]
+    page_is_index = not page_segments or page_segments[-1] in CAREER_INDEX_SEGMENTS
     if "ats_listing" not in job.posting_evidence:
-        if job.source_url.split("#", 1)[0].rstrip("/") == page:
-            return False  # card without its own posting page
         if not segments or segments[-1] in CAREER_INDEX_SEGMENTS:
             return False
+        if job.source_url.split("#", 1)[0].rstrip("/") == page and page_is_index:
+            return False  # card without its own posting page on a careers index
     return bool(job.posting_evidence)
 
 
@@ -443,6 +455,45 @@ def extract_jobs_from_html_cards(
         "li.job", "li.stilling", "[data-job-id]"
     ]
     cards = soup.select(", ".join(selectors))
+
+    path_segments = [seg for seg in urlparse(base_url).path.casefold().split("/") if seg]
+    is_posting_path = (
+        len(path_segments) >= 2
+        and any(k in path_segments for k in ("stilling", "stillinger", "karriere", "jobb", "jobs", "career", "vacanc"))
+        and path_segments[-1] not in CAREER_INDEX_SEGMENTS
+    )
+    if is_posting_path and not cards:
+        page_text = soup.get_text(" ", strip=True)
+        if POSTING_HINTS.search(page_text):
+            h1 = soup.select_one("h1, .job-title, .stilling-tittel, .entry-title")
+            title_text = clean_job_title(h1.get_text(" ", strip=True) if h1 else (soup.title.get_text(" ", strip=True) if soup.title else None))
+            if title_text and title_text.casefold() not in GENERIC_CAREER_TITLES:
+                deadline = _extract_deadline_from_text(page_text)
+                published = normalize_date_string(page_text)
+                loc_el = soup.select_one(".location, .job-location, .sted, [data-location]")
+                location = loc_el.get_text(" ", strip=True)[:100] if loc_el else None
+                id_assessment = verify_job_identity(profile, {"title": title_text, "description": page_text[:500], "linked_from_verified_site": True}, base_url)
+                if id_assessment["verified"]:
+                    content_sha = hashlib.sha256(f"{title_text}|{base_url}".encode("utf-8")).hexdigest()
+                    job_id = f"job-{org_nr}-{content_sha[:12]}"
+                    records.append(JobRecord(
+                        job_id=job_id,
+                        company_orgnr=org_nr,
+                        job_title=title_text,
+                        location=location,
+                        employment_type=None,
+                        department=None,
+                        description=page_text[:500],
+                        published_at=published,
+                        deadline=deadline,
+                        source_url=base_url,
+                        retrieved_at=utc_now(),
+                        content_sha256=content_sha,
+                        identity_assessment=id_assessment,
+                        extraction_method="html_page",
+                        posting_evidence=posting_evidence_for(base_url, page_text, deadline),
+                    ))
+                    return records
 
     if not cards:
         links = soup.select("a[href*='/stilling/'], a[href*='/jobb/'], a[href*='/job/'], a[href*='/careers/'], a[href*='/karriere/'], a[href*='/vacancies/'], a[href*='/ledige-stillinger/']")

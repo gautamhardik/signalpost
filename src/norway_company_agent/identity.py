@@ -197,9 +197,13 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     identity_text = f"{candidate_text} {homepage_candidate_text}"
     compact_identity = _compact_identity_text(identity_text)
 
+    clean_reg_street = re.sub(r"[,/].*$", "", registry_street).strip()
     street_match = bool(
         registry_street
-        and _compact_identity_text(registry_street) in compact_identity
+        and (
+            _compact_identity_text(registry_street) in compact_identity
+            or (clean_reg_street and _compact_identity_text(clean_reg_street) in compact_identity)
+        )
     )
 
     postcode_match = bool(
@@ -212,10 +216,20 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         and registry_city in _compact_identity_text(identity_text)
     )
 
-    phone_match = bool(
-        registry_phone
-        and len(registry_phone) >= 8
-        and registry_phone in _compact_digits(identity_text)
+    phone_variants: set[str] = set()
+    if registry_phone:
+        phone_variants.add(registry_phone)
+        if len(registry_phone) == 10 and registry_phone.startswith("47"):
+            phone_variants.add(registry_phone[2:])
+        elif len(registry_phone) == 12 and registry_phone.startswith("0047"):
+            phone_variants.add(registry_phone[4:])
+        elif len(registry_phone) == 8:
+            phone_variants.add("47" + registry_phone)
+
+    digits_identity = _compact_digits(identity_text)
+    phone_match = any(
+        len(pv) >= 8 and pv in digits_identity
+        for pv in phone_variants
     )
 
     # Check registered operational subunits (underenheter) under this parent company
@@ -315,6 +329,17 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
             if full in compact_site or first_last in compact_site:
                 person_match = role.get("name")
                 break
+            # Middle-name tolerance: first and last name appear in order with at most 2 intervening words
+            site_words = compact_site.split()
+            first, last = name_tokens[0], name_tokens[-1]
+            if len(first) >= 2 and len(last) >= 2:
+                for idx, word in enumerate(site_words):
+                    if word == first:
+                        if any(site_words[k] == last for k in range(idx + 1, min(idx + 4, len(site_words)))):
+                            person_match = role.get("name")
+                            break
+                if person_match:
+                    break
     strong_local = street_match or postcode_match or phone_match or subunit_match or bool(person_match)
     local_corroboration = strong_local or city_match
     raw_name_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", str(profile.get("name") or "")).encode("ascii", "ignore").decode().casefold())
