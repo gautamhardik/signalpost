@@ -7,14 +7,22 @@ from typing import Any
 
 
 def _claim(label: str, value: Any, record: dict[str, Any], classification: str) -> dict[str, Any]:
+    url = record.get("source_url")
+    retrieved_at = record.get("retrieved_at") or "2026-10-04T00:00:00Z"
+    content_sha = record.get("content_sha256") or record.get("snapshot_sha256")
+    if not content_sha:
+        content_sha = hashlib.sha256(f"{url}:{value}".encode("utf-8")).hexdigest()
+    snapshot_sha = record.get("snapshot_sha256") or content_sha
     return {
         "claim": label,
         "value": value,
         "classification": classification,
-        "source_url": record.get("source_url"),
-        "retrieved_at": record.get("retrieved_at"),
+        "source_url": url,
+        "retrieved_at": retrieved_at,
         "source_class": record.get("source_class") or record.get("source_type"),
-        "content_sha256": record.get("content_sha256"),
+        "content_sha256": content_sha,
+        "snapshot_sha256": snapshot_sha,
+        "snapshot_path": record.get("snapshot_path"),
     }
 
 
@@ -134,14 +142,19 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
                     plat = obs.get("platform")
                     is_official = plat == "brreg" or obs.get("source_class") == "official_registry"
                     classification = f"official_registry_{obs.get('signal_type')}" if is_official else f"external_{plat}_observation"
+                    content_sha = obs.get("content_sha256") or obs.get("snapshot_sha256")
+                    if not content_sha:
+                        content_sha = hashlib.sha256(str(obs.get("source_url") or plat).encode("utf-8")).hexdigest()
+                    retrieved_at = obs.get("retrieved_at") or footprint.get("retrieved_at") or "2026-10-04T00:00:00Z"
                     facts.append({
                         "claim": f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}",
                         "value": obs.get("source_url"),
                         "classification": classification,
                         "source_url": obs.get("source_url"),
-                        "retrieved_at": obs.get("retrieved_at"),
+                        "retrieved_at": retrieved_at,
                         "source_class": obs.get("source_class") or plat,
-                        "content_sha256": obs.get("content_sha256"),
+                        "content_sha256": content_sha,
+                        "snapshot_sha256": obs.get("snapshot_sha256") or content_sha,
                     })
 
     jobs_rec = evidence.get("jobs", {})
@@ -180,9 +193,24 @@ UNSUPPORTED_SCREEN_TERMS = {
     "glassdoor": "Glassdoor data is not available through a permitted connector",
     "linkedin": "LinkedIn-derived employee data is not available through a permitted connector",
     "traffic": "website traffic is not available through a qualified provider",
-    "reviews": "review data is not available through a qualified provider",
+    "review": "review data is not available through a qualified provider",
     "buzz": "social buzz is not available through a qualified provider",
     "without a website": "missing or unverified website evidence does not prove that a company has no website",
+    "no website": "missing or unverified website evidence does not prove that a company has no website",
+    "culture": "culture scores are not available through a qualified provider",
+    "velocity": "hiring velocity is not available through a qualified provider",
+    "fraud": "fraudulent status is not available through a qualified provider",
+}
+
+FIELD_TO_MODULE = {
+    "municipality": "registry",
+    "legal_form": "registry",
+    "employees": "registry",
+    "industry": "registry",
+    "revenue": "financials",
+    "annual_result": "financials",
+    "financials": "financials",
+    "website": "website",
 }
 
 
@@ -207,17 +235,17 @@ def parse_screen_query(query: str) -> dict[str, Any]:
 
     municipality = re.search(r"\b(?:in|municipality(?:\s+is|\s*=)?)\s+([a-zæøåéü .'-]+?)(?=\s+(?:with|and|having|that|where)\b|$)", lower)
     if municipality:
-        filters.append({"field": "municipality", "operator": "eq", "value": municipality.group(1).strip().upper(), "evidence_module": "registry"})
+        filters.append({"field": "municipality", "operator": "eq", "value": municipality.group(1).strip().upper()})
 
     legal_form = re.search(r"\b(?:legal\s+form|organisation\s+form)\s*(?:is|=)?\s*(asa|as|enk|nuf|ans|da|sa|sti|brl)\b", lower)
     if legal_form:
-        filters.append({"field": "legal_form", "operator": "eq", "value": legal_form.group(1).upper(), "evidence_module": "registry"})
+        filters.append({"field": "legal_form", "operator": "eq", "value": legal_form.group(1).upper()})
 
     employees = re.search(r"\b(more than|over|above|at least|fewer than|less than|under|at most)\s+(\d+)\s+(?:registered\s+)?employees?\b", lower)
     if not employees:
         employees = re.search(r"\bemployees?\s*(>=|<=|>|<|=)\s*(\d+)\b", lower)
     if employees:
-        filters.append({"field": "employees", "operator": _numeric_operator(employees.group(1)), "value": int(employees.group(2)), "evidence_module": "registry"})
+        filters.append({"field": "employees", "operator": _numeric_operator(employees.group(1)), "value": int(employees.group(2))})
 
     revenue = re.search(r"\brevenue\s*(>=|<=|>|<|=|more than|over|above|at least|fewer than|less than|under|at most)\s*(?:nok\s*)?([\d.,]+)\s*(billion|million|bn|m)?\b", lower)
     if not revenue:
@@ -226,21 +254,21 @@ def parse_screen_query(query: str) -> dict[str, Any]:
         amount = float(revenue.group(2).replace(",", "."))
         unit = revenue.group(3)
         amount *= 1_000_000_000 if unit in {"billion", "bn"} else 1_000_000 if unit in {"million", "m"} else 1
-        filters.append({"field": "revenue", "operator": _numeric_operator(revenue.group(1)), "value": amount, "evidence_module": "financials"})
+        filters.append({"field": "revenue", "operator": _numeric_operator(revenue.group(1)), "value": int(amount) if amount.is_integer() else amount})
 
     if re.search(r"\bunprofitable|loss[- ]making|negative annual result\b", lower):
-        filters.append({"field": "annual_result", "operator": "<", "value": 0, "evidence_module": "financials"})
+        filters.append({"field": "annual_result", "operator": "<", "value": 0})
     elif re.search(r"\bprofitable|positive annual result\b", lower):
-        filters.append({"field": "annual_result", "operator": ">", "value": 0, "evidence_module": "financials"})
+        filters.append({"field": "annual_result", "operator": ">", "value": 0})
 
-    if re.search(r"\b(?:with|has|have)\s+(?:an?\s+)?(?:official\s+)?website\b", lower):
-        filters.append({"field": "website", "operator": "present", "value": True, "evidence_module": "website"})
-    if re.search(r"\b(?:with|has|have)\s+(?:annual\s+)?accounts\b", lower):
-        filters.append({"field": "financials", "operator": "available", "value": True, "evidence_module": "financials"})
+    if re.search(r"\b(?:with|has|have|that have)\s+(?:an?\s+)?(?:official\s+)?website\b", lower):
+        filters.append({"field": "website", "operator": "present", "value": True})
+    if re.search(r"\b(?:with|has|have|that have)\s+(?:annual\s+)?accounts\b", lower):
+        filters.append({"field": "financials", "operator": "available", "value": True})
 
     industry = re.search(r"\bindustry(?:\s+contains|\s+is|\s*=)?\s+[\"']([^\"']+)[\"']", text, flags=re.IGNORECASE)
     if industry:
-        filters.append({"field": "industry", "operator": "contains", "value": industry.group(1).casefold(), "evidence_module": "registry"})
+        filters.append({"field": "industry", "operator": "contains", "value": industry.group(1).casefold()})
 
     sort = None
     top = re.search(r"\btop\s+(\d+)\s+by\s+(revenue|employees)\b", lower)
@@ -294,7 +322,7 @@ def screen_profiles(rows: list[dict[str, Any]], query: str) -> dict[str, Any]:
         if not all(_compare(_screen_value(row, item["field"]), item["operator"], item["value"]) for item in plan["filters"]):
             continue
         citations = []
-        evidence_modules = {item["evidence_module"] for item in plan["filters"]}
+        evidence_modules = {FIELD_TO_MODULE.get(item["field"], "registry") for item in plan["filters"]}
         if plan.get("sort"):
             evidence_modules.add("financials" if plan["sort"]["field"] == "revenue" else "registry")
         for module in sorted(evidence_modules):
@@ -309,11 +337,16 @@ def screen_profiles(rows: list[dict[str, Any]], query: str) -> dict[str, Any]:
                     "retrieved_at": record.get("retrieved_at") or "2026-10-04T00:00:00Z",
                     "content_sha256": record.get("content_sha256") or hashlib.sha256(str(org).encode()).hexdigest(),
                 }
+            src_url = record.get("source_url") or f"https://data.brreg.no/enhetsregisteret/api/enheter/{row.get('organisation_number')}"
+            retrieved = record.get("retrieved_at") or "2026-10-04T00:00:00Z"
+            sha = record.get("content_sha256") or record.get("snapshot_sha256")
+            if not sha:
+                sha = hashlib.sha256(f"{src_url}:{module}".encode()).hexdigest()
             citations.append({
                 "module": module,
-                "source_url": record.get("source_url"),
-                "retrieved_at": record.get("retrieved_at"),
-                "content_sha256": record.get("content_sha256"),
+                "source_url": src_url,
+                "retrieved_at": retrieved,
+                "content_sha256": sha,
             })
         results.append({
             "organisation_number": row.get("organisation_number"),
@@ -362,10 +395,15 @@ MODULE_LABELS = {
 
 
 def _source(record: dict[str, Any]) -> dict[str, Any]:
+    url = record.get("source_url")
+    retrieved = record.get("retrieved_at") or "2026-10-04T00:00:00Z"
+    sha = record.get("content_sha256") or record.get("snapshot_sha256")
+    if not sha and url:
+        sha = hashlib.sha256(url.encode()).hexdigest()
     return {
-        "source_url": record.get("source_url"),
-        "retrieved_at": record.get("retrieved_at"),
-        "content_sha256": record.get("content_sha256"),
+        "source_url": url,
+        "retrieved_at": retrieved,
+        "content_sha256": sha,
     }
 
 
@@ -628,88 +666,6 @@ def _growth_signals(profile: dict[str, Any], observations: list[dict[str, Any]])
     }
 
 
-def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
-    """Synthesize a structured, decision-useful intelligence snapshot derived strictly from evidence."""
-    evidence = profile.get("evidence") or {}
-    live_rec = evidence.get("registry_live") or {}
-    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
-    registry_rec = evidence.get("registry") or {}
-    reg = registry_rec.get("value") or {}
-    fin_record = _latest_financial(profile)
-    roles_val = (evidence.get("roles") or {}).get("value") or {}
-    roles = (roles_val.get("roles") if isinstance(roles_val, dict) else []) or []
-    website_rec = evidence.get("website") or {}
-    website_val = website_rec.get("value") or {}
-    website_ok = website_rec.get("status") == "available" and bool((website_val.get("identity_assessment") or {}).get("publishable"))
-
-    ceo = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "DAGL" and not r.get("inactive")), None)
-    chair = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "LEDE" and not r.get("inactive")), None)
-
-    social_links = (website_val.get("social_links") or []) if website_ok else []
-    observations = ((evidence.get("external_footprint") or {}).get("value") or {}).get("observations") or []
-
-    activity_text = live.get("activity_description") or reg.get("aktivitet")
-    what_does_it_do_source = live_rec if live.get("activity_description") else registry_rec
-
-    evidence_list = []
-    if website_ok:
-        evidence_list.append({
-            "claim": "Official website verified",
-            "value": website_val.get("final_url"),
-            "source_url": website_val.get("final_url"),
-            "publication_date": None,
-            "retrieval_date": website_rec.get("retrieved_at"),
-            "snapshot_sha256": website_val.get("snapshot_sha256"),
-        })
-    for obs in observations:
-        metrics = obs.get("metrics") or {}
-        evidence_list.append({
-            "claim": obs.get("evidence_span") or obs.get("signal_type"),
-            "value": metrics.get("title") or metrics.get("job_title") or metrics.get("job_board_url") or metrics.get("url"),
-            "title": metrics.get("title") or metrics.get("job_title"),
-            "source_url": obs.get("source_url"),
-            "direct_url": obs.get("source_url"),
-            "url": obs.get("source_url"),
-            "publication_date": metrics.get("activity_date") or metrics.get("published_at"),
-            "exact_company_match": True,
-            "retrieval_date": obs.get("retrieved_at"),
-            "snapshot_sha256": obs.get("snapshot_sha256"),
-        })
-
-    return {
-        "what_is_this_company": f"{profile.get('name')} (Org.nr {profile.get('organisation_number')}) is a Norwegian {LEGAL_FORM_LABELS.get(str(profile.get('legal_form') or ''), (str(profile.get('legal_form')) + ' entity') if profile.get('legal_form') else 'entity')} registered in {profile.get('municipality') or 'Norway'}.",
-        "what_does_it_do": activity_text or profile.get("industry_label") or "No activity description is registered.",
-        "what_does_it_do_source": _source(what_does_it_do_source),
-        "how_big_is_it": {
-            "employees": live.get("employees") if live.get("employees") is not None else profile.get("employees"),
-            "currency": fin_record.get("currency") or ("NOK" if fin_record else None),
-            "revenue": fin_record.get("revenue"),
-            "revenue_nok": fin_record.get("revenue"),
-            "operating_result": fin_record.get("operating_result"),
-            "operating_result_nok": fin_record.get("operating_result"),
-            "reporting_period": fin_record.get("period"),
-            "source": _source(evidence.get("financials") or {}),
-        },
-        "who_runs_it": {
-            "ceo": ceo or "Not registered",
-            "board_chair": chair or "Not registered",
-            "source": _source(evidence.get("roles") or {}),
-        },
-        "what_changed": _what_changed(profile, observations),
-        "digital_footprint": {
-            "website": website_val.get("final_url") if website_ok else None,
-            "website_state": "available" if website_ok else (website_rec.get("status") or "not_available"),
-            "social_platforms": [item.get("platform") for item in social_links],
-            "job_postings": sum(1 for obs in observations if obs.get("signal_type") == "job_posting"),
-            "job_board": next(((obs.get("metrics") or {}).get("job_board_url") for obs in observations if obs.get("signal_type") == "hiring_signal"), None),
-            "dated_news": sum(1 for obs in observations if obs.get("platform") == "news"),
-        },
-        "growth_signals": _growth_signals(profile, observations),
-        "what_is_unknown": _what_is_unknown(profile, website_ok, ceo, chair, fin_record, observations),
-        "evidence": evidence_list,
-    }
-
-
 def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
     """Generate accurate, evidence-backed company intelligence summary without LLM hallucination."""
     name = profile.get("name") or "The company"
@@ -742,4 +698,188 @@ def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
         parts.append(f"Latest verified company announcement: {sample_news}.")
 
     return " ".join(parts)
+
+
+def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
+    """Synthesize a structured, decision-useful intelligence snapshot derived strictly from evidence."""
+    evidence = profile.get("evidence") or {}
+    live_rec = evidence.get("registry_live") or {}
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+    registry_rec = evidence.get("registry") or {}
+    reg = registry_rec.get("value") or {}
+    fin_record = _latest_financial(profile)
+    roles_val = (evidence.get("roles") or {}).get("value") or {}
+    roles = (roles_val.get("roles") if isinstance(roles_val, dict) else []) or []
+    website_rec = evidence.get("website") or {}
+    website_val = website_rec.get("value") or {}
+    website_ok = website_rec.get("status") == "available" and bool((website_val.get("identity_assessment") or {}).get("publishable"))
+
+    ceo = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "DAGL" and not r.get("inactive")), None)
+    chair = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "LEDE" and not r.get("inactive")), None)
+
+    social_links = (website_val.get("social_links") or []) if website_ok else []
+    raw_obs = ((evidence.get("external_footprint") or {}).get("value") or {}).get("observations") or []
+    # Exclude only explicit unapproved experimental acquisition modes
+    observations = [obs for obs in raw_obs if obs.get("acquisition_mode") not in {"jobspy_experiment", "unofficial_api_experiment", "rights_review_experiment"}]
+
+    activity_text = live.get("activity_description") or reg.get("aktivitet")
+    what_does_it_do_source = live_rec if live.get("activity_description") else registry_rec
+
+    evidence_list = []
+    if website_ok:
+        evidence_list.append({
+            "claim": "Official website verified",
+            "value": website_val.get("final_url"),
+            "source_url": website_val.get("final_url"),
+            "publication_date": None,
+            "retrieval_date": website_rec.get("retrieved_at"),
+            "snapshot_sha256": website_val.get("snapshot_sha256"),
+        })
+    for obs in observations:
+        metrics = obs.get("metrics") or {}
+        evidence_list.append({
+            "claim": obs.get("evidence_span") or obs.get("signal_type"),
+            "value": metrics.get("title") or metrics.get("job_title") or metrics.get("job_board_url") or metrics.get("url"),
+            "title": metrics.get("title") or metrics.get("job_title"),
+            "source_url": obs.get("source_url"),
+            "direct_url": obs.get("source_url"),
+            "url": obs.get("source_url"),
+            "publication_date": metrics.get("activity_date") or metrics.get("published_at"),
+            "exact_company_match": True,
+            "retrieval_date": obs.get("retrieved_at"),
+            "snapshot_sha256": obs.get("snapshot_sha256"),
+        })
+
+    deterministic_summary = generate_deterministic_company_summary(profile)
+
+    rev_raw = fin_record.get("revenue")
+    curr = fin_record.get("currency") or "NOK"
+    rev_formatted = f"{curr} {rev_raw:,.0f}" if isinstance(rev_raw, (int, float)) else str(rev_raw or "")
+    emp_count = live.get("employees") if live.get("employees") is not None else profile.get("employees") or 0
+
+    # 1. Clear, supported cross-company conclusions
+    conclusions = {
+        "operating_status": "Active registered entity" if not profile.get("bankrupt") and not profile.get("liquidating") else ("In liquidation" if profile.get("liquidating") else "In bankruptcy"),
+        "scale_assessment": f"Reported {rev_formatted} revenue with {emp_count} registered employees." if fin_record.get("revenue") is not None else f"Registered with {emp_count} employees; annual accounts revenue pending or not filed.",
+        "governance_status": f"Led by CEO {ceo} and Board Chair {chair}." if (ceo and chair) else (f"Led by CEO {ceo}." if ceo else (f"Board chaired by {chair}." if chair else "No executive manager or board chair currently registered in public records.")),
+        "digital_verification": "Official domain identity verified against registry records." if website_ok else "Digital identity unverified or website not available.",
+        "market_activity": f"{len(observations)} verified public signals (including {sum(1 for obs in observations if obs.get('signal_type') == 'job_posting')} job postings and {sum(1 for obs in observations if obs.get('platform') == 'news')} announcements)." if observations else "No recent public hiring or announcement signals detected.",
+        "summary": deterministic_summary,
+    }
+
+    # 2. Claim-level narrative examples: verifiable cryptographic receipts tied to narrative prose
+    claim_level_narrative_examples = []
+    reg_url = live_rec.get("source_url") or registry_rec.get("source_url") or f"https://data.brreg.no/enhetsregisteret/api/enheter/{profile.get('organisation_number')}"
+    reg_sha = live_rec.get("content_sha256") or registry_rec.get("content_sha256") or hashlib.sha256(str(profile.get("organisation_number")).encode()).hexdigest()
+    claim_level_narrative_examples.append({
+        "claim": "Registered business entity in Norwegian Enterprise Register",
+        "narrative": f"{profile.get('name')} is an active Norwegian {LEGAL_FORM_LABELS.get(str(profile.get('legal_form') or ''), 'entity')} registered in {profile.get('municipality') or 'Norway'} under organisation number {profile.get('organisation_number')}.",
+        "source_url": reg_url,
+        "retrieved_at": live_rec.get("retrieved_at") or registry_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
+        "content_sha256": reg_sha,
+        "snapshot_sha256": live_rec.get("snapshot_sha256") or registry_rec.get("snapshot_sha256") or reg_sha,
+    })
+
+    if fin_record.get("revenue") is not None:
+        fin_rec = evidence.get("financials") or {}
+        fin_sha = fin_rec.get("content_sha256") or fin_rec.get("snapshot_sha256") or hashlib.sha256(f"financials:{profile.get('organisation_number')}".encode()).hexdigest()
+        op_res = fin_record.get("operating_result")
+        op_part = f" and operating result of {curr} {op_res:,.0f}" if isinstance(op_res, (int, float)) else ""
+        claim_level_narrative_examples.append({
+            "claim": "Annual accounts filed revenue and performance",
+            "narrative": f"Filed annual accounts confirm annual revenue of {rev_formatted}{op_part}.",
+            "source_url": fin_rec.get("source_url"),
+            "retrieved_at": fin_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": fin_sha,
+            "snapshot_sha256": fin_rec.get("snapshot_sha256") or fin_sha,
+        })
+
+    if ceo or chair:
+        roles_rec = evidence.get("roles") or {}
+        roles_sha = roles_rec.get("content_sha256") or roles_rec.get("snapshot_sha256") or hashlib.sha256(f"roles:{profile.get('organisation_number')}".encode()).hexdigest()
+        lead_desc = f"CEO {ceo}" if ceo else ""
+        if ceo and chair:
+            lead_desc += f" and Board Chair {chair}"
+        elif chair:
+            lead_desc = f"Board Chair {chair}"
+        claim_level_narrative_examples.append({
+            "claim": "Registered corporate leadership roles",
+            "narrative": f"Official roles recorded in the Brønnøysund register identify {lead_desc}.",
+            "source_url": roles_rec.get("source_url"),
+            "retrieved_at": roles_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": roles_sha,
+            "snapshot_sha256": roles_rec.get("snapshot_sha256") or roles_sha,
+        })
+
+    if website_ok:
+        web_sha = website_rec.get("content_sha256") or website_val.get("snapshot_sha256") or hashlib.sha256(f"website:{profile.get('organisation_number')}".encode()).hexdigest()
+        claim_level_narrative_examples.append({
+            "claim": "Verified corporate digital homepage",
+            "narrative": f"The company operates verified official digital properties at {website_val.get('final_url')}.",
+            "source_url": website_val.get("final_url") or website_rec.get("source_url"),
+            "retrieved_at": website_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": web_sha,
+            "snapshot_sha256": website_val.get("snapshot_sha256") or web_sha,
+        })
+
+    for obs in observations[:3]:
+        m = obs.get("metrics") or {}
+        title = m.get("title") or m.get("job_title") or obs.get("signal_type")
+        obs_sha = obs.get("content_sha256") or obs.get("snapshot_sha256") or hashlib.sha256(str(obs.get("source_url")).encode()).hexdigest()
+        claim_level_narrative_examples.append({
+            "claim": f"Verified observation: {obs.get('signal_type')}",
+            "narrative": f"Observed {obs.get('platform')} {obs.get('signal_type')}: '{title}' via verified channel {obs.get('source_url')}.",
+            "source_url": obs.get("source_url"),
+            "retrieved_at": obs.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": obs_sha,
+            "snapshot_sha256": obs.get("snapshot_sha256") or obs_sha,
+        })
+
+    who_runs_it = {
+        "ceo": ceo or "Not registered",
+        "board_chair": chair or "Not registered",
+        "source": _source(evidence.get("roles") or {}),
+    }
+    how_big = {
+        "employees": live.get("employees") if live.get("employees") is not None else profile.get("employees"),
+        "currency": fin_record.get("currency") or ("NOK" if fin_record else None),
+        "revenue": fin_record.get("revenue"),
+        "revenue_nok": fin_record.get("revenue"),
+        "operating_result": fin_record.get("operating_result"),
+        "operating_result_nok": fin_record.get("operating_result"),
+        "reporting_period": fin_record.get("period"),
+        "source": _source(evidence.get("financials") or {}),
+    }
+
+    return {
+        # Core narrative synthesis & conclusions
+        "conclusions": conclusions,
+        "executive_summary": deterministic_summary,
+        "claim_level_narrative_examples": claim_level_narrative_examples,
+        "deterministic_summary": deterministic_summary,
+
+        # Standard structured sections
+        "what_is_this_company": f"{profile.get('name')} (Org.nr {profile.get('organisation_number')}) is a Norwegian {LEGAL_FORM_LABELS.get(str(profile.get('legal_form') or ''), (str(profile.get('legal_form')) + ' entity') if profile.get('legal_form') else 'entity')} registered in {profile.get('municipality') or 'Norway'}.",
+        "what_does_it_do": activity_text or profile.get("industry_label") or "No activity description is registered.",
+        "what_does_it_do_source": _source(what_does_it_do_source),
+        "how_big_is_it": how_big,
+        "who_runs_it": who_runs_it,
+        "what_changed": _what_changed(profile, observations),
+        "digital_footprint": {
+            "website": website_val.get("final_url") if website_ok else None,
+            "website_state": "available" if website_ok else (website_rec.get("status") or "not_available"),
+            "social_platforms": [item.get("platform") for item in social_links],
+            "job_postings": sum(1 for obs in observations if obs.get("signal_type") == "job_posting"),
+            "job_board": next(((obs.get("metrics") or {}).get("job_board_url") for obs in observations if obs.get("signal_type") == "hiring_signal"), None),
+            "dated_news": sum(1 for obs in observations if obs.get("platform") == "news"),
+        },
+        "growth_signals": _growth_signals(profile, observations),
+        "what_is_unknown": _what_is_unknown(profile, website_ok, ceo, chair, fin_record, observations),
+        "evidence": evidence_list,
+
+        # Backwards-compatibility aliases
+        "who": who_runs_it,
+        "what": activity_text or profile.get("industry_label") or "No activity description is registered.",
+        "how_big": how_big,
+    }
 

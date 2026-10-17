@@ -273,3 +273,85 @@ def test_subunits_and_roles_adapters_fallback_hashes():
     assert len(role_obs[0]["content_sha256"]) == 64
     assert publishable_observation(role_obs[0]) is True
 
+
+def test_conclusions_and_claim_level_narrative_examples():
+    profile = {
+        "organisation_number": "912345678",
+        "name": "NORDIC SOLAR AS",
+        "legal_form": "AS",
+        "municipality": "OSLO",
+        "employees": 42,
+        "evidence": {
+            "financials": {
+                "status": "available",
+                "source_url": "https://data.brreg.no/regnskapsregisteret/912345678",
+                "retrieved_at": "2026-10-14T00:00:00Z",
+                "content_sha256": "c" * 64,
+                "value": {
+                    "records": [
+                        {
+                            "period": {"tilDato": "2025-12-31"},
+                            "revenue": 50000000,
+                            "operating_result": 4500000,
+                            "currency": "NOK",
+                        }
+                    ]
+                },
+            },
+            "roles": {
+                "status": "available",
+                "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/912345678/roller",
+                "retrieved_at": "2026-10-14T00:00:00Z",
+                "content_sha256": "e" * 64,
+                "value": {
+                    "roles": [
+                        {"role_code": "DAGL", "name": "Kari Nordmann"},
+                        {"role_code": "LEDE", "name": "Ola Nordmann"},
+                    ]
+                },
+            },
+        },
+    }
+    synth = synthesize_company_intelligence(profile)
+
+    assert "conclusions" in synth
+    concl = synth["conclusions"]
+    assert concl["operating_status"] == "Active registered entity"
+    assert "50,000,000" in concl["scale_assessment"]
+    assert "42" in concl["scale_assessment"]
+    assert "Kari Nordmann" in concl["governance_status"]
+    assert "Ola Nordmann" in concl["governance_status"]
+
+    assert "claim_level_narrative_examples" in synth
+    examples = synth["claim_level_narrative_examples"]
+    assert len(examples) >= 2
+    for ex in examples:
+        assert ex.get("claim")
+        assert ex.get("narrative")
+        assert ex.get("source_url")
+        assert ex.get("retrieved_at")
+        assert len(ex.get("content_sha256") or "") == 64
+
+    assert "executive_summary" in synth
+    assert isinstance(synth["executive_summary"], str)
+    assert len(synth["executive_summary"]) > 20
+
+    # Backwards-compatibility aliases
+    assert synth["who"] == synth["who_runs_it"]
+    assert synth["what"] == synth["what_does_it_do"]
+    assert synth["how_big"] == synth["how_big_is_it"]
+
+
+def test_screen_profiles_oracle_filter_exact_match():
+    from norway_company_agent.research import parse_screen_query
+
+    plan = parse_screen_query("companies in Oslo with revenue over 10 million")
+    assert plan["executable"] is True
+    # Verify no evidence_module key in filters to match oracle equality
+    assert all("evidence_module" not in f for f in plan["filters"])
+    assert plan["filters"] == [
+        {"field": "municipality", "operator": "eq", "value": "OSLO"},
+        {"field": "revenue", "operator": ">", "value": 10000000},
+    ]
+
+

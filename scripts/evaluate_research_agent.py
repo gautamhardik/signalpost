@@ -25,7 +25,13 @@ def main() -> None:
     suite = json.loads(Path(args.suite).read_text(encoding="utf-8"))
 
     single_spec = suite["single_company"]
-    single = answer_profile(by_org[single_spec["organisation_number"]], single_spec["question"])
+    single_org = single_spec["organisation_number"]
+    single_row = by_org.get(single_org)
+    if single_row is None:
+        from norway_company_agent.batch import load_profiles
+        fallback_rows, _ = load_profiles(None, [single_org])
+        single_row = fallback_rows[0] if fallback_rows else {"organisation_number": single_org}
+    single = answer_profile(single_row, single_spec["question"])
     single_supported = len(single["facts"]) >= single_spec["minimum_facts"] and all(
         item.get("source_url") and item.get("retrieved_at") and item.get("content_sha256") for item in single["facts"]
     )

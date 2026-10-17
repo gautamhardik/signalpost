@@ -40,7 +40,7 @@ from norway_company_agent.discovery import (  # noqa: E402
 )
 from norway_company_agent.evidence import evidence, normalize_evidence_states, utc_now  # noqa: E402
 from norway_company_agent.evidence_store import EvidenceStore, attach_observation_snapshots, snapshot_website_pages, strip_transient_bytes  # noqa: E402
-from norway_company_agent.external_footprint import aggregate_footprint, extract_profile_footprint_observations  # noqa: E402
+from norway_company_agent.external_footprint import aggregate_footprint, extract_profile_footprint_observations, publishable_observation  # noqa: E402
 from norway_company_agent.http import fetch_json  # noqa: E402
 from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
 from norway_company_agent.official import fetch_official_modules, merge_live_registry  # noqa: E402
@@ -393,7 +393,7 @@ def main() -> None:
                     page_refs = snapshot_website_pages(store, website_record)
                     attach_observation_snapshots(observations, page_refs, (website_record.get("value") or {}).get("final_url"))
                     summary = aggregate_footprint(observations)
-                    summary["observations"] = observations
+                    summary["observations"] = [item for item in observations if publishable_observation(item)]
                     profile["evidence"]["external_footprint"] = evidence(
                         "external_footprint",
                         "available" if observations else "not_available",
