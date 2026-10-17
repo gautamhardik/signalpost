@@ -38,6 +38,7 @@ SIGNAL_TYPES = {
     "review",
     "review_summary",
     "job_posting",
+    "hiring_signal",
     "workforce_snapshot",
     "public_post",
     "public_mention",

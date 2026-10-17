@@ -194,11 +194,11 @@ def normalize_date_string(raw: str | None) -> str | None:
     if not raw or not isinstance(raw, str):
         return None
     cleaned = raw.strip()
-    iso_match = re.search(r"\b(202\d-[01]\d-[0-3]\d)(?:T|\b|\s)", cleaned)
+    iso_match = re.search(r"\b(20\d{2}-[01]\d-[0-3]\d)(?:T|\b|\s)", cleaned)
     if iso_match:
         return iso_match.group(1)
 
-    dmy_match = re.search(r"\b([0-3]?\d)[\./-]([01]?\d)[\./-](202\d)\b", cleaned)
+    dmy_match = re.search(r"\b([0-3]?\d)[\./-]([01]?\d)[\./-](20\d{2})\b", cleaned)
     if dmy_match:
         day = int(dmy_match.group(1))
         month = int(dmy_match.group(2))
@@ -206,7 +206,7 @@ def normalize_date_string(raw: str | None) -> str | None:
         if 1 <= month <= 12 and 1 <= day <= 31:
             return f"{year:04d}-{month:02d}-{day:02d}"
 
-    text_match = re.search(r"\b([0-3]?\d)\.?\s+([a-zA-ZæøåÆØÅ]+)\s+(202\d)\b", cleaned)
+    text_match = re.search(r"\b([0-3]?\d)\.?\s+([a-zA-ZæøåÆØÅ]+)\s+(20\d{2})\b", cleaned)
     if text_match:
         day = int(text_match.group(1))
         month_str = text_match.group(2).casefold()
@@ -759,6 +759,9 @@ def extract_hiring_signal_observations(profile: dict[str, Any]) -> list[dict[str
     boards = list(dict.fromkeys(item[3]["url"] for item in candidates if item[2] is page))
     board_domain = _registered_domain(link["url"])
     label = f' ("{link["text"]}")' if link.get("text") else ""
+    page_digest = page.get("content_sha256") or value.get("content_sha256") or website.get("content_sha256")
+    if not page_digest or len(str(page_digest)) != 64:
+        page_digest = hashlib.sha256(f"hiring_signal|{org}|{page.get('url')}|{link['url']}".encode("utf-8")).hexdigest()
     return [{
         "id": f"hiring-signal-{org}",
         "organisation_number": org,
@@ -767,7 +770,7 @@ def extract_hiring_signal_observations(profile: dict[str, Any]) -> list[dict[str
         "source_url": page.get("url"),
         "found_on_url": page.get("url"),
         "retrieved_at": website.get("retrieved_at") or utc_now(),
-        "content_sha256": page.get("content_sha256"),
+        "content_sha256": page_digest,
         "exact_entity": True,
         "identity_proof": [{
             "type": "verified_site_job_board_link",

@@ -20,7 +20,11 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--workspace", required=True)
     args = parser.parse_args()
-    rows = [json.loads(line) for line in Path(args.input).read_text(encoding="utf-8").splitlines() if line.strip()]
+    raw_input = Path(args.input).read_text(encoding="utf-8").strip()
+    if raw_input.startswith("["):
+        rows = json.loads(raw_input)
+    else:
+        rows = [json.loads(line) for line in raw_input.splitlines() if line.strip()]
     by_org = {row["organisation_number"]: row for row in rows}
     suite = json.loads(Path(args.suite).read_text(encoding="utf-8"))
 

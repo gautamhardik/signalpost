@@ -122,6 +122,17 @@ def test_careers_page_without_a_job_board_is_not_a_hiring_signal():
     assert extract_hiring_signal_observations(profile) == []
 
 
+def test_hiring_signal_fallback_hash_when_page_content_sha256_missing():
+    from norway_company_agent.external_footprint import publishable_observation
+    board = {"url": "https://equinor.wd3.myworkdayjobs.com/EQNR", "text": "See open positions", "kind": "link"}
+    profile = _hiring_profile([
+        {"url": "https://www.equinor.com/careers", "title": "Careers", "job_board_links": [board]},
+    ])
+    [signal] = extract_hiring_signal_observations(profile)
+    assert len(signal["content_sha256"]) == 64
+    assert publishable_observation(signal) is True
+
+
 # --- crawl targets --------------------------------------------------------------------
 
 def test_careers_and_news_pages_get_crawl_slots():
