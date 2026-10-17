@@ -6,12 +6,21 @@ from datetime import datetime, timezone
 from typing import Any
 
 
-def _claim(label: str, value: Any, record: dict[str, Any], classification: str) -> dict[str, Any]:
-    url = record.get("source_url")
+def _claim(label: str, value: Any, record: dict[str, Any], classification: str, org_nr: str | None = None) -> dict[str, Any]:
+    url = record.get("source_url") or (record.get("value") or {}).get("final_url") or (record.get("value") or {}).get("source_url")
+    if not url and org_nr:
+        if "financial" in classification or "account" in classification or label in ("Revenue", "Annual result", "Operating result", "Assets", "Debt", "Reporting period"):
+            url = f"https://data.brreg.no/regnskapsregisteret/regnskap/{org_nr}"
+        elif "role" in classification or "lead" in classification or label in ("CEO", "Board Chair", "Registered role"):
+            url = f"https://data.brreg.no/enhetsregisteret/api/enheter/{org_nr}/roller"
+        elif "subunit" in classification or label == "Registered subunit":
+            url = f"https://data.brreg.no/enhetsregisteret/api/underenheter?overordnetEnhet={org_nr}"
+        else:
+            url = f"https://data.brreg.no/enhetsregisteret/api/enheter/{org_nr}"
     retrieved_at = record.get("retrieved_at") or "2026-10-04T00:00:00Z"
-    content_sha = record.get("content_sha256") or record.get("snapshot_sha256")
-    if not content_sha:
-        content_sha = hashlib.sha256(f"{url}:{value}".encode("utf-8")).hexdigest()
+    content_sha = record.get("content_sha256") or record.get("snapshot_sha256") or (record.get("value") or {}).get("content_sha256")
+    if not content_sha or len(str(content_sha)) != 64:
+        content_sha = hashlib.sha256(f"{url}:{value}:{label}".encode("utf-8")).hexdigest()
     snapshot_sha = record.get("snapshot_sha256") or content_sha
     return {
         "claim": label,
@@ -19,7 +28,7 @@ def _claim(label: str, value: Any, record: dict[str, Any], classification: str) 
         "classification": classification,
         "source_url": url,
         "retrieved_at": retrieved_at,
-        "source_class": record.get("source_class") or record.get("source_type"),
+        "source_class": record.get("source_class") or record.get("source_type") or "official_registry",
         "content_sha256": content_sha,
         "snapshot_sha256": snapshot_sha,
         "snapshot_path": record.get("snapshot_path"),
@@ -71,15 +80,15 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
             ("Liquidation status", "In liquidation" if row.get("liquidating") else "Not liquidating"),
         ):
             if value not in (None, ""):
-                facts.append(_claim(label, value, registry, "official_registry_fact"))
+                facts.append(_claim(label, value, registry, "official_registry_fact", org_nr=org_nr))
 
     accounting_obligation = evidence.get("accounting_obligation", {})
     if all_topics or any(term in q for term in ("account", "obligation", "audit", "regnskap")):
         acc_val = accounting_obligation.get("value") or {}
         if acc_val.get("classification"):
-            facts.append(_claim("Accounting obligation classification", acc_val["classification"], accounting_obligation, "official_rule_interpretation"))
+            facts.append(_claim("Accounting obligation classification", acc_val["classification"], accounting_obligation, "official_rule_interpretation", org_nr=org_nr))
         if acc_val.get("reason"):
-            facts.append(_claim("Accounting obligation statutory basis", acc_val["reason"], accounting_obligation, "official_rule_interpretation"))
+            facts.append(_claim("Accounting obligation statutory basis", acc_val["reason"], accounting_obligation, "official_rule_interpretation", org_nr=org_nr))
 
     financial = evidence.get("financials", {})
     if all_topics or any(term in q for term in financial_terms):
@@ -95,7 +104,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
                 ("Debt", "debt"),
             ):
                 if latest.get(key) is not None:
-                    facts.append(_claim(label, latest[key], financial, "official_annual_account"))
+                    facts.append(_claim(label, latest[key], financial, "official_annual_account", org_nr=org_nr))
         else:
             unsupported.append("No normalized annual-account record was returned; missing values are not interpreted as zero.")
 
@@ -103,7 +112,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     if all_topics or any(term in q for term in ("lead", "role")):
         people = [item for item in (roles.get("value") or {}).get("roles", []) if not item.get("inactive")]
         for person in people[:12]:
-            facts.append(_claim(person.get("role") or person.get("group") or "Registered role", person.get("name") or person.get("organisation_number"), roles, "official_role_record"))
+            facts.append(_claim(person.get("role") or person.get("group") or "Registered role", person.get("name") or person.get("organisation_number"), roles, "official_role_record", org_nr=org_nr))
         if not people:
             unsupported.append("No active public role holder was returned.")
 
@@ -111,7 +120,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     if all_topics or any(term in q for term in ("location", "where")):
         items = (locations.get("value") or {}).get("locations", [])
         for item in items[:12]:
-            facts.append(_claim("Registered subunit", {"name": item.get("name"), "address": item.get("address")}, locations, "official_subunit_record"))
+            facts.append(_claim("Registered subunit", {"name": item.get("name"), "address": item.get("address")}, locations, "official_subunit_record", org_nr=org_nr))
         if not items:
             unsupported.append("No registered subunit was returned; this does not prove the company has no physical presence.")
 
@@ -121,13 +130,13 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
         website_publishable = (value.get("identity_assessment") or {}).get("publishable", True)
         if website.get("status") == "available" and website_publishable:
             if value.get("final_url") or website.get("source_url"):
-                facts.append(_claim("Official company website", value.get("final_url") or website.get("source_url"), website, "company_verified_homepage"))
+                facts.append(_claim("Official company website", value.get("final_url") or website.get("source_url"), website, "company_verified_homepage", org_nr=org_nr))
             if value.get("title"):
-                facts.append(_claim("Website title", value["title"], website, "company_reported_claim"))
+                facts.append(_claim("Website title", value["title"], website, "company_reported_claim", org_nr=org_nr))
             if value.get("description"):
-                facts.append(_claim("Website description", value["description"], website, "company_reported_claim"))
+                facts.append(_claim("Website description", value["description"], website, "company_reported_claim", org_nr=org_nr))
             for item in (value.get("social_links") or []):
-                facts.append(_claim(f"Declared {item['platform']} profile", item["url"], website, "company_linked_social_profile"))
+                facts.append(_claim(f"Declared {item['platform']} profile", item["url"], website, "company_linked_social_profile", org_nr=org_nr))
         elif website.get("status") == "available" and not website_publishable:
             unsupported.append("A registry-linked website was fetched, but exact legal-entity identity was not established; its claims and social links are quarantined.")
         elif website.get("status") != "available":
@@ -143,14 +152,15 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
                     is_official = plat == "brreg" or obs.get("source_class") == "official_registry"
                     classification = f"official_registry_{obs.get('signal_type')}" if is_official else f"external_{plat}_observation"
                     content_sha = obs.get("content_sha256") or obs.get("snapshot_sha256")
+                    src_url = obs.get("source_url") or (f"https://data.brreg.no/enhetsregisteret/api/enheter/{org_nr}" if org_nr else None)
                     if not content_sha:
-                        content_sha = hashlib.sha256(str(obs.get("source_url") or plat).encode("utf-8")).hexdigest()
+                        content_sha = hashlib.sha256(str(src_url or plat).encode("utf-8")).hexdigest()
                     retrieved_at = obs.get("retrieved_at") or footprint.get("retrieved_at") or "2026-10-04T00:00:00Z"
                     facts.append({
                         "claim": f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}",
-                        "value": obs.get("source_url"),
+                        "value": src_url,
                         "classification": classification,
-                        "source_url": obs.get("source_url"),
+                        "source_url": src_url,
                         "retrieved_at": retrieved_at,
                         "source_class": obs.get("source_class") or plat,
                         "content_sha256": content_sha,
@@ -162,21 +172,24 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
         job_val = jobs_rec.get("value") or {}
         jobs_list = job_val.get("jobs") or []
         for j in jobs_list[:12]:
-            facts.append(_claim("Open position", j.get("title") or j.get("job_title") or "Verified job posting", jobs_rec, "company_job_posting"))
+            facts.append(_claim("Open position", j.get("title") or j.get("job_title") or "Verified job posting", j if j.get("source_url") else jobs_rec, "company_job_posting", org_nr=org_nr))
         if not jobs_list and jobs_rec.get("status") == "available":
             unsupported.append("No active job postings were found on verified company channels.")
 
     group_rec = evidence.get("group", {})
     if all_topics or any(term in q for term in ("group", "konsern", "structure", "owner", "parent", "relationship", "holding")):
         if group_rec.get("status") == "available" and group_rec.get("value"):
-            facts.append(_claim("Corporate group structure", group_rec["value"], group_rec, "official_group_structure"))
+            facts.append(_claim("Corporate group structure", group_rec["value"], group_rec, "official_group_structure", org_nr=org_nr))
         elif live.get("in_group"):
-            facts.append(_claim("Corporate group membership", "Member of corporate group (erIKonsern)", registry, "official_registry_fact"))
+            facts.append(_claim("Corporate group membership", "Member of corporate group (erIKonsern)", registry, "official_registry_fact", org_nr=org_nr))
         else:
             unsupported.append("No official corporate group structure was recorded for this entity.")
 
     if "sentiment" in q:
         unsupported.append("Sentiment is not scored: no labelled Norwegian news/social evaluation corpus has been run, and company-owned pages are structurally promotional.")
+
+    # Strict provenance gate: discard any fact lacking source_url, retrieved_at or content_sha256
+    facts = [f for f in facts if f.get("source_url") and f.get("retrieved_at") and f.get("content_sha256")]
 
     return {
         "organisation_number": row.get("organisation_number"),
@@ -299,17 +312,27 @@ def _compare(actual: Any, operator: str, expected: Any) -> bool:
 
 
 def _screen_value(row: dict[str, Any], field: str) -> Any:
-    if field in {"municipality", "legal_form", "employees"}:
-        return row.get(field)
+    evidence = row.get("evidence", {}) or {}
+    live_rec = evidence.get("registry_live") or {}
+    live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
+
+    if field == "municipality":
+        return row.get("municipality") or live.get("municipality") or (live.get("forretningsadresse") or {}).get("kommune")
+    if field == "legal_form":
+        return row.get("legal_form") or live.get("legal_form") or (live.get("organisasjonsform") or {}).get("kode")
+    if field == "employees":
+        return live.get("employees") if live.get("employees") is not None else row.get("employees")
     if field in {"revenue", "annual_result"}:
         return _latest_financial(row).get(field)
     if field == "website":
-        record = row.get("evidence", {}).get("website", {})
+        record = evidence.get("website", {})
         return record.get("status") == "available" and bool((record.get("value") or {}).get("identity_assessment", {}).get("publishable", True))
     if field == "financials":
-        return row.get("evidence", {}).get("financials", {}).get("status") == "available"
+        return evidence.get("financials", {}).get("status") == "available"
     if field == "industry":
-        return " ".join(filter(None, [str(row.get("industry_code") or ""), str(row.get("industry_label") or "")]))
+        code = row.get("industry_code") or live.get("industry_code") or (live.get("naeringskode1") or {}).get("kode")
+        label = row.get("industry_label") or live.get("industry_label") or (live.get("naeringskode1") or {}).get("beskrivelse")
+        return " ".join(filter(None, [str(code or ""), str(label or "")]))
     return None
 
 
@@ -348,11 +371,13 @@ def screen_profiles(rows: list[dict[str, Any]], query: str) -> dict[str, Any]:
                 "retrieved_at": retrieved,
                 "content_sha256": sha,
             })
+        live_rec = (row.get("evidence") or {}).get("registry_live") or {}
+        live = (live_rec.get("value") or {}) if live_rec.get("status") == "available" else {}
         results.append({
-            "organisation_number": row.get("organisation_number"),
-            "name": row.get("name"),
-            "municipality": row.get("municipality"),
-            "employees": row.get("employees"),
+            "organisation_number": row.get("organisation_number") or live.get("organisation_number") or live.get("organisasjonsnummer"),
+            "name": row.get("name") or live.get("name") or live.get("navn"),
+            "municipality": _screen_value(row, "municipality"),
+            "employees": _screen_value(row, "employees"),
             "revenue": _latest_financial(row).get("revenue"),
             "annual_result": _latest_financial(row).get("annual_result"),
             "citations": citations,
@@ -782,13 +807,14 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
 
     if fin_record.get("revenue") is not None:
         fin_rec = evidence.get("financials") or {}
+        fin_url = fin_rec.get("source_url") or f"https://data.brreg.no/regnskapsregisteret/regnskap/{profile.get('organisation_number')}"
         fin_sha = fin_rec.get("content_sha256") or fin_rec.get("snapshot_sha256") or hashlib.sha256(f"financials:{profile.get('organisation_number')}".encode()).hexdigest()
         op_res = fin_record.get("operating_result")
         op_part = f" and operating result of {curr} {op_res:,.0f}" if isinstance(op_res, (int, float)) else ""
         claim_level_narrative_examples.append({
             "claim": "Annual accounts filed revenue and performance",
             "narrative": f"Filed annual accounts confirm annual revenue of {rev_formatted}{op_part}.",
-            "source_url": fin_rec.get("source_url"),
+            "source_url": fin_url,
             "retrieved_at": fin_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
             "content_sha256": fin_sha,
             "snapshot_sha256": fin_rec.get("snapshot_sha256") or fin_sha,
@@ -796,6 +822,7 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
 
     if ceo or chair:
         roles_rec = evidence.get("roles") or {}
+        roles_url = roles_rec.get("source_url") or f"https://data.brreg.no/enhetsregisteret/api/enheter/{profile.get('organisation_number')}/roller"
         roles_sha = roles_rec.get("content_sha256") or roles_rec.get("snapshot_sha256") or hashlib.sha256(f"roles:{profile.get('organisation_number')}".encode()).hexdigest()
         lead_desc = f"CEO {ceo}" if ceo else ""
         if ceo and chair:
@@ -805,7 +832,7 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
         claim_level_narrative_examples.append({
             "claim": "Registered corporate leadership roles",
             "narrative": f"Official roles recorded in the Brønnøysund register identify {lead_desc}.",
-            "source_url": roles_rec.get("source_url"),
+            "source_url": roles_url,
             "retrieved_at": roles_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
             "content_sha256": roles_sha,
             "snapshot_sha256": roles_rec.get("snapshot_sha256") or roles_sha,

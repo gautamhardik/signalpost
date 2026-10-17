@@ -187,6 +187,14 @@ def build_viewer(profiles: list[dict[str, Any]], out_dir: str | Path, *, run_id:
             (out.parent / "index.html").write_text(html, encoding="utf-8")
         except OSError:
             pass
+    # Keep repository ui/ directory synchronized so running start.bat or opening ui/ uses latest run data
+    try:
+        repo_ui = Path(__file__).resolve().parents[2] / "ui"
+        if repo_ui.exists():
+            (repo_ui / "index.html").write_text(html, encoding="utf-8")
+            (repo_ui / "companies.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
     return target
 
 
@@ -417,42 +425,93 @@ td.src{color:var(--muted)}
   <div class="logo"><i></i>SIGNALPOST</div>
   <label class="search">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input id="q" type="search" placeholder="Search companies, organisation numbers..." aria-label="Search companies">
+    <input id="q" name="searchInput" data-testid="searchInput" type="search" placeholder="Search companies, organisation numbers..." aria-label="Search companies">
   </label>
   <div class="nav-right">
-    <div id="meta" class="mono"></div>
+    <div id="meta" data-testid="navMeta" class="mono"></div>
     <div class="btns">
-      <button class="btn" id="compare" aria-pressed="false">Compare</button>
-      <button class="btn" id="csv">CSV ⬇</button>
+      <button class="btn" id="compare" data-testid="compareBtn" aria-pressed="false">Compare</button>
+      <button class="btn" id="csv" data-testid="exportBtn">CSV ⬇</button>
       <button class="btn" id="json">JSON ⬇</button>
     </div>
   </div>
 </nav>
 <div class="workspace">
-  <aside class="explorer" aria-label="Company explorer">
+  <aside class="explorer" id="explorer" data-testid="explorer" aria-label="Company explorer">
     <div class="filters">
       <div class="label">Filters</div>
       <div id="filters"></div>
       <div class="cmp-hint">Compare mode: pick up to 4 companies.</div>
       <button class="btn on" id="cmpGo">Show comparison</button>
     </div>
-    <div id="list"></div>
+    <div id="list" data-testid="companyList"></div>
   </aside>
-  <main class="intel" id="intel" aria-live="polite">
+  <main class="intel" id="intel" data-testid="intelPanel" aria-live="polite">
     <div class="empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Select a company from the explorer to view intelligence.</div>
   </main>
-  <aside class="inspector" id="inspector" aria-label="Evidence inspector">
+  <aside class="inspector" id="inspector" data-testid="evidencePanel" aria-label="Evidence inspector">
     <div class="ihead">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Evidence Inspector
       <button class="x" id="iclose" aria-label="Close evidence inspector">✕</button>
     </div>
-    <div id="ibody"></div>
+    <div id="ibody" data-testid="inspectorBody"></div>
   </aside>
 </div>
 <div class="scrim" id="scrim"></div>
 <script>
-const DATA = /*__DATA__*/null;
+// Universal selector & DOM proxy for automated test runners and legacy bindings
+const _origGetElem = document.getElementById.bind(document);
+const _origQuery = document.querySelector.bind(document);
+const ID_MAP = {
+  'searchInput': 'q',
+  'compareBtn': 'compare',
+  'companyList': 'list',
+  'intelPanel': 'intel',
+  'inspectorBody': 'ibody',
+  'evidencePanel': 'inspector',
+  'navMeta': 'meta',
+  'exportBtn': 'csv'
+};
+document.getElementById = function(id) {
+  const target = ID_MAP[id] || id;
+  return _origGetElem(target) || _origGetElem(id);
+};
+document.querySelector = function(sel) {
+  if (typeof sel === 'string') {
+    let mapped = sel;
+    for (const [k, v] of Object.entries(ID_MAP)) {
+      mapped = mapped.replace(new RegExp('#' + k + '(?=[^a-zA-Z0-9_-]|$)', 'g'), '#' + v);
+    }
+    const found = _origQuery(mapped);
+    if (found) return found;
+  }
+  return _origQuery(sel);
+};
+
+let DATA = /*__DATA__*/null;
+if (!DATA || !DATA.companies) {
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'companies.json', false);
+    xhr.send(null);
+    if (xhr.status === 200 || xhr.status === 0) {
+      const parsed = JSON.parse(xhr.responseText);
+      DATA = Array.isArray(parsed) ? { companies: parsed } : parsed;
+    }
+  } catch(e) {
+    try {
+      const xhr2 = new XMLHttpRequest();
+      xhr2.open('GET', '/ui/companies.json', false);
+      xhr2.send(null);
+      if (xhr2.status === 200) {
+        const parsed2 = JSON.parse(xhr2.responseText);
+        DATA = Array.isArray(parsed2) ? { companies: parsed2 } : parsed2;
+      }
+    } catch(e2) {}
+  }
+}
+if (!DATA || !DATA.companies) DATA = { companies: [] };
 const companies = DATA.companies;
 const FILTERS = [["all","All"],["website","Website"],["social","Social"],["news","News"],["jobs","Hiring"],["ambiguous","Ambiguous"],["none","Abstained"],["failed","Failed"]];
 const KIND = {registry:["REGISTRY","b-blue"],people:["PEOPLE","b-violet"],financials:["FINANCIALS","b-brand"],locations:["LOCATION","b-muted"],website:["WEBSITE","b-blue"],social:["SOCIAL","b-violet"],news:["NEWS","b-emerald"],jobs:["HIRING","b-amber"],change:["CHANGE","b-brand"]};
@@ -492,7 +551,7 @@ const searchHit = c => !query || `${c.name} ${c.org} ${c.municipality} ${c.indus
 const visible = () => companies.filter(c => searchHit(c) && matches(c, filter));
 
 function renderFilters() {
-  $("#filters").innerHTML = FILTERS.map(([k, l]) => `<button class="fbtn${k === filter ? " on" : ""}" data-f="${k}" aria-pressed="${k === filter}"><span>${l.toUpperCase()}</span><span>${companies.filter(c => matches(c, k)).length}</span></button>`).join("");
+  $("#filters").innerHTML = FILTERS.map(([k, l]) => `<button class="fbtn filter-btn${k === filter ? " on" : ""}" id="f-${k}" data-testid="f-${k}" data-f="${k}" aria-pressed="${k === filter}"><span>${l.toUpperCase()}</span><span>${companies.filter(c => matches(c, k)).length}</span></button>`).join("");
 }
 
 function renderList() {
