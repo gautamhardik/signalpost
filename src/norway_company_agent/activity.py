@@ -441,13 +441,19 @@ def extract_activity_from_html_articles(
         "article", ".news-item", ".nyhet-item", ".post-item",
         ".article-card", ".nyhetskort", ".press-release", ".event-item",
         ".aktuelt-item", ".blog-post", ".press-release-item", ".news-card",
-        "li.news-item", "li.article", ".news-list-item"
+        "li.news-item", "li.article", ".news-list-item",
+        ".teaser", ".nyhetsartikkel",
     ]
-    cards = soup.select(", ".join(selectors))
+    raw_cards = soup.select(", ".join(selectors))
+    cards = [c for c in raw_cards if not any(other in c.descendants for other in raw_cards if other is not c)]
 
     # If no article containers, inspect linked news anchors
     if not cards:
-        links = soup.select("a[href*='/nyheter/'], a[href*='/aktuelt/'], a[href*='/presse/'], a[href*='/news/'], a[href*='/artikler/'], a[href*='/media/'], a[href*='/newsroom/'], a[href*='/pressroom/'], a[href*='/press-releases/'], a[href*='/investors/']")
+        links = soup.select(
+            "a[href*='/nyheter/'], a[href*='/nyhet/'], a[href*='/aktuelt/'], a[href*='/presse/'], "
+            "a[href*='/pressemeldinger/'], a[href*='/news/'], a[href*='/artikler/'], a[href*='/media/'], "
+            "a[href*='/newsroom/'], a[href*='/pressroom/'], a[href*='/press-releases/'], a[href*='/investors/']"
+        )
         seen_links = set()
         for link in links:
             href = link.get("href")
@@ -468,8 +474,13 @@ def extract_activity_from_html_articles(
             parent = link.parent
             own_parent = parent is not None and len(parent.select("a[href]")) <= 2
             parent_text = parent.get_text(" ", strip=True) if own_parent else link_text
+            time_el = (parent.select_one("time") if own_parent and parent else None) or link.select_one("time")
+            time_date = None
+            if time_el:
+                time_date = normalize_date_string(time_el.get("datetime") or time_el.get("data-date") or time_el.get_text(" ", strip=True))
             activity_date = (
-                extract_activity_date_from_text(link_text)
+                time_date
+                or extract_activity_date_from_text(link_text)
                 or (extract_activity_date_from_text(parent_text) if own_parent else None)
                 or date_from_url(full_url)
             )
@@ -519,10 +530,10 @@ def extract_activity_from_html_articles(
         card_text = card.get_text(" ", strip=True)
 
         # Date extraction: search <time> tags first, then text regex, then page meta
-        time_el = card.select_one("time")
+        time_el = card.select_one("time") or card.select_one("[data-date]") or card.select_one(".date, .pubdate, .published")
         activity_date = None
         if time_el:
-            activity_date = normalize_date_string(time_el.get("datetime") or time_el.get_text(" ", strip=True))
+            activity_date = normalize_date_string(time_el.get("datetime") or time_el.get("data-date") or time_el.get_text(" ", strip=True))
         if not activity_date and item_url.split("#", 1)[0].rstrip("/") == base_url.split("#", 1)[0].rstrip("/"):
             # The page's own publish date only dates the page itself, never the cards listed on it.
             activity_date = page_meta_date

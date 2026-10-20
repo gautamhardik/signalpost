@@ -205,3 +205,40 @@ def test_assess_candidate_funnel_with_verified_and_rejection():
     assert res["verified_sources"][0]["url"] == "https://testfirma.no/"
     assert res["verified_yield"] > 0.0
     assert res["candidate_efficiency"] > 0.0
+
+
+def test_advanced_domain_candidate_patterns():
+    # 1. A/S suffix handling
+    cands_as = generate_deterministic_domain_candidates({"name": "AUTO BJØRN A/S"})
+    assert "https://autobjorn.no/" in cands_as
+
+    # 2. Surnames in multi-word names
+    cands_otteren = generate_deterministic_domain_candidates({"name": "JØRGEN OTTEREN AS"})
+    assert "https://otteren.no/" in cands_otteren
+
+    cands_tellefsen = generate_deterministic_domain_candidates({"name": "PREBEN TELLEFSEN AS"})
+    assert "https://tellefsen.no/" in cands_tellefsen
+
+    # 3. Generic tail word stripping
+    cands_nordic = generate_deterministic_domain_candidates({"name": "NORDIC SEASON PRODUCTS AS"})
+    assert "https://nordicseason.no/" in cands_nordic
+
+    # 4. Daycare contraction
+    cands_bhg = generate_deterministic_domain_candidates({"name": "LØNNEBERGET BARNEHAGE AS"})
+    assert "https://lonneberget-bhg.no/" in cands_bhg or "https://lonnebergetbhg.no/" in cands_bhg
+
+    # 5. Municipality stripping
+    profile_muni = {
+        "name": "JORDBÆRPIKENE STJØRDAL AS",
+        "evidence": {
+            "registry": {
+                "value": {
+                    "forretningsadresse.poststed": "STJØRDAL",
+                    "forretningsadresse.kommune": "STJØRDAL",
+                }
+            }
+        }
+    }
+    cands_muni = generate_deterministic_domain_candidates(profile_muni)
+    assert "https://jordbaerpikene.no/" in cands_muni or "https://jordbarpikene.no/" in cands_muni
+

@@ -166,13 +166,23 @@ LEGAL_SUFFIX_TOKENS = {
     "as", "asa", "ans", "da", "enk", "nuf", "sa", "iks", "ks", "ba", "sf", "hf", "bbl", "brl", "esek", "fli", "sti",
     "aksjeselskap", "allmennaksjeselskap", "borettslag", "boligbyggelag", "enkeltpersonforetak", "stiftelse", "forening", "sameie",
 }
+GENERIC_TAIL_WORDS = {
+    "products", "norge", "norway", "drift", "service", "services",
+    "eiendom", "invest", "holding", "utleie", "consulting", "solutions",
+    "teknikk", "partner", "handel", "industri", "gruppen", "group",
+}
 
 
 def _full_name_tokens(name: str) -> list[str]:
     """Every word of the name except the legal-form suffix, keeping digits ("Taksthuset 1")."""
     text = name.translate(str.maketrans({"ø": "o", "å": "a", "æ": "ae", "Ø": "O", "Å": "A", "Æ": "AE", "&": " "}))
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().casefold()
-    return [token for token in re.findall(r"[a-z0-9]+", text) if token not in LEGAL_SUFFIX_TOKENS]
+    tokens = [token for token in re.findall(r"[a-z0-9]+", text) if token not in LEGAL_SUFFIX_TOKENS]
+    if len(tokens) >= 2 and tokens[-2:] == ["a", "s"]:
+        tokens = tokens[:-2]
+    if len(tokens) >= 2 and tokens[:2] == ["a", "s"]:
+        tokens = tokens[2:]
+    return tokens
 
 
 def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_candidates: int = MAX_DOMAIN_CANDIDATES_PER_COMPANY) -> list[str]:
@@ -189,94 +199,155 @@ def generate_deterministic_domain_candidates(profile: dict[str, Any], *, max_can
     if not tokens:
         return []
 
-    raw_candidates: list[str] = []
-    
-    # Most specific first: the whole name as one domain ("askermarineservice.no",
-    # "taksthuset1.no"). Shortened variants come later because they often belong to
-    # a different company ("asker.no", "taksthuset.no").
+    tier1: list[str] = []
+    tier2: list[str] = []
+    tier3: list[str] = []
+
     full = _full_name_tokens(name)
     joined = "".join(full)
-    if 1 <= len(full) <= 5 and 3 <= len(joined) <= 40:
-        raw_candidates.append(f"https://{joined}.no/")
-        if len(full) > 1:
-            raw_candidates.append(f"https://{'-'.join(full)}.no/")
-        without_og = [token for token in full if token != "og"]
-        if without_og != full:
-            raw_candidates.append(f"https://{''.join(without_og)}.no/")
-        raw_candidates.append(f"https://{joined}-as.no/")
-        raw_candidates.append(f"https://{joined}as.no/")
-        if len(full) > 1:
-            raw_candidates.append(f"https://{'-'.join(full)}-as.no/")
-            raw_candidates.append(f"https://{''.join(full)}as.no/")
-
-        if any(c in name for c in ("å", "Å", "ø", "Ø", "æ", "Æ")):
-            text_aa = name.translate(str.maketrans({"ø": "oe", "å": "aa", "æ": "ae", "Ø": "OE", "Å": "AA", "Æ": "AE", "&": " "}))
-            text_aa = unicodedata.normalize("NFKD", text_aa).encode("ascii", "ignore").decode().casefold()
-            full_aa = [token for token in re.findall(r"[a-z0-9]+", text_aa) if token not in LEGAL_SUFFIX_TOKENS]
-            joined_aa = "".join(full_aa)
-            if joined_aa != joined and 3 <= len(joined_aa) <= 40:
-                raw_candidates.append(f"https://{joined_aa}.no/")
-                if len(full_aa) > 1:
-                    raw_candidates.append(f"https://{'-'.join(full_aa)}.no/")
-
     t1 = tokens[0] if len(tokens) > 0 else ""
     t2 = tokens[1] if len(tokens) > 1 else ""
     t3 = tokens[2] if len(tokens) > 2 else ""
     t4 = tokens[3] if len(tokens) > 3 else ""
 
-    if len(tokens) == 1:
-        if len(t1) >= 3:
-            raw_candidates.extend([
-                f"https://{t1}.no/",
-                f"https://{t1}.com/",
-                f"https://{t1}-as.no/",
-                f"https://{t1}as.no/",
-                f"https://{t1}norge.no/",
-                f"https://{t1}-norge.no/",
-                f"https://{t1}group.no/",
-                f"https://{t1}group.com/",
-            ])
-    elif len(tokens) == 2:
-        raw_candidates.extend([
-            f"https://{t1}.no/",
-            f"https://{t1}.com/",
+    # ----------------- TIER 1: CORE HIGH-YIELD CANDIDATES -----------------
+    if 1 <= len(full) <= 5 and 3 <= len(joined) <= 40:
+        tier1.append(f"https://{joined}.no/")
+        if 1 <= len(full) <= 3:
+            tier1.append(f"https://{joined}.com/")
+
+    # First word brand/global domain (critical for Elopak, Equinor, Tomra, PCS, etc.)
+    if len(t1) >= 3:
+        tier1.append(f"https://{t1}.no/")
+        tier1.append(f"https://{t1}.com/")
+
+    # Generic tail stripping (e.g. Nordic Season Products AS -> nordicseason.no)
+    tail_stripped = None
+    if len(full) >= 2 and full[-1] in GENERIC_TAIL_WORDS:
+        tail_stripped = full[:-1]
+        tier1.append(f"https://{''.join(tail_stripped)}.no/")
+
+    # Daycare contraction (e.g. Lønneberget Barnehage AS -> lonneberget-bhg.no)
+    if any(w in full for w in ("barnehage", "barnehager")):
+        bhg_tokens = [t if t not in ("barnehage", "barnehager") else "bhg" for t in full]
+        tier1.append(f"https://{'-'.join(bhg_tokens)}.no/")
+        tier1.append(f"https://{''.join(bhg_tokens)}.no/")
+
+    # Municipality variant (e.g. Jordbærpikene Stjørdal AS -> jordbarpikene.no)
+    reg_val = profile.get("evidence", {}).get("registry", {}).get("value") or {}
+    poststed = str(reg_val.get("forretningsadresse.poststed") or reg_val.get("postadresse.poststed") or "").strip().lower()
+    kommune = str(reg_val.get("forretningsadresse.kommune") or reg_val.get("postadresse.kommune") or "").strip().lower()
+    munis = {m for m in (poststed, kommune) if m and len(m) >= 3}
+    muni_stripped = None
+    if len(full) >= 2 and full[-1] in munis:
+        muni_stripped = full[:-1]
+        tier1.append(f"https://{''.join(muni_stripped)}.no/")
+
+    if len(tokens) == 2:
+        tier1.extend([
             f"https://{t1}{t2}.no/",
-            f"https://{t1}{t2}.com/",
             f"https://{t1}-{t2}.no/",
-            f"https://{t1}{t2}-as.no/",
-            f"https://{t1}{t2}as.no/",
-            f"https://{t1}group.no/",
-            f"https://{t1}gruppen.no/",
-            f"https://{t1}group.com/",
+            f"https://{t1}{t2}.com/",
+            f"https://{t2}.no/",
         ])
     elif len(tokens) == 3:
-        raw_candidates.extend([
-            f"https://{t1}.no/",
-            f"https://{t1}.com/",
+        tier1.extend([
             f"https://{t1}{t2}.no/",
-            f"https://{t1}{t2}.com/",
             f"https://{t1}{t2}{t3}.no/",
             f"https://{t1}{t2}{t3}.com/",
-            f"https://{t1}-{t2}-{t3}.no/",
-            f"https://{t1}{t2}{t3}-as.no/",
-            f"https://{t1}{t2}{t3}as.no/",
-            f"https://{t1}group.no/",
-            f"https://{t1}gruppen.no/",
+            f"https://{t3}.no/",  # Surname token (e.g. Preben Tellefsen AS -> tellefsen.no)
+            f"https://{t3}.com/",
         ])
     elif len(tokens) >= 4:
-        raw_candidates.extend([
-            f"https://{t1}.no/",
-            f"https://{t1}.com/",
+        tier1.extend([
             f"https://{t1}{t2}.no/",
             f"https://{t1}{t2}{t3}.no/",
-            f"https://{t1}{t2}{t3}{t4}.no/",
-            f"https://{t1}-{t2}-{t3}-{t4}.no/",
-            f"https://{t1}group.no/",
         ])
 
-    if 1 <= len(full) <= 5 and 3 <= len(joined) <= 40:
-        raw_candidates.insert(min(len(raw_candidates), 4), f"https://{joined}.com/")
+    # ----------------- TIER 2: HYPHENATED, ACRONYMS, SURNAMES, SUFFIXES -----------------
+    if len(full) > 1:
+        tier2.append(f"https://{'-'.join(full)}.no/")
+    if tail_stripped and len(tail_stripped) > 1:
+        tier2.append(f"https://{'-'.join(tail_stripped)}.no/")
+    if muni_stripped and len(muni_stripped) > 1:
+        tier2.append(f"https://{'-'.join(muni_stripped)}.no/")
 
+    without_og = [token for token in full if token != "og"]
+    if without_og != full:
+        tier2.append(f"https://{''.join(without_og)}.no/")
+
+    # Initials/acronym candidates for 3-4 word names (e.g. Bergen Installasjon og Teknikk -> bitas.no)
+    if 3 <= len(full) <= 4:
+        initials = "".join(t[0] for t in full if t != "og")
+        if 3 <= len(initials) <= 4:
+            tier2.append(f"https://{initials}.no/")
+            tier2.append(f"https://{initials}as.no/")
+
+    # Short stems combined with AS
+    tier2.append(f"https://{joined}-as.no/")
+    tier2.append(f"https://{joined}as.no/")
+    if len(tokens) == 1:
+        tier2.extend([
+            f"https://{t1}-as.no/",
+            f"https://{t1}as.no/",
+            f"https://{t1}norge.no/",
+            f"https://{t1}-norge.no/",
+        ])
+    elif len(tokens) == 2:
+        tier2.extend([
+            f"https://{t2}.com/",
+            f"https://{t1}{t2}-as.no/",
+            f"https://{t1}{t2}as.no/",
+        ])
+    elif len(tokens) == 3:
+        tier2.extend([
+            f"https://{t2}{t3}.no/",
+            f"https://{t1}-{t2}-{t3}.no/",
+            f"https://{t2}-{t3}.no/",
+            f"https://{t1}{t2}{t3}-as.no/",
+            f"https://{t1}{t2}{t3}as.no/",
+        ])
+    elif len(tokens) >= 4:
+        tier2.extend([
+            f"https://{t1}{t2}{t3}{t4}.no/",
+            f"https://{t1}-{t2}-{t3}-{t4}.no/",
+        ])
+
+    # ----------------- TIER 3: TRANSLITERATIONS & GROUP SUFFIXES -----------------
+    if any(c in name for c in ("å", "Å", "ø", "Ø", "æ", "Æ")):
+        text_aa = name.translate(str.maketrans({"ø": "oe", "å": "aa", "æ": "ae", "Ø": "OE", "Å": "AA", "Æ": "AE", "&": " "}))
+        text_aa = unicodedata.normalize("NFKD", text_aa).encode("ascii", "ignore").decode().casefold()
+        full_aa = [token for token in re.findall(r"[a-z0-9]+", text_aa) if token not in LEGAL_SUFFIX_TOKENS]
+        if len(full_aa) >= 2 and full_aa[-2:] == ["a", "s"]:
+            full_aa = full_aa[:-2]
+        if len(full_aa) >= 2 and full_aa[:2] == ["a", "s"]:
+            full_aa = full_aa[2:]
+        joined_aa = "".join(full_aa)
+        if joined_aa != joined and 3 <= len(joined_aa) <= 40:
+            tier3.append(f"https://{joined_aa}.no/")
+            if len(full_aa) > 1:
+                tier3.append(f"https://{'-'.join(full_aa)}.no/")
+
+        text_a = name.translate(str.maketrans({"ø": "o", "å": "a", "æ": "a", "Ø": "O", "Å": "A", "Æ": "A", "&": " "}))
+        text_a = unicodedata.normalize("NFKD", text_a).encode("ascii", "ignore").decode().casefold()
+        full_a = [token for token in re.findall(r"[a-z0-9]+", text_a) if token not in LEGAL_SUFFIX_TOKENS]
+        if len(full_a) >= 2 and full_a[-2:] == ["a", "s"]:
+            full_a = full_a[:-2]
+        if len(full_a) >= 2 and full_a[:2] == ["a", "s"]:
+            full_a = full_a[2:]
+        joined_a = "".join(full_a)
+        if joined_a not in (joined, joined_aa) and 3 <= len(joined_a) <= 40:
+            tier3.append(f"https://{joined_a}.no/")
+            if len(full_a) > 1:
+                tier3.append(f"https://{'-'.join(full_a)}.no/")
+
+    tier3.extend([
+        f"https://{t1}group.no/",
+        f"https://{t1}gruppen.no/",
+        f"https://{t1}group.com/",
+    ])
+
+    raw_candidates = tier1 + tier2 + tier3
     deduped: list[str] = []
     seen: set[str] = set()
     for cand in raw_candidates:
@@ -317,7 +388,40 @@ def generate_brreg_relationship_candidates(profile: dict[str, Any], *, max_candi
 
     # 2. Operating subunits (underenheter)
     locations_val = (profile.get("evidence", {}).get("locations", {}).get("value") or {}).get("locations") or []
-    for loc in locations_val[:3]:
+    for loc in locations_val[:5]:
+        sub_web = loc.get("website")
+        if sub_web:
+            norm_sub_web = normalize_candidate_url(sub_web)
+            if norm_sub_web and norm_sub_web not in seen:
+                seen.add(norm_sub_web)
+                candidates.append(CandidateSource(
+                    url=norm_sub_web,
+                    source_type="website",
+                    discovery_tier="tier2_brreg_relationship",
+                    discovery_reason=f"Operating subunit website: '{sub_web}'",
+                    rank=1,
+                ))
+                if len(candidates) >= max_candidates:
+                    return candidates
+
+        sub_email = str(loc.get("email") or "").strip().casefold()
+        if sub_email and "@" in sub_email:
+            sub_email_domain = sub_email.rsplit("@", 1)[-1].removeprefix("www.")
+            if sub_email_domain not in GENERIC_EMAIL_DOMAINS and "." in sub_email_domain and len(sub_email_domain) >= 4:
+                email_url = f"https://{sub_email_domain}/"
+                norm_email = normalize_candidate_url(email_url)
+                if norm_email and norm_email not in seen:
+                    seen.add(norm_email)
+                    candidates.append(CandidateSource(
+                        url=norm_email,
+                        source_type="website",
+                        discovery_tier="tier2_email_domain",
+                        discovery_reason=f"Subunit contact email domain ({sub_email})",
+                        rank=1,
+                    ))
+                    if len(candidates) >= max_candidates:
+                        return candidates
+
         sub_name = str(loc.get("name") or "").strip()
         sub_tokens = [t for t in _tokens(sub_name) if t not in GENERIC_NAME_TOKENS]
         if sub_tokens and len(sub_tokens) >= 2:

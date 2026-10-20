@@ -511,7 +511,14 @@ def _decode(raw: bytes, content_type: str) -> str:
         return raw.decode("utf-8", errors="replace")
 
 
-def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:
+KNOWN_ATS_DOMAINS = {
+    "teamtailor.com", "jobbnorge.no", "webcruiter.no", "recman.no", "reachmee.com",
+    "smartrecruiters.com", "myworkdayjobs.com", "workdayjobs.com", "greenhouse.io",
+    "lever.co", "bamboohr.com", "empir.no", "talentech.com", "cvideo.no", "finn.no"
+}
+
+
+def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max_bytes: int, allow_ats: bool = False) -> tuple[dict[str, Any] | None, list[dict[str, str]], int, int, int, str | None]:
     robots_requests = 0 if robots_cached(url) else 1
     try:
         if not _robots_allowed(url, timeout):
@@ -530,7 +537,8 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
             final_url = response.geturl()
             if len(raw) > max_bytes or "html" not in content_type.lower():
                 return None, [], requests, len(raw), elapsed, "unsupported or oversized page"
-            if _registered_domain(final_url) != homepage_domain:
+            final_reg = _registered_domain(final_url)
+            if final_reg != homepage_domain and not (allow_ats and final_reg in KNOWN_ATS_DOMAINS):
                 return None, [], requests, len(raw), elapsed, "redirected outside registered domain"
         decompressed_raw, decomp_err = safe_decompress_body(raw, encoding=encoding, max_bytes=max_bytes)
         if len(decompressed_raw) > max_bytes:
@@ -711,6 +719,28 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
                 social.extend(page_social)
             elif page_error:
                 crawl_errors.append({"url": page_url, "error": page_error})
+
+        # Fetch up to 1 external ATS job board linked from the site
+        ats_candidates = [
+            jb["url"] for jb in value.get("job_board_links") or []
+            if _registered_domain(jb.get("url") or "") in KNOWN_ATS_DOMAINS
+        ]
+        if ats_candidates:
+            ats_url = ats_candidates[0]
+            if not any(p.get("url") == ats_url for p in pages):
+                page, _, page_requests, page_bytes, page_elapsed, _ = _fetch_secondary_page(
+                    ats_url,
+                    homepage_domain=homepage_domain,
+                    timeout=timeout,
+                    max_bytes=min(max_bytes, 1_000_000),
+                    allow_ats=True,
+                )
+                requests += page_requests
+                bytes_received += page_bytes
+                if page:
+                    page["is_ats_board"] = True
+                    pages.append(page)
+
         value["pages"] = pages
         value["social_links"] = list({(item["platform"], item["url"]): item for item in social}.values())
         value["crawl_errors"] = crawl_errors

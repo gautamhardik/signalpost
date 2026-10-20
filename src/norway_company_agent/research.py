@@ -57,6 +57,25 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     ind_code = row.get("industry_code") or live.get("industry_code") or (live.get("naeringskode1") or {}).get("kode")
     ind_label = row.get("industry_label") or live.get("industry_label") or (live.get("naeringskode1") or {}).get("beskrivelse")
 
+    reg_date = live.get("registreringsdatoEnhetsregisteret") or row.get("registered_at")
+    foundation_date = live.get("stiftelsesdato") or row.get("founded_at")
+    forretningsadresse = live.get("forretningsadresse") or row.get("forretningsadresse") or {}
+    postadresse = live.get("postadresse") or row.get("postadresse") or {}
+    street_lines = forretningsadresse.get("adresse") or postadresse.get("adresse") or row.get("address")
+    street = ", ".join(s for s in street_lines if s) if isinstance(street_lines, list) else str(street_lines or "").strip()
+    postal_code = forretningsadresse.get("postnummer") or postadresse.get("postnummer") or row.get("postcode")
+    postal_city = forretningsadresse.get("poststed") or postadresse.get("poststed") or row.get("city")
+    naeringskode2 = (live.get("naeringskode2") or {}).get("kode")
+    naeringskode2_desc = (live.get("naeringskode2") or {}).get("beskrivelse")
+    naeringskode3 = (live.get("naeringskode3") or {}).get("kode")
+    naeringskode3_desc = (live.get("naeringskode3") or {}).get("beskrivelse")
+    sektorkode = (live.get("institusjonellSektorkode") or {}).get("kode")
+    sektorkode_desc = (live.get("institusjonellSektorkode") or {}).get("beskrivelse")
+    purpose_val = live.get("formaal") or live.get("aktivitet") or row.get("purpose") or row.get("activity")
+    purpose = " ".join(p for p in purpose_val if p) if isinstance(purpose_val, list) else str(purpose_val or "").strip()
+    mva = live.get("registrertIMvaregisteret")
+    mva_status = "Registered in MVA (VAT) register" if mva is True else "Not registered in MVA register" if mva is False else None
+
     if not registry.get("source_url") and org_nr:
         registry = {
             **registry,
@@ -66,7 +85,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
             "source_class": "official_registry",
         }
 
-    if all_topics or "employee" in q or "industry" in q or "activity" in q:
+    if all_topics or any(term in q for term in ("employee", "industry", "activity", "statutory", "registry", "address", "founded", "registered")):
         for label, value in (
             ("Registered name", name),
             ("Organisation number", org_nr),
@@ -75,6 +94,19 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
             ("Registry employee count", employees),
             ("Industry code", ind_code),
             ("Industry label", ind_label),
+            ("Registration date", reg_date),
+            ("Foundation date", foundation_date),
+            ("Registered business address", street or None),
+            ("Postal code", postal_code),
+            ("Postal area", postal_city),
+            ("Secondary industry code", naeringskode2),
+            ("Secondary industry label", naeringskode2_desc),
+            ("Tertiary industry code", naeringskode3),
+            ("Tertiary industry label", naeringskode3_desc),
+            ("Institutional sector code", sektorkode),
+            ("Institutional sector label", sektorkode_desc),
+            ("Statutory purpose / activity", purpose or None),
+            ("VAT registration status", mva_status),
             ("Latest submitted accounts year", row.get("latest_submitted_accounts")),
             ("Bankruptcy status", "In bankruptcy" if row.get("bankrupt") else "Not bankrupt"),
             ("Liquidation status", "In liquidation" if row.get("liquidating") else "Not liquidating"),
@@ -94,17 +126,24 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
     if all_topics or any(term in q for term in financial_terms):
         records = (financial.get("value") or {}).get("records") or []
         if records:
-            latest = records[0]
-            for label, key in (
-                ("Reporting period", "period"),
-                ("Revenue", "revenue"),
-                ("Operating result", "operating_result"),
-                ("Annual result", "annual_result"),
-                ("Assets", "assets"),
-                ("Debt", "debt"),
-            ):
-                if latest.get(key) is not None:
-                    facts.append(_claim(label, latest[key], financial, "official_annual_account", org_nr=org_nr))
+            for idx, latest in enumerate(records[:3]):
+                year = str((latest.get("period") or {}).get("tilDato") or "")[:4]
+                year_tag = f" ({year})" if year else ""
+                for label, key in (
+                    ("Reporting period", "period"),
+                    ("Revenue", "revenue"),
+                    ("Operating result", "operating_result"),
+                    ("Annual result", "annual_result"),
+                    ("Profit before tax", "profit_before_tax"),
+                    ("Assets", "assets"),
+                    ("Equity", "equity"),
+                    ("Debt", "debt"),
+                ):
+                    if latest.get(key) is not None:
+                        if idx == 0:
+                            facts.append(_claim(label, latest[key], financial, "official_annual_account", org_nr=org_nr))
+                        if year:
+                            facts.append(_claim(f"{label}{year_tag}", latest[key], financial, "official_annual_account", org_nr=org_nr))
         else:
             unsupported.append("No normalized annual-account record was returned; missing values are not interpreted as zero.")
 
@@ -143,7 +182,7 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
             unsupported.append("The registry-linked company website was not available to this run.")
 
     footprint = evidence.get("external_footprint", {})
-    if all_topics or "social" in q or "footprint" in q:
+    if all_topics or any(term in q for term in ("social", "footprint", "news", "activity", "article", "presse")):
         fp_val = footprint.get("value") or {}
         if footprint.get("status") == "available":
             for obs in fp_val.get("observations") or []:
@@ -156,9 +195,14 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
                     if not content_sha:
                         content_sha = hashlib.sha256(str(src_url or plat).encode("utf-8")).hexdigest()
                     retrieved_at = obs.get("retrieved_at") or footprint.get("retrieved_at") or "2026-10-04T00:00:00Z"
+                    claim_text = f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}"
+                    claim_val = src_url
+                    if plat == "news" and obs.get("title"):
+                        claim_text = f"Published news: {obs['title']}"
+                        claim_val = obs.get("title")
                     facts.append({
-                        "claim": f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}",
-                        "value": src_url,
+                        "claim": claim_text,
+                        "value": claim_val,
                         "classification": classification,
                         "source_url": src_url,
                         "retrieved_at": retrieved_at,

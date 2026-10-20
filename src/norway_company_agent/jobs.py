@@ -155,7 +155,7 @@ def job_board_url(url: str) -> str | None:
     return parsed._replace(fragment="").geturl()
 
 
-def posting_evidence_for(job_url: str, context_text: str, deadline: str | None) -> tuple[str, ...]:
+def posting_evidence_for(job_url: str, context_text: str, deadline: str | None, *, is_card: bool = False) -> tuple[str, ...]:
     """Collect concrete signs that a link is one job posting rather than a careers landing page."""
     found: list[str] = []
     if deadline:
@@ -164,6 +164,8 @@ def posting_evidence_for(job_url: str, context_text: str, deadline: str | None) 
         found.append("posting_terms")
     if _registered_domain(job_url) in RECRUITER_DOMAINS:
         found.append("ats_listing")
+    if is_card:
+        found.append("card_element")
     return tuple(found)
 
 
@@ -175,13 +177,13 @@ def is_publishable_job(job: "JobRecord") -> bool:
         return False
     if LINK_TEXT_PATTERN.search(title):
         return False
-    if job.extraction_method == "jsonld":
+    if job.extraction_method in ("jsonld", "ats_link"):
         return True
     segments = [seg for seg in urlparse(job.source_url).path.casefold().split("/") if seg]
     page = (job.found_on_url or "").split("#", 1)[0].rstrip("/")
     page_segments = [seg for seg in urlparse(page).path.casefold().split("/") if seg]
     page_is_index = not page_segments or page_segments[-1] in CAREER_INDEX_SEGMENTS
-    if "ats_listing" not in job.posting_evidence:
+    if "ats_listing" not in job.posting_evidence and "card_element" not in job.posting_evidence:
         if not segments or segments[-1] in CAREER_INDEX_SEGMENTS:
             return False
         if job.source_url.split("#", 1)[0].rstrip("/") == page and page_is_index:
@@ -495,15 +497,26 @@ def extract_jobs_from_html_cards(
                     ))
                     return records
 
+    JOB_HREF_KEYWORDS = (
+        "/stilling/", "/stillinger/", "/jobb/", "/jobber/", "/job/", "/jobs/",
+        "/careers/", "/career/", "/vacancies/", "/vacancy/", "/ledige-stillinger/",
+        "/positions/", "/position/", "/openings/", "/opening/", "/rekruttering/", "job.php",
+    )
     if not cards:
-        links = soup.select("a[href*='/stilling/'], a[href*='/jobb/'], a[href*='/job/'], a[href*='/careers/'], a[href*='/karriere/'], a[href*='/vacancies/'], a[href*='/ledige-stillinger/']")
         seen_links = set()
-        for link in links:
+        for link in soup.select("a[href]"):
             href = link.get("href")
-            if not href:
+            if not href or href.startswith(("javascript:", "mailto:", "tel:", "#")):
                 continue
             full_url = urljoin(base_url, href)
             if full_url in seen_links or full_url.rstrip("/") == base_url.rstrip("/"):
+                continue
+            parsed_href = urlparse(full_url)
+            path_lower = parsed_href.path.casefold()
+            is_job_href = any(kw in path_lower for kw in JOB_HREF_KEYWORDS)
+            ext_dom = tldextract.extract(parsed_href.hostname or "").registered_domain or ""
+            is_ats_dom = ext_dom in (RECRUITER_DOMAINS | JOB_BOARD_DOMAINS)
+            if not (is_job_href or is_ats_dom):
                 continue
             seen_links.add(full_url)
 
@@ -584,7 +597,7 @@ def extract_jobs_from_html_cards(
             content_sha256=content_sha,
             identity_assessment=id_assessment,
             extraction_method="html_card",
-            posting_evidence=posting_evidence_for(job_url, card_text, deadline),
+            posting_evidence=posting_evidence_for(job_url, card_text, deadline, is_card=True),
         ))
 
     return records
@@ -624,6 +637,37 @@ def extract_jobs_from_crawl_material(
             for j in html_jobs:
                 if j.job_id not in all_jobs:
                     all_jobs[j.job_id] = j
+
+        for jb in page.get("job_board_links") or []:
+            jb_url = jb.get("url") or ""
+            jb_text = clean_job_title(jb.get("text"))
+            if not jb_url or not jb_text:
+                continue
+            if jb_text.casefold() in GENERIC_CAREER_TITLES or jb_text.casefold() in JOB_LINK_TEXT:
+                continue
+            id_assess = verify_job_identity(
+                profile,
+                {"title": jb_text, "linked_from_verified_site": True},
+                jb_url,
+            )
+            if not id_assess["verified"]:
+                continue
+            org_nr = str(profile.get("organisation_number") or "")
+            c_sha = hashlib.sha256(f"{jb_text}|{jb_url}".encode("utf-8")).hexdigest()
+            j_id = f"job-{org_nr}-{c_sha[:12]}"
+            if j_id not in all_jobs:
+                all_jobs[j_id] = JobRecord(
+                    job_id=j_id,
+                    company_orgnr=org_nr,
+                    job_title=jb_text,
+                    source_url=jb_url,
+                    found_on_url=p_url,
+                    retrieved_at=utc_now(),
+                    content_sha256=c_sha,
+                    identity_assessment=id_assess,
+                    extraction_method="ats_link",
+                    posting_evidence=("ats_listing",),
+                )
 
     return list(all_jobs.values())
 
@@ -690,8 +734,10 @@ def extract_job_observations(profile: dict[str, Any]) -> list[dict[str, Any]]:
     for job in jobs:
         if not is_publishable_job(job):
             continue
-        if not within_site_scope(job.source_url, web_value.get("final_url"), scope):
-            continue  # the posting belongs to the wider site (or an ATS we cannot tie to this section)
+        found_url = getattr(job, "found_on_url", None) or job.source_url
+        if scope and not within_site_scope(job.source_url, web_value.get("final_url"), scope):
+            if not within_site_scope(found_url, web_value.get("final_url"), scope):
+                continue
         key = f"{job.source_url}|{job.job_title.casefold()}"
         if key in seen:
             continue

@@ -142,20 +142,24 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         or ""
     ).strip().casefold()
 
-    email_domain = registry_email.rsplit("@", 1)[-1] if "@" in registry_email else ""
-    email_domain = email_domain.removeprefix("www.")
-
+    email_domain = registry_email.rsplit("@", 1)[-1].removeprefix("www.") if "@" in registry_email else ""
+    sub_emails = [
+        str(loc.get("email") or "").strip().casefold()
+        for loc in (profile.get("evidence", {}).get("locations", {}).get("value") or {}).get("locations", [])
+        if loc.get("email")
+    ]
+    all_emails = [registry_email] + sub_emails
     candidate_host = str(value.get("url") or value.get("final_url") or website.get("source_url") or "").split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold()
     candidate_host = candidate_host.removeprefix("www.")
 
     shared_mail_hosts = {"gmail.com", "hotmail.com", "outlook.com", "live.no", "live.com", "online.no", "yahoo.com", "icloud.com", "msn.com", "hotmail.no", "outlook.no"}
+    email_domains = {e.rsplit("@", 1)[-1].removeprefix("www.") for e in all_emails if "@" in e} - shared_mail_hosts
     email_domain_match = bool(
-        email_domain
-        and email_domain not in shared_mail_hosts
+        email_domains
         and candidate_host
-        and (
-            candidate_host == email_domain
-            or candidate_host.endswith("." + email_domain)
+        and any(
+            candidate_host == ed or candidate_host.endswith("." + ed)
+            for ed in email_domains if len(ed) >= 4 and "." in ed
         )
     )
 
@@ -165,12 +169,22 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         or ""
     ).strip().casefold()
     registry_host = registry_website.split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold().removeprefix("www.")
+    sub_websites = [
+        str(loc.get("website") or "").strip().casefold()
+        for loc in (profile.get("evidence", {}).get("locations", {}).get("value") or {}).get("locations", [])
+        if loc.get("website")
+    ]
+    all_reg_websites = [registry_website] + sub_websites
+    all_reg_hosts = {
+        w.split("://")[-1].split("/", 1)[0].split(":", 1)[0].casefold().removeprefix("www.")
+        for w in all_reg_websites if w
+    }
     registry_domain_match = bool(
-        registry_host
+        all_reg_hosts
         and candidate_host
-        and (
-            candidate_host == registry_host
-            or candidate_host.endswith("." + registry_host)
+        and any(
+            candidate_host == rh or candidate_host.endswith("." + rh)
+            for rh in all_reg_hosts if len(rh) >= 4
         )
     )
     # The registered address itself was requested and redirected elsewhere (palfingermarine.com
@@ -291,9 +305,16 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     substantive_homepage = len(str(value.get("main_text_excerpt") or "").strip()) >= 100
     substantive_site = substantive_homepage or any(len(str(p.get("main_text_excerpt") or "").strip()) >= 100 for p in value.get("pages", []))
     is_business_sports_club = bool(re.search(r"(?:^|\s)B\.?\s*I\.?\s*L\.?(?:\s|$)", str(profile.get("name") or ""), re.I))
-    # Conflicting 9-digit Norwegian OrgNr detection
-    found_org_numbers = set(re.findall(r"\b[89]\d{8}\b", homepage_candidate_text))
-    has_conflicting_org = bool(org_digits and any(o != org_digits for o in found_org_numbers))
+    # Conflicting 9-digit Norwegian OrgNr detection (normalizes spaces, dots, and NO...MVA)
+    org_pattern = re.compile(r"(?:NO\s*)?([89]\d{2}[\s.\xa0]?\d{3}[\s.\xa0]?\d{3})(?:\s*MVA)?", re.IGNORECASE)
+    raw_found_orgs = org_pattern.findall(homepage_candidate_text)
+    found_org_numbers = {re.sub(r"[\s.\xa0]", "", m) for m in raw_found_orgs if len(re.sub(r"[\s.\xa0]", "", m)) == 9}
+    subunit_orgs = {
+        str(loc.get("organisation_number") or "")
+        for loc in (profile.get("evidence", {}).get("locations", {}).get("value") or {}).get("locations", [])
+        if loc.get("organisation_number")
+    }
+    has_conflicting_org = bool(org_digits and any(o != org_digits and o not in subunit_orgs for o in found_org_numbers))
 
     # A site reached through a shortened-name domain (leroy.no -> a group page) must name the
     # company's distinguishing words in its own title/description, not just in a footer that
@@ -344,17 +365,28 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     local_corroboration = strong_local or city_match
     raw_name_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", str(profile.get("name") or "")).encode("ascii", "ignore").decode().casefold())
     dropped_short_tokens = [tok for tok in raw_name_tokens if len(tok) == 1 and tok not in LEGAL_AND_GENERIC]
-    norwegian_named_domain = (
-        candidate_host.endswith(".no")
-        and bool(core)
-        and "".join(core) == cand_domain_root.replace("-", "")
+    legal_form = str(profile.get("legal_form") or "").upper()
+    domain_stem = cand_domain_root.replace("-", "")
+    stem_matches = (
+        bool(core)
+        and (
+            domain_stem == "".join(core)
+            or (len(core[0]) >= 4 and domain_stem == core[0] and exact_homepage_name)
+        )
+    )
+    named_domain = (
+        stem_matches
         and not dropped_short_tokens
+        and (
+            candidate_host.endswith(".no")
+            or (candidate_host.endswith(".com") and (legal_form in {"ASA", "AS"} and len(domain_stem) >= 4 and exact_homepage_name))
+        )
     )
     # Single-word names are too often shared, so a guessed domain alone never confirms them.
     if len(core) == 1:
-        name_link_ok = registry_linked or strong_local
+        name_link_ok = registry_linked or strong_local or (named_domain and exact_homepage_name)
     else:
-        name_link_ok = registry_linked or local_corroboration or norwegian_named_domain
+        name_link_ok = registry_linked or local_corroboration or named_domain
 
     spelled_by_domain, rest_of_name = name_spelled_by_domain(profile.get("name"), re.sub(r"[^a-z0-9]", "", cand_domain_root))
     branch_registered_site = bool(spelled_by_domain and rest_of_name and all(token in _place_words(profile) for token in rest_of_name))
