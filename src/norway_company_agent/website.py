@@ -295,7 +295,12 @@ def _priority_links(base_url: str, soup: BeautifulSoup, limit: int = 8) -> list[
             in_text = any(term.replace("-", " ").replace("_", " ") in text for term in terms)
             if in_path or in_text:
                 depth = len([segment for segment in path.split("/") if segment])
-                rank = (index, (0 if in_path else 1, depth, len(path)))
+                if index == 0:  # careers: prioritize vacancy listings over culture/diversity articles
+                    is_vacancy = any(term in path or term in text for term in ("vacan", "stilling", "position", "ledig", "job", "oppdrag", "opening", "search", "apply"))
+                    tier = 0 if depth <= 1 else (1 if is_vacancy else 2)
+                    rank = (index, (0 if in_path else 1, tier, depth, len(path)))
+                else:
+                    rank = (index, (0 if in_path else 1, depth, len(path)))
                 if clean not in best or rank < best[clean]:
                     best[clean] = rank
                 break
@@ -529,9 +534,15 @@ def _decode(raw: bytes, content_type: str) -> str:
 
 
 KNOWN_ATS_DOMAINS = {
-    "teamtailor.com", "jobbnorge.no", "webcruiter.no", "recman.no", "reachmee.com",
-    "smartrecruiters.com", "myworkdayjobs.com", "workdayjobs.com", "greenhouse.io",
-    "lever.co", "bamboohr.com", "empir.no", "talentech.com", "cvideo.no", "finn.no"
+    "webcruiter.com", "webcruiter.no", "jobbnorge.no", "recman.no", "recman.page", "cruit.no",
+    "easycruit.com", "hr-manager.net", "jobylon.com", "teamtailor.com", "reachmee.com", "cvideo.no",
+    "smartrecruiters.com", "myworkdayjobs.com", "workday.com", "workdayjobs.com", "taleo.net",
+    "successfactors.eu", "successfactors.com", "icims.com", "greenhouse.io", "lever.co",
+    "personio.de", "personio.com", "personio.net", "recruitee.com", "workable.com", "homerun.co",
+    "varbi.com", "emply.com", "karrierestart.no", "finn.no", "nav.no", "linkedin.com",
+    "talentech.com", "talentech.io", "mojob.io", "candidatedna.com", "bamboohr.com", "breezy.hr",
+    "zohorecruit.com", "freshteam.com", "jobtoolz.com", "ashbyhq.com", "pinpointhq.com",
+    "recright.com", "grade.com", "intelliplan.eu", "intelliplan.se", "empir.no", "oraclecloud.com",
 }
 
 
@@ -743,9 +754,17 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
             elif page_error:
                 crawl_errors.append({"url": page_url, "error": page_error})
 
+        # Collect all job board links discovered across homepage and crawled pages
+        all_job_board_links = list({
+            jb["url"]: jb
+            for p in pages
+            for jb in p.get("job_board_links") or []
+        }.values())
+        value["job_board_links"] = all_job_board_links
+
         # Fetch up to 1 external ATS job board linked from the site
         ats_candidates = [
-            jb["url"] for jb in value.get("job_board_links") or []
+            jb["url"] for jb in all_job_board_links
             if _registered_domain(jb.get("url") or "") in KNOWN_ATS_DOMAINS
         ]
         if ats_candidates:

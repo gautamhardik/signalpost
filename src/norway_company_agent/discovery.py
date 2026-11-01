@@ -944,6 +944,8 @@ def search_lite_duckduckgo(
         },
     )
 
+    # Multi-engine zero-cost search fallback chain: DDG Lite -> Bing RSS -> Google News RSS
+    # 1. Primary: DuckDuckGo Lite
     try:
         from bs4 import BeautifulSoup
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -971,9 +973,82 @@ def search_lite_duckduckgo(
                         "provider": "duckduckgo_lite",
                         "query": clean_q,
                     })
-            cb.record_success()
-            cb.set_cached(query, results, raw)
-            return results, raw
+            if results:
+                cb.record_success()
+                cb.set_cached(query, results, raw)
+                return results, raw
     except Exception:
-        cb.record_failure()
-        return [], None
+        pass
+
+    # 2. Fallback: Bing RSS search
+    try:
+        bing_url = f"https://www.bing.com/search?q={urllib.parse.quote(clean_q)}&format=rss"
+        bing_req = urllib.request.Request(
+            bing_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/rss+xml,application/xml,text/xml",
+            },
+        )
+        with urllib.request.urlopen(bing_req, timeout=timeout) as resp:
+            raw = resp.read()
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(raw)
+            results = []
+            for rank, item in enumerate(root.findall(".//item")[:20], start=1):
+                link = (item.findtext("link") or "").strip()
+                title = (item.findtext("title") or "").strip()
+                desc = (item.findtext("description") or "").strip()
+                if link:
+                    results.append({
+                        "url": link,
+                        "title": title,
+                        "snippet": desc,
+                        "rank": rank,
+                        "provider": "bing_rss",
+                        "query": clean_q,
+                    })
+            if results:
+                cb.record_success()
+                cb.set_cached(query, results, raw)
+                return results, raw
+    except Exception:
+        pass
+
+    # 3. Fallback: Google News RSS search (for news, announcements, company mentions)
+    try:
+        gnews_url = f"https://news.google.com/rss/search?q={urllib.parse.quote(clean_q)}&hl=no&gl=NO&ceid=NO:no"
+        gnews_req = urllib.request.Request(
+            gnews_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/rss+xml,application/xml,text/xml",
+            },
+        )
+        with urllib.request.urlopen(gnews_req, timeout=timeout) as resp:
+            raw = resp.read()
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(raw)
+            results = []
+            for rank, item in enumerate(root.findall(".//item")[:20], start=1):
+                link = (item.findtext("link") or "").strip()
+                title = (item.findtext("title") or "").strip()
+                pub_date = (item.findtext("pubDate") or "").strip()
+                if link:
+                    results.append({
+                        "url": link,
+                        "title": title,
+                        "snippet": f"Published: {pub_date}" if pub_date else "",
+                        "rank": rank,
+                        "provider": "google_news_rss",
+                        "query": clean_q,
+                    })
+            if results:
+                cb.record_success()
+                cb.set_cached(query, results, raw)
+                return results, raw
+    except Exception:
+        pass
+
+    cb.record_failure()
+    return [], None

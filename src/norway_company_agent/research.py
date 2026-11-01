@@ -579,6 +579,8 @@ def _what_is_unknown(profile: dict[str, Any], website_ok: bool, ceo: Any, chair:
                 "failed": "The site could not be fetched.",
             }.get(status, "No website is registered and none could be verified.")
             unknown.append({"topic": label, "state": status, "reason": reason, "source_url": record.get("source_url")})
+        elif module == "financials":
+            continue  # Handled below with precise topic separation (annual accounts vs revenue)
         elif status != "available":
             unknown.append({"topic": label, "state": status, "reason": record.get("note") or f"{label} not available", "source_url": record.get("source_url")})
     roles_rec = evidence.get("roles") or {}
@@ -588,9 +590,14 @@ def _what_is_unknown(profile: dict[str, Any], website_ok: bool, ceo: Any, chair:
         if not chair:
             unknown.append({"topic": "board chair", "state": "not_available", "reason": "No board chair (LEDE) is registered.", "source_url": roles_rec.get("source_url")})
     fin_rec = evidence.get("financials") or {}
-    if fin_rec.get("status") == "failed":
+    fin_status = fin_rec.get("status")
+    if fin_status == "failed":
         unknown.append({"topic": "annual accounts", "state": "failed", "reason": "Official annual accounts lookup failed.", "source_url": fin_rec.get("source_url")})
-    elif fin_rec.get("status") == "available" and fin_record.get("revenue") is None:
+    elif fin_status == "blocked":
+        unknown.append({"topic": "annual accounts", "state": "blocked", "reason": "Official annual accounts lookup was blocked by source.", "source_url": fin_rec.get("source_url")})
+    elif fin_status in {"not_available", "not_found", "not_applicable"}:
+        unknown.append({"topic": "annual accounts", "state": "not_available", "reason": "No annual accounts filed with the accounting register.", "source_url": fin_rec.get("source_url")})
+    elif fin_status == "available" and fin_record.get("revenue") is None:
         unknown.append({"topic": "revenue", "state": "not_available", "reason": "The filed accounts do not report revenue.", "source_url": fin_rec.get("source_url")})
     platforms = {obs.get("platform") for obs in observations}
     checked = "verified company sources" if website_ok else "any verified company source (no verified website)"

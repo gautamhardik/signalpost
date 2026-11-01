@@ -611,13 +611,42 @@ def handle_matches_site(handle_compact: str, root: str) -> bool:
     return len(root) >= 6 and root in handle_compact and len(handle_compact) - len(root) <= 12
 
 
-def assess_social_identity(profile: dict[str, Any], link: dict[str, str], site_root: str = "", branch_site: bool = False) -> dict[str, Any]:
+def assess_social_identity(
+    profile: dict[str, Any],
+    link: dict[str, str],
+    site_root: str = "",
+    branch_site: bool = False,
+    *,
+    is_search_discovery: bool = False,
+    context_snippet: str = "",
+) -> dict[str, Any]:
     """Tie a social profile linked from the company's verified site to the company.
 
     Accepted when the handle carries the company's legal name, or when it is the verified
     site's own name (``site_root``) and the company is not a branch on a parent's site.
     """
     core = _tokens(profile.get("name"))
+    # Strict disambiguation: search results for common single-token / surname companies
+    # (e.g. SOLBERG AS, BYGG AS) MUST be corroborated by OrgNr, municipality or exact legal name in snippet/title.
+    if is_search_discovery:
+        org_nr = str(profile.get("organisation_number") or "")
+        municipality = str(profile.get("municipality") or "").casefold()
+        legal_name = str(profile.get("name") or "").casefold()
+        context_lower = (context_snippet + " " + link.get("title", "")).casefold()
+        has_corroboration = (
+            (org_nr and org_nr in context_lower)
+            or (municipality and len(municipality) >= 4 and municipality in context_lower)
+            or (legal_name and legal_name in context_lower)
+        )
+        if len(core) <= 1 and not has_corroboration:
+            return {
+                **link,
+                "identity_score": 0.25,
+                "publishable": False,
+                "matched_tokens": [],
+                "reason": "search-discovered social profile for single-word company lacks OrgNr or municipality corroboration",
+                "method": "search_social_strict_disambiguation",
+            }
     parsed = urllib.parse.urlparse(link.get("url") or "")
     handle_text = urllib.parse.unquote(parsed.path)
 

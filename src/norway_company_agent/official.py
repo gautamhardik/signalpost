@@ -247,10 +247,14 @@ def merge_live_registry(profile: dict[str, Any]) -> None:
 
 def _classified(field: str, source_type: str, result: FetchResult, value: Any = None) -> dict[str, Any]:
     if result.status == 200:
+        if field == "financials" and isinstance(value, dict) and not value.get("records"):
+            return evidence(field, "not_found", source_type, result.url, note="No submitted annual accounts on register", content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
         return evidence(field, "available", source_type, result.url, value=result.body if value is None else value, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
     if result.status in {404, 410}:
-        return evidence(field, "not_found", source_type, result.url, note=result.error, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
-    return evidence(field, "source_error", source_type, result.url, note=result.error, content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
+        return evidence(field, "not_found", source_type, result.url, note=result.error or "Resource not found on official register", content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
+    if result.status in {401, 403, 429, 451}:
+        return evidence(field, "blocked", source_type, result.url, note=result.error or f"HTTP {result.status} blocked by official source", content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
+    return evidence(field, "source_error", source_type, result.url, note=result.error or f"HTTP {result.status} lookup failed", content_sha256=result.content_sha256, retrieved_at=result.retrieved_at, effective_at=result.effective_at)
 
 
 def fetch_official_modules(org: str, modules: set[str], fetcher: Callable[[str], FetchResult] = fetch_json) -> tuple[dict[str, Any], list[FetchResult]]:

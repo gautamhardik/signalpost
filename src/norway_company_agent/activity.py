@@ -129,19 +129,21 @@ def is_publishable_news(act: "ActivityRecord", today: date | None = None) -> boo
     except ValueError:
         return False
     today = today or datetime.now(timezone.utc).date()
-    horizon = timedelta(days=366) if act.activity_type == "event" else timedelta(days=1)
+    horizon = timedelta(days=366) if act.activity_type == "event" else timedelta(days=0)
     if published < date(2000, 1, 1) or published > today + horizon:
         return False
     parsed = urlparse(act.source_url)
     segments = [seg for seg in parsed.path.casefold().split("/") if seg]
     if not segments:
         return False  # homepage, or an anchor on it
-    if parsed.fragment and act.found_on_url and act.source_url.split("#", 1)[0].rstrip("/") == act.found_on_url.split("#", 1)[0].rstrip("/"):
-        return False  # in-page anchor, not an article
+    if "#" in act.source_url or parsed.fragment:
+        return False  # in-page anchor, not a standalone article
+    if any(param in (parsed.query or "").casefold() for param in ("page=", "p=", "offset=", "start=","filter=","category=","tag=")):
+        return False  # pagination or filter query, not an article permalink
     if segments[-1] in NEWS_INDEX_SEGMENTS or any(seg in NON_ARTICLE_SEGMENTS for seg in segments):
         return False
     title = act.title.casefold().strip()
-    if len(title) < 8 or title in LINK_TEXT_TITLES or NON_ARTICLE_TITLE.search(title):
+    if len(title) < 15 or title in LINK_TEXT_TITLES or NON_ARTICLE_TITLE.search(title):
         return False
     if PLACEHOLDER_TITLE.search(title) or CRIMINAL_MATTER.search(title):
         return False
@@ -822,7 +824,12 @@ def extract_activity_observations(profile: dict[str, Any]) -> list[dict[str, Any
     # Several one- or two-word "posts" published on the same day ("Forretningsplan",
     # "Foredrag", "Styreverv") are a site's service pages set up as posts, not news.
     per_day = collections.Counter(obs["metrics"]["activity_date"] for obs in observations)
-    return [
+    filtered = [
         obs for obs in observations
         if not (per_day[obs["metrics"]["activity_date"]] >= 3 and len(str(obs["metrics"]["title"]).split()) <= 2)
     ]
+    # Cap to top 8 newest high-confidence dated articles to prevent sidebar/index spam
+    if len(filtered) > 8:
+        newest_ids = set(id(obs) for obs in sorted(filtered, key=lambda item: str((item.get("metrics") or {}).get("activity_date") or ""), reverse=True)[:8])
+        filtered = [obs for obs in filtered if id(obs) in newest_ids]
+    return filtered

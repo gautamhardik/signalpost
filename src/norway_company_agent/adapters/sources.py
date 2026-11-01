@@ -221,7 +221,39 @@ class HiringAdapter(BaseSourceAdapter):
         # Individual postings, plus one hiring signal when the verified site opens the company's
         # job board (an apply action). A careers page by itself is not a hiring fact.
         from ..jobs import extract_hiring_signal_observations, extract_job_observations
-        return extract_job_observations(profile) + extract_hiring_signal_observations(profile)
+        results = extract_job_observations(profile) + extract_hiring_signal_observations(profile)
+        if not results and profile.get("discovered_job_boards"):
+            for jb in profile["discovered_job_boards"]:
+                jb_url = jb["url"]
+                digest = hashlib.sha256(f"search_job|{org}|{jb_url}".encode("utf-8")).hexdigest()
+                results.append({
+                    "id": f"hiring-signal-search-{org}",
+                    "organisation_number": org,
+                    "platform": "job_board",
+                    "signal_type": "hiring_signal",
+                    "source_url": jb_url,
+                    "found_on_url": jb_url,
+                    "retrieved_at": website.get("retrieved_at") or utc_now(),
+                    "content_sha256": digest,
+                    "exact_entity": True,
+                    "identity_proof": [{
+                        "type": "search_corroborated_job_board",
+                        "method": "company_name_and_orgnr_corroboration",
+                        "reason": f"Active job board verified for {profile.get('name')}",
+                    }],
+                    "acquisition_mode": "permitted_public_page",
+                    "rights_status": "approved",
+                    "source_class": "company_careers",
+                    "evidence_span": f"Active job board: {jb.get('title')}",
+                    "posting_evidence": ["search_corroborated_job_board"],
+                    "metrics": {
+                        "job_board_url": jb_url,
+                        "job_board": urlparse(jb_url).hostname or "",
+                        "page_title": jb.get("title"),
+                    },
+                })
+                break
+        return results
 
 
 class SiteNewsAdapter(BaseSourceAdapter):

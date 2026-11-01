@@ -327,7 +327,13 @@ def main() -> None:
                     if normalized_soc and normalized_soc.get("platform"):
                         platform = normalized_soc["platform"]
                         clean_url = normalized_soc["url"]
-                        soc_assessment = assess_social_identity(profile, {"platform": platform, "url": clean_url})
+                        context_text = f"{res_item.get('title') or ''} {res_item.get('snippet') or ''}"
+                        soc_assessment = assess_social_identity(
+                            profile,
+                            {"platform": platform, "url": clean_url, "title": res_item.get("title") or ""},
+                            is_search_discovery=True,
+                            context_snippet=context_text,
+                        )
                         if soc_assessment.get("publishable"):
                             if not any(s.get("platform") == platform for s in discovered_social):
                                 item_to_add = {
@@ -428,6 +434,38 @@ def main() -> None:
                     research_website(profile, allowance.for_company(), metrics)
 
                 if "external_footprint" in requested_modules:
+                    # Zero-cost search fallback for open jobs/careers if crawling produced 0 job signals
+                    web_val = (profile.get("evidence", {}).get("website", {}) or {}).get("value") or {}
+                    has_job_signal = any(p.get("job_board_links") for p in web_val.get("pages") or [])
+                    if not has_job_signal and allowance.for_company().can(1):
+                        company_name = profile.get("name") or ""
+                        job_query = f'"{company_name}" (ledige stillinger OR karriere OR site:finn.no/job)'
+                        try:
+                            job_results, job_raw = search_lite_duckduckgo(job_query, timeout=4.0)
+                            if job_raw:
+                                job_ref = store.put(job_raw, kind="html")
+                            for jr in job_results:
+                                jr_url = str(jr.get("url") or "")
+                                from norway_company_agent.jobs import job_board_url
+                                jb_clean = job_board_url(jr_url)
+                                jr_text = f"{jr.get('title') or ''} {jr.get('snippet') or ''}".casefold()
+                                # Strict match: company legal name or OrgNr must be present
+                                name_tokens = [t for t in company_name.casefold().split() if t not in {"as", "asa", "da", "ans", "sa"}]
+                                matched_name = all(t in jr_text for t in name_tokens) if name_tokens else False
+                                matched_org = profile["organisation_number"] in jr_text
+                                if jb_clean and (matched_name or matched_org):
+                                    discovered_jobs = profile.setdefault("discovered_job_boards", [])
+                                    if not any(j["url"] == jb_clean for j in discovered_jobs):
+                                        discovered_jobs.append({
+                                            "url": jb_clean,
+                                            "title": jr.get("title") or "Open Positions",
+                                            "text": jr.get("title") or "Ledige stillinger",
+                                            "kind": "link",
+                                            "source": "search_fallback",
+                                        })
+                                    break
+                        except Exception:
+                            pass
                     observations = extract_profile_footprint_observations(profile)
                     website_record = profile["evidence"].get("website") or {}
                     page_refs = snapshot_website_pages(store, website_record)
