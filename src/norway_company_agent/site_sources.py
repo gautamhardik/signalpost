@@ -8,6 +8,8 @@ fetched from the company's own registered domain, with robots.txt respected.
 """
 from __future__ import annotations
 
+import http.client
+
 import email.utils
 import hashlib
 import html as html_lib
@@ -225,7 +227,10 @@ def _fetch_document(url: str, *, site_domain: str, timeout: float, max_bytes: in
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/xml,text/xml,application/rss+xml,application/atom+xml,*/*;q=0.5"})
     try:
         with SAFE_OPENER.open(request, timeout=timeout) as response:
-            raw = response.read(max_bytes + 1)
+            try:
+                raw = response.read(max_bytes + 1)
+            except http.client.IncompleteRead as exc:
+                raw = exc.partial or b""
             final_url = response.geturl()
             encoding = response.headers.get("content-encoding", "")
         metrics["latencies_ms"].append(int((time.monotonic() - started) * 1000))

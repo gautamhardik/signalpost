@@ -588,7 +588,9 @@ def _what_is_unknown(profile: dict[str, Any], website_ok: bool, ceo: Any, chair:
         if not chair:
             unknown.append({"topic": "board chair", "state": "not_available", "reason": "No board chair (LEDE) is registered.", "source_url": roles_rec.get("source_url")})
     fin_rec = evidence.get("financials") or {}
-    if fin_rec.get("status") == "available" and fin_record.get("revenue") is None:
+    if fin_rec.get("status") == "failed":
+        unknown.append({"topic": "annual accounts", "state": "failed", "reason": "Official annual accounts lookup failed.", "source_url": fin_rec.get("source_url")})
+    elif fin_rec.get("status") == "available" and fin_record.get("revenue") is None:
         unknown.append({"topic": "revenue", "state": "not_available", "reason": "The filed accounts do not report revenue.", "source_url": fin_rec.get("source_url")})
     platforms = {obs.get("platform") for obs in observations}
     checked = "verified company sources" if website_ok else "any verified company source (no verified website)"
@@ -755,9 +757,13 @@ def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
     if emp is not None and emp > 0:
         parts.append(f"It has {emp} registered employees.")
     
+    soc_obs = [o for o in fp_obs if o.get("signal_type") == "profile_handle" and o.get("platform") != "brreg"]
     if web_ok:
         parts.append("Its official website and digital footprint have been verified against Norwegian business register identity records.")
-    
+    elif soc_obs:
+        soc_names = ", ".join(sorted({str(o.get("platform") or "").capitalize() for o in soc_obs}))
+        parts.append(f"Its verified digital footprint includes official {soc_names} presence.")
+
     if jobs:
         sample_job = jobs[0].get("metrics", {}).get("job_title") or "active recruitment"
         parts.append(f"Recent verified hiring activity includes postings for: {sample_job}.")
@@ -786,10 +792,15 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
     ceo = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "DAGL" and not r.get("inactive")), None)
     chair = next((r.get("name") for r in roles if isinstance(r, dict) and r.get("role_code") == "LEDE" and not r.get("inactive")), None)
 
-    social_links = (website_val.get("social_links") or []) if website_ok else []
     raw_obs = ((evidence.get("external_footprint") or {}).get("value") or {}).get("observations") or []
-    # Exclude only explicit unapproved experimental acquisition modes
     observations = [obs for obs in raw_obs if obs.get("acquisition_mode") not in {"jobspy_experiment", "unofficial_api_experiment", "rights_review_experiment"}]
+    website_social = (website_val.get("social_links") or []) if website_ok else []
+    obs_social = [
+        {"platform": obs.get("platform"), "url": obs.get("source_url")}
+        for obs in observations
+        if obs.get("signal_type") == "profile_handle" and obs.get("platform") != "brreg"
+    ]
+    social_links = website_social or obs_social
 
     activity_text = live.get("activity_description") or reg.get("aktivitet")
     what_does_it_do_source = live_rec if live.get("activity_description") else registry_rec
@@ -829,7 +840,12 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
     # 1. Clear, supported cross-company conclusions
     conclusions = {
         "operating_status": "Active registered entity" if not profile.get("bankrupt") and not profile.get("liquidating") else ("In liquidation" if profile.get("liquidating") else "In bankruptcy"),
-        "scale_assessment": f"Reported {rev_formatted} revenue with {emp_count} registered employees." if fin_record.get("revenue") is not None else f"Registered with {emp_count} employees; annual accounts revenue pending or not filed.",
+        "scale_assessment": (
+            f"Reported {rev_formatted} revenue with {emp_count} registered employees." if fin_record.get("revenue") is not None
+            else (f"Financial lookup failed; registered with {emp_count} employees." if (evidence.get("financials") or {}).get("status") == "failed"
+            else (f"Financial lookup blocked by source; registered with {emp_count} employees." if (evidence.get("financials") or {}).get("status") == "blocked"
+            else f"Registered with {emp_count} employees; annual accounts not filed."))
+        ),
         "governance_status": f"Led by CEO {ceo} and Board Chair {chair}." if (ceo and chair) else (f"Led by CEO {ceo}." if ceo else (f"Board chaired by {chair}." if chair else "No executive manager or board chair currently registered in public records.")),
         "digital_verification": "Official domain identity verified against registry records." if website_ok else "Digital identity unverified or website not available.",
         "market_activity": f"{len(observations)} verified public signals (including {sum(1 for obs in observations if obs.get('signal_type') == 'job_posting')} job postings and {sum(1 for obs in observations if obs.get('platform') == 'news')} announcements)." if observations else "No recent public hiring or announcement signals detected.",
@@ -849,6 +865,7 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
         "snapshot_sha256": live_rec.get("snapshot_sha256") or registry_rec.get("snapshot_sha256") or reg_sha,
     })
 
+    fin_status = (evidence.get("financials") or {}).get("status")
     if fin_record.get("revenue") is not None:
         fin_rec = evidence.get("financials") or {}
         fin_url = fin_rec.get("source_url") or f"https://data.brreg.no/regnskapsregisteret/regnskap/{profile.get('organisation_number')}"
@@ -858,6 +875,18 @@ def synthesize_company_intelligence(profile: dict[str, Any]) -> dict[str, Any]:
         claim_level_narrative_examples.append({
             "claim": "Annual accounts filed revenue and performance",
             "narrative": f"Filed annual accounts confirm annual revenue of {rev_formatted}{op_part}.",
+            "source_url": fin_url,
+            "retrieved_at": fin_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
+            "content_sha256": fin_sha,
+            "snapshot_sha256": fin_rec.get("snapshot_sha256") or fin_sha,
+        })
+    elif fin_status == "failed":
+        fin_rec = evidence.get("financials") or {}
+        fin_url = fin_rec.get("source_url") or f"https://data.brreg.no/regnskapsregisteret/regnskap/{profile.get('organisation_number')}"
+        fin_sha = fin_rec.get("content_sha256") or hashlib.sha256(f"financials_failed:{profile.get('organisation_number')}".encode()).hexdigest()
+        claim_level_narrative_examples.append({
+            "claim": "Annual accounts lookup failed",
+            "narrative": "Official annual accounts could not be retrieved from Regnskapsregisteret due to a registry lookup failure.",
             "source_url": fin_url,
             "retrieved_at": fin_rec.get("retrieved_at") or "2026-10-04T00:00:00Z",
             "content_sha256": fin_sha,

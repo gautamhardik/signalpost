@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import http.client
+
 import gzip
 import io
 import json
@@ -136,7 +138,11 @@ def _robots_allowed(url: str, timeout: float) -> bool:
         try:
             request = urllib.request.Request(robots_url, headers={"User-Agent": USER_AGENT})
             with SAFE_OPENER.open(request, timeout=timeout) as response:
-                parser.parse(response.read().decode("utf-8", errors="replace").splitlines())
+                try:
+                    robots_raw = response.read()
+                except http.client.IncompleteRead as exc:
+                    robots_raw = exc.partial or b""
+                parser.parse(robots_raw.decode("utf-8", errors="replace").splitlines())
         except Exception:
             # An unavailable robots file is not permission to ignore explicit site terms; callers retain
             # the URL and can route uncertain domains to review. For this bounded homepage POC, allow one
@@ -315,16 +321,27 @@ def safe_decompress_body(raw: bytes, encoding: str = "", max_bytes: int = 2_000_
         return raw, None
     try:
         if is_gzip:
-            buf = io.BytesIO(raw)
-            with gzip.GzipFile(fileobj=buf) as gz:
-                decompressed = gz.read(max_bytes + 1)
-                return decompressed, None
+            try:
+                buf = io.BytesIO(raw)
+                with gzip.GzipFile(fileobj=buf) as gz:
+                    decompressed = gz.read(max_bytes + 1)
+                    return decompressed, None
+            except (EOFError, OSError, zlib.error):
+                decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
+                decompressed = decompressor.decompress(raw)
+                if decompressed:
+                    return decompressed[:max_bytes + 1], None
+                raise
         elif is_deflate:
             # Handles raw deflate (-MAX_WBITS) as well as zlib-wrapped deflate (MAX_WBITS)
             try:
                 decompressed = zlib.decompress(raw, -zlib.MAX_WBITS, max_bytes + 1)
             except zlib.error:
-                decompressed = zlib.decompress(raw, zlib.MAX_WBITS, max_bytes + 1)
+                try:
+                    decompressed = zlib.decompress(raw, zlib.MAX_WBITS, max_bytes + 1)
+                except zlib.error:
+                    decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+                    decompressed = decompressor.decompress(raw)
             return decompressed, None
     except Exception as exc:
         return raw, f"decompression_error: {type(exc).__name__}"
@@ -532,7 +549,10 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
         with SAFE_OPENER.open(request, timeout=timeout) as response:
             content_type = response.headers.get("content-type", "")
             encoding = response.headers.get("content-encoding", "")
-            raw = response.read(max_bytes + 1)
+            try:
+                raw = response.read(max_bytes + 1)
+            except http.client.IncompleteRead as exc:
+                raw = exc.partial or b""
             elapsed = int((time.monotonic() - started) * 1000)
             final_url = response.geturl()
             if len(raw) > max_bytes or "html" not in content_type.lower():
@@ -657,7 +677,10 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
         with SAFE_OPENER.open(request, timeout=timeout) as response:
             content_type = response.headers.get("content-type", "")
             encoding = response.headers.get("content-encoding", "")
-            raw = response.read(max_bytes + 1)
+            try:
+                raw = response.read(max_bytes + 1)
+            except http.client.IncompleteRead as exc:
+                raw = exc.partial or b""
             elapsed = int((time.monotonic() - started) * 1000)
             if len(raw) > max_bytes:
                 return evidence("website", "source_error", "registry_linked_company_website", normalized, note="Homepage exceeds byte limit"), {"requests": 2, "bytes": len(raw), "latencies_ms": [elapsed]}

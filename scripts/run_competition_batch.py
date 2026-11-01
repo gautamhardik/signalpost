@@ -37,12 +37,13 @@ from norway_company_agent.discovery import (  # noqa: E402
     choose_search_candidate,
     generate_company_candidate_sources,
     normalize_candidate_url,
+    search_lite_duckduckgo,
 )
 from norway_company_agent.evidence import evidence, normalize_evidence_states, utc_now  # noqa: E402
 from norway_company_agent.evidence_store import EvidenceStore, attach_observation_snapshots, snapshot_website_pages, strip_transient_bytes  # noqa: E402
 from norway_company_agent.external_footprint import aggregate_footprint, extract_profile_footprint_observations, publishable_observation  # noqa: E402
 from norway_company_agent.http import fetch_json  # noqa: E402
-from norway_company_agent.identity import apply_website_identity_gate  # noqa: E402
+from norway_company_agent.identity import apply_website_identity_gate, assess_social_identity  # noqa: E402
 from norway_company_agent.official import fetch_official_modules, merge_live_registry  # noqa: E402
 from norway_company_agent.refresh import diff_profile  # noqa: E402
 from norway_company_agent.research import synthesize_company_intelligence  # noqa: E402
@@ -281,32 +282,71 @@ def main() -> None:
                 verified_record, _ = fetch(funnel["verified_sources"][0]["url"])
                 gated = apply_website_identity_gate(profile, verified_record)
 
-        if args.search_endpoint and not (gated.get("assessment") or {}).get("publishable"):
-            max_queries = 3 if opportunity >= 0.70 else 2 if opportunity >= 0.50 else 1
+        if not (gated.get("assessment") or {}).get("publishable"):
+            max_queries = 2 if opportunity >= 0.70 else 1
             for query in build_flexible_company_search_queries(profile)[:max_queries]:
                 if not budget.reserve(1):
                     break
+                results = []
+                search_raw = None
                 try:
-                    request = urllib.request.Request(
-                        f"{args.search_endpoint}?{urllib.parse.urlencode({'q': query, 'format': 'json'})}",
-                        headers={"User-Agent": "signalpost-batch/0.2"},
-                    )
-                    with urllib.request.urlopen(request, timeout=8) as response:
+                    if args.search_endpoint:
+                        request = urllib.request.Request(
+                            f"{args.search_endpoint}?{urllib.parse.urlencode({'q': query, 'format': 'json'})}",
+                            headers={"User-Agent": "signalpost-batch/0.2"},
+                        )
+                        with urllib.request.urlopen(request, timeout=8) as response:
+                            budget.charge(1)
+                            metrics["requests"] += 1
+                            search_raw = response.read()
+                            body = json.loads(search_raw.decode("utf-8"))
+                        results = [
+                            {"rank": rank, "url": item.get("url"), "title": item.get("title") or "", "snippet": item.get("content") or "", "provider": "search_endpoint", "query": query}
+                            for rank, item in enumerate(body.get("results", []), start=1)
+                        ]
+                    else:
                         budget.charge(1)
-                        body = json.loads(response.read().decode("utf-8"))
-                    results = [
-                        {"rank": rank, "url": item.get("url"), "title": item.get("title") or "", "snippet": item.get("content") or ""}
-                        for rank, item in enumerate(body.get("results", []), start=1)
-                    ]
-                    selected = choose_search_candidate(profile, results).get("selected")
-                    if selected:
-                        search_record, _ = fetch(selected["url"])
-                        search_gated = apply_website_identity_gate(profile, search_record)
-                        if search_record.get("status") == "available" and (search_gated.get("assessment") or {}).get("publishable"):
-                            gated = search_gated
-                            break
+                        metrics["requests"] += 1
+                        results, search_raw = search_lite_duckduckgo(query, timeout=4.0)
                 except Exception:
                     continue
+
+                if not results:
+                    continue
+
+                # Snapshot search HTML evidence for cryptographic SHA-256 provenance
+                search_snapshot_ref = None
+                if search_raw:
+                    search_snapshot_ref = store.put(search_raw, kind="html")
+
+                # 1. Collect and verify candidate social profiles found in search
+                discovered_social = profile.setdefault("discovered_social_links", [])
+                for res_item in results:
+                    raw_url = str(res_item.get("url") or "")
+                    normalized_soc = normalize_social_url(raw_url)
+                    if normalized_soc and normalized_soc.get("platform"):
+                        platform = normalized_soc["platform"]
+                        clean_url = normalized_soc["url"]
+                        soc_assessment = assess_social_identity(profile, {"platform": platform, "url": clean_url})
+                        if soc_assessment.get("publishable"):
+                            if not any(s.get("platform") == platform for s in discovered_social):
+                                item_to_add = {
+                                    **soc_assessment,
+                                    "found_via": "web_search",
+                                    "search_query": query,
+                                }
+                                if search_snapshot_ref:
+                                    item_to_add.update(search_snapshot_ref)
+                                discovered_social.append(item_to_add)
+
+                # 2. Select and verify potential company website candidate
+                selected = choose_search_candidate(profile, results).get("selected")
+                if selected:
+                    search_record, _ = fetch(selected["url"])
+                    search_gated = apply_website_identity_gate(profile, search_record)
+                    if search_record.get("status") == "available" and (search_gated.get("assessment") or {}).get("publishable"):
+                        gated = search_gated
+                        break
 
         for cached_record, _ in cache.values():
             if cached_record is not gated["website"]:

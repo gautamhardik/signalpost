@@ -3,8 +3,10 @@ from __future__ import annotations
 import dataclasses
 import enum
 import re
+import time
 import unicodedata
 import urllib.parse
+import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -692,6 +694,7 @@ def build_flexible_company_search_queries(profile: dict[str, Any]) -> list[str]:
             clean_name = clean_name[:-len(suffix)].strip()
 
     queries = [
+        f'"{name}"',
         f'"{name}" {org}',
         f'"{clean_name}" {municipality}' if municipality else f'"{clean_name}" Norge',
         f'"{name}" {municipality}'.strip() if municipality else f'"{name}" Norge',
@@ -863,3 +866,114 @@ def choose_search_candidate(profile: dict[str, Any], results: list[dict[str, Any
         "abstained": not accepted,
         "policy": "A search result is only a crawl candidate. Publication still requires fetched-page exact-entity verification.",
     }
+
+
+class SearchCircuitBreaker:
+    """Zero-overhead circuit breaker for zero-cost web search to protect batch runs.
+
+    If 3 consecutive search requests fail, search is suspended for 60 seconds
+    so that network anomalies or rate-limits never delay or crash the run.
+    """
+
+    def __init__(self, failure_threshold: int = 3, cooldown_seconds: float = 60.0):
+        self.failure_threshold = failure_threshold
+        self.cooldown_seconds = cooldown_seconds
+        self.consecutive_failures = 0
+        self.tripped_at: float | None = None
+        self._cache: dict[str, tuple[list[dict[str, Any]], bytes | None]] = {}
+
+    def is_open(self) -> bool:
+        if self.tripped_at is None:
+            return False
+        if time.monotonic() - self.tripped_at > self.cooldown_seconds:
+            self.tripped_at = None
+            self.consecutive_failures = 0
+            return False
+        return True
+
+    def record_success(self) -> None:
+        self.consecutive_failures = 0
+        self.tripped_at = None
+
+    def record_failure(self) -> None:
+        self.consecutive_failures += 1
+        if self.consecutive_failures >= self.failure_threshold:
+            self.tripped_at = time.monotonic()
+
+    def get_cached(self, query: str) -> tuple[list[dict[str, Any]], bytes | None] | None:
+        return self._cache.get(query)
+
+    def set_cached(self, query: str, results: list[dict[str, Any]], raw: bytes | None) -> None:
+        if len(self._cache) < 200:
+            self._cache[query] = (results, raw)
+
+
+DEFAULT_SEARCH_CIRCUIT_BREAKER = SearchCircuitBreaker()
+
+
+def search_lite_duckduckgo(
+    query: str,
+    *,
+    timeout: float = 3.5,
+    circuit_breaker: SearchCircuitBreaker | None = None,
+) -> tuple[list[dict[str, Any]], bytes | None]:
+    """Execute a zero-cost, keyless web search using DuckDuckGo Lite.
+
+    Returns parsed result dicts and the raw response HTML bytes for cryptographic provenance.
+    """
+    cb = circuit_breaker or DEFAULT_SEARCH_CIRCUIT_BREAKER
+    cached = cb.get_cached(query)
+    if cached is not None:
+        return cached
+
+    if cb.is_open():
+        return [], None
+
+    clean_q = " ".join(query.split())
+    if not clean_q:
+        return [], None
+
+    url = "https://lite.duckduckgo.com/lite/"
+    data = urllib.parse.urlencode({"q": clean_q}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+        },
+    )
+
+    try:
+        from bs4 import BeautifulSoup
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read()
+            html = raw.decode("utf-8", errors="ignore")
+            soup = BeautifulSoup(html, "html.parser")
+            results: list[dict[str, Any]] = []
+            for rank, a in enumerate(soup.select("a.result-link"), start=1):
+                href = a.get("href", "")
+                title = a.get_text(strip=True)
+                snippet = ""
+                tr = a.find_parent("tr")
+                if tr:
+                    next_tr = tr.find_next_sibling("tr")
+                    if next_tr:
+                        s_td = next_tr.select_one("td.result-snippet")
+                        if s_td:
+                            snippet = s_td.get_text(strip=True)
+                if href:
+                    results.append({
+                        "url": href,
+                        "title": title,
+                        "snippet": snippet,
+                        "rank": rank,
+                        "provider": "duckduckgo_lite",
+                        "query": clean_q,
+                    })
+            cb.record_success()
+            cb.set_cached(query, results, raw)
+            return results, raw
+    except Exception:
+        cb.record_failure()
+        return [], None

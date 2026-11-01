@@ -365,13 +365,25 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     local_corroboration = strong_local or city_match
     raw_name_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", str(profile.get("name") or "")).encode("ascii", "ignore").decode().casefold())
     dropped_short_tokens = [tok for tok in raw_name_tokens if len(tok) == 1 and tok not in LEGAL_AND_GENERIC]
-    legal_form = str(profile.get("legal_form") or "").upper()
+    legal_form = str(
+        profile.get("legal_form")
+        or registry_value.get("organisasjonsform.kode")
+        or (registry_value.get("organisasjonsform") or {}).get("kode")
+        or ""
+    ).upper()
+    if not legal_form and str(profile.get("name") or "").upper().endswith(" ASA"):
+        legal_form = "ASA"
+    elif not legal_form and str(profile.get("name") or "").upper().endswith(" AS"):
+        legal_form = "AS"
     domain_stem = cand_domain_root.replace("-", "")
+    GENERIC_STEM_TAILS = {"systems", "group", "holding", "solutions", "services", "service", "drift", "eiendom", "invest", "norge", "norway"}
     stem_matches = (
         bool(core)
         and (
             domain_stem == "".join(core)
             or (len(core[0]) >= 4 and domain_stem == core[0] and exact_homepage_name)
+            or (len(core) >= 2 and core[-1] in GENERIC_STEM_TAILS and domain_stem == "".join(core[:-1]))
+            or (len(core) >= 2 and core[-1] in GENERIC_STEM_TAILS and domain_stem == core[0])
         )
     )
     named_domain = (
@@ -392,6 +404,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     branch_registered_site = bool(spelled_by_domain and rest_of_name and all(token in _place_words(profile) for token in rest_of_name))
     chain_site_of_branch = False
 
+    org_in_site = bool(org_digits and (org_digits in compact_homepage_candidate or org_digits in compact_candidate))
     if error_page:
         score = 0.1
         reasons.append("captured page is an error (404) page, not a company website")
@@ -401,10 +414,10 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif is_business_sports_club and "bedriftsidrett" not in normalized_candidate_text and "b i l" not in normalized_candidate_text:
         score = 0.3
         reasons.append("business sports-club entity points to the operating company's site without club evidence")
-    elif org_digits and org_digits in compact_homepage_candidate:
+    elif org_in_site and not has_conflicting_org:
         score = 1.0
-        reasons.append("exact organisation number appears in homepage identity evidence")
-    elif has_conflicting_org and not (org_digits and org_digits in compact_homepage_candidate):
+        reasons.append("exact organisation number appears in site identity evidence")
+    elif has_conflicting_org and not org_in_site:
         score = 0.2
         reasons.append("captured page contains conflicting organisation number belonging to a different entity")
     elif (registry_domain_match or registry_redirect_match) and email_domain_match and not has_conflicting_org:
@@ -422,7 +435,7 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     elif len(core) >= 2 and exact_homepage_name and name_link_ok:
         score = 0.95
         reasons.append("all normalized legal-name tokens appear together in homepage identity evidence")
-    elif len(core) == 1 and exact_homepage_name and substantive_homepage and name_link_ok:
+    elif len(core) == 1 and exact_homepage_name and (substantive_homepage or (substantive_site and registry_domain_match)) and name_link_ok:
         score = 0.95
         reasons.append("single distinctive legal-name token appears in homepage identity evidence with substantive content")
     elif exact_homepage_name and not name_link_ok:

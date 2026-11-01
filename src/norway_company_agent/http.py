@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import http.client
+
 import json
 import hashlib
 import time
@@ -38,7 +40,10 @@ def fetch_json(url: str, *, timeout: float = 20.0, attempts: int = 3) -> FetchRe
         )
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
-                raw = response.read()
+                try:
+                    raw = response.read()
+                except http.client.IncompleteRead as exc:
+                    raw = exc.partial or b""
                 elapsed = int((time.monotonic() - started) * 1000)
                 return FetchResult(url, response.status, elapsed, len(raw), json.loads(raw), content_sha256=hashlib.sha256(raw).hexdigest(), retrieved_at=_utc_now(), raw=raw)
         except urllib.error.HTTPError as exc:

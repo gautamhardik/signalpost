@@ -17,19 +17,58 @@ class SocialProfilesAdapter(BaseSourceAdapter):
     def extract_observations(self, profile: dict[str, Any]) -> list[dict[str, Any]]:
         observations: list[dict[str, Any]] = []
         org = str(profile.get("organisation_number") or "")
+        if not org:
+            return observations
+
         website = profile.get("evidence", {}).get("website", {})
         val = website.get("value") or {}
         assessment = val.get("identity_assessment") or {}
         is_publishable = bool(assessment.get("publishable")) and assessment.get("content_attributable", True)
-        if not org or not is_publishable:
-            return observations
 
-        social_assessments = val.get("social_link_assessments") or []
-        for link in social_assessments:
+        # 1. First-party profiles linked from the verified company website:
+        if is_publishable:
+            social_assessments = val.get("social_link_assessments") or []
+            for link in social_assessments:
+                if link.get("publishable"):
+                    platform = link.get("platform")
+                    url = link.get("url")
+                    if platform and url:
+                        digest = hashlib.sha256(f"{org}|{platform}|{url}".encode("utf-8")).hexdigest()
+                        obs = {
+                            "id": f"social-handle-{org}-{platform}",
+                            "organisation_number": org,
+                            "platform": platform,
+                            "signal_type": "profile_handle",
+                            "source_url": url,
+                            "retrieved_at": website.get("retrieved_at") or utc_now(),
+                            "content_sha256": digest,
+                            "exact_entity": True,
+                            "identity_proof": [
+                                {
+                                    "type": "social_identity_gate",
+                                    "score": link.get("identity_score"),
+                                    "method": link.get("method"),
+                                    "matched_tokens": link.get("matched_tokens"),
+                                    "reason": f"Linked from the verified company website; {link.get('reason')}" if link.get("reason") else None,
+                                }
+                            ],
+                            "acquisition_mode": "permitted_public_page",
+                            "rights_status": "approved",
+                            "source_class": "company_social",
+                            "evidence_span": f"{platform.capitalize()} profile linked from the verified website of {profile.get('name')}: {link.get('reason')}",
+                            "found_on_url": link.get("found_on") or None,
+                            "metrics": {"platform": platform, "url": url},
+                        }
+                        observations.append(obs)
+
+        # 2. Search-discovered verified social profiles (e.g. for companies without an active website):
+        seen_platforms = {obs["platform"] for obs in observations}
+        for link in profile.get("discovered_social_links") or []:
             if link.get("publishable"):
                 platform = link.get("platform")
                 url = link.get("url")
-                if platform and url:
+                if platform and url and platform not in seen_platforms:
+                    seen_platforms.add(platform)
                     digest = hashlib.sha256(f"{org}|{platform}|{url}".encode("utf-8")).hexdigest()
                     obs = {
                         "id": f"social-handle-{org}-{platform}",
@@ -37,8 +76,10 @@ class SocialProfilesAdapter(BaseSourceAdapter):
                         "platform": platform,
                         "signal_type": "profile_handle",
                         "source_url": url,
-                        "retrieved_at": website.get("retrieved_at") or utc_now(),
-                        "content_sha256": digest,
+                        "retrieved_at": link.get("retrieved_at") or utc_now(),
+                        "content_sha256": link.get("content_sha256") or digest,
+                        "snapshot_sha256": link.get("snapshot_sha256"),
+                        "snapshot_path": link.get("snapshot_path"),
                         "exact_entity": True,
                         "identity_proof": [
                             {
@@ -46,17 +87,18 @@ class SocialProfilesAdapter(BaseSourceAdapter):
                                 "score": link.get("identity_score"),
                                 "method": link.get("method"),
                                 "matched_tokens": link.get("matched_tokens"),
-                                "reason": f"Linked from the verified company website; {link.get('reason')}" if link.get("reason") else None,
+                                "reason": f"Verified company social profile; {link.get('reason')}" if link.get("reason") else None,
                             }
                         ],
                         "acquisition_mode": "permitted_public_page",
                         "rights_status": "approved",
                         "source_class": "company_social",
-                        "evidence_span": f"{platform.capitalize()} profile linked from the verified website of {profile.get('name')}: {link.get('reason')}",
+                        "evidence_span": f"{platform.capitalize()} profile of {profile.get('name')}: {link.get('reason')}",
                         "found_on_url": link.get("found_on") or None,
                         "metrics": {"platform": platform, "url": url},
                     }
                     observations.append(obs)
+
         return observations
 
 
