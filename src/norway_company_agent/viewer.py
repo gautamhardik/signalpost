@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -190,10 +191,11 @@ def build_viewer(profiles: list[dict[str, Any]], out_dir: str | Path, *, run_id:
             pass
     # Keep repository ui/ directory synchronized so running start.bat or opening ui/ uses latest run data
     try:
-        repo_ui = Path(__file__).resolve().parents[2] / "ui"
-        if repo_ui.exists():
-            (repo_ui / "index.html").write_text(html, encoding="utf-8")
-            (repo_ui / "companies.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        if "PYTEST_CURRENT_TEST" not in os.environ:
+            repo_ui = Path(__file__).resolve().parents[2] / "ui"
+            if repo_ui.exists():
+                (repo_ui / "index.html").write_text(html, encoding="utf-8")
+                (repo_ui / "companies.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception:
         pass
     return target

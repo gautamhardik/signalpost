@@ -293,13 +293,17 @@ A brutal, comprehensive, zero-stone-unturned audit across all four functional di
 3. **Synthesis Fluency & Grammar (`src/norway_company_agent/research.py:875-885`)**:
    - *Finding*: Sentence 3 in `generate_deterministic_company_summary()` joined verified public signals using `", and "`, creating repetitive conjunctions when 3+ signals were present (e.g. `"signals include A, and B, and C"`).
    - *Fix*: Implemented proper Oxford comma list formatting: single items are unjoined, two items use `"A and B"`, and three or more items use `"A, B, and C"`.
-4. **Offline Viewer UX Synchronization (`src/norway_company_agent/viewer.py:155-165, 580-590`)**:
+4. **Offline Viewer UX Synchronization (`src/norway_company_agent/viewer.py:155-165, 580-590`, `ui/index.html:378-385`)**:
    - *Finding*: The standalone HTML viewer rendered `<h2>Executive Summary</h2>` via clientside JS function `summaryText(c)`, which reconstructed the old boilerplate registry summary (`"X is a Norwegian entity registered in Y..."`), bypassing the buyer-first 4-sentence executive summary.
-   - *Fix*: Passed `"executive_summary"` in `company_view()` and updated `summaryText(c)` to render `c.executive_summary` directly. Buyers and evaluators opening the offline viewer now immediately see the verified, evidence-backed 4-sentence narrative.
+   - *Fix*: Passed `"executive_summary"` in `company_view()` and updated `summaryText(c)` in both `viewer.py`'s template and static `ui/index.html` to render `c.executive_summary` directly. Buyers and evaluators opening the offline viewer now immediately see the verified, evidence-backed 4-sentence narrative.
+5. **Test Isolation for UI Directory (`src/norway_company_agent/viewer.py:190-200`)**:
+   - *Finding*: Running unit tests that call `build_viewer()` could overwrite repository `ui/companies.json` with single-company test fixtures.
+   - *Fix*: Added environment guard `if "PYTEST_CURRENT_TEST" not in os.environ:` so test suites never mutate static demo assets in the repository workspace.
 
 ### Verification Results
 - **Pytest**: **155 / 155 passed** in 1.35s across all suites.
 - **Offline HTML Viewer**: Standalone verification confirmed `executive_summary` is properly embedded into `index.html` and rendered prominently under `<h2>Executive Summary</h2>`.
+
 
 
 
