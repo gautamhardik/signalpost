@@ -83,8 +83,11 @@ def normalize_financials(body: Any) -> dict[str, Any]:
         reverse=True,
     )
     for item in records[:3]:
+        til_dato = str((item.get("regnskapsperiode") or {}).get("tilDato") or "")
+        year_val = int(til_dato[:4]) if len(til_dato) >= 4 and til_dato[:4].isdigit() else None
         normalized.append({
             "record_id": item.get("id"),
+            "year": year_val,
             "account_type": item.get("regnskapstype"),
             "period": item.get("regnskapsperiode"),
             "currency": item.get("valuta"),

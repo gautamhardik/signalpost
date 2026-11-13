@@ -213,4 +213,68 @@ On 13 November 2026, the official Builderr evaluation of commit `e723da13` was r
    - **Pytest**: **152 / 152 passed** in 1.65s (zero failures, zero regressions).
    - **Adversarial Identity Stress Suite (Mission 5D)**: **10 / 10 passed** with **100.0% precision** and **0 wrong-company publications**.
 
+---
+
+## Milestone 2026-11-13 (Part 3): Pre-Submission Audit, 4-Sentence Buyer-First Summary Overhaul, and Homonym & Agency Hardening
+
+### Request & Context
+Execution of the final, exhaustive "Soham Mindset" pre-submission audit before submitting our final commit hash to Builderr (evaluation closes Sunday 15 Nov, 9:00 AM IST; scores published Wednesday 18 Nov). Target: 100% claim precision ($\ge 95\%$ qualification threshold), credit for site-linked jobs/hiring signals, and a buyer-first summary strictly satisfying all requirements from both Email 2 and Email 3.
+
+### Architectural Decisions & Root-Cause Fixes
+1. **Financial Normalization & Fiscal Year Attribution (`src/norway_company_agent/official.py:83-91`)**:
+   - Extracted `year_val = int(til_dato[:4])` from `regnskapsperiode.tilDato` into `normalized` records.
+   - Ensures latest annual accounts retain unambiguous fiscal year attribution (e.g. `2025`, `2024`) for trend and percentage calculations.
+2. **Buyer-First 4-Sentence Deterministic Summary (`src/norway_company_agent/research.py:776-880`)**:
+   - Restructured `generate_deterministic_company_summary` into an exact 4-sentence structure satisfying both Email 2 and Email 3:
+     - **Sentence 1 (Buyer-First Fact + Source + Latest Fiscal Year + YoY % change)**:
+       - Filed accounts: `"Reported {curr} {revenue:,.0f} revenue in {year} (up/down {growth}% from {prior_year}) with {emp} registered employees according to Regnskapsregisteret annual accounts and Brønnøysund Enhetsregisteret."`
+       - Lookup failed: `"Financial accounts lookup failed (Regnskapsregisteret request failed); operates with {emp} registered employees according to Brønnøysund Enhetsregisteret."`
+       - Unfiled accounts with verified web presence: Leads with active commercial offerings and headcount from website description and registry.
+       - Basic registry only: Leads with registered employees and municipality activity classification.
+     - **Sentence 2 (What the Company Does & Scale in Municipality)**:
+       - `"Based in {muni}, {name} (Org.nr {org}) is a registered {legal_form} providing {desc}."` or `"operating in {ind}."`
+     - **Sentence 3 (Verified Digital Channels, Job Openings & Announcements with Sources)**:
+       - Synthesizes verified website host, active job postings (role title and source ATS host), active hiring infrastructure, and latest verified news headline.
+     - **Final Sentence (Explicit Unknowns)**:
+       - Explicitly enumerates remaining unknowns: unfiled financial accounts in Regnskapsregisteret, absence of verified website, lack of open job postings, or unobserved dated announcements.
+3. **`.no` Homonym Collision & Unanchored Domain Rejection (`src/norway_company_agent/identity.py:14-25, 280-325, 435-465`)**:
+   - *Problem*: Companies with no website in Brreg sharing common names or single-token stems (e.g. `SOLBERG HOLDING AS` in Tromsø) could guess `solberg.no` belonging to an unrelated Drammen business. Because `.no` was accepted, it risked false-positive publication on title matching alone.
+   - *Fix*:
+     - Defined `GENERIC_BUSINESS_WORDS` (39 standard business/industry tokens: `bygg`, `eiendom`, `holding`, `invest`, `cafe`, `kafe`, `design`, `drift`, `service`, `solutions`, etc.).
+     - Computed `distinctive_core = [t for t in core if t not in GENERIC_BUSINESS_WORDS and len(t) >= 3]`.
+     - Added Norwegian address/postcode conflict detection (`has_conflicting_location`): parses Norwegian 4-digit postcodes (`0001`–`9999`) and city names from candidate pages. If a candidate site has addresses that do not match the company's registered postcodes or municipalities, `has_conflicting_location` triggers.
+     - For unlinked domains (`not registry_linked`): strictly requires `has_hard_statutory_anchor` (OrgNr on site, registered street address, postcode, phone, or CEO/chair match) OR (`len(distinctive_core) >= 2` matching domain stem and candidate tokens with `not has_conflicting_location`). Otherwise, `named_domain = False`, `name_link_ok = False`, and score is capped $\le 0.85$ (`publishable = False`).
+4. **Web Agency Footer Credit & Unmatched Social Handle Rejection (`src/norway_company_agent/website.py:165-215`, `identity.py:680-715`, `research.py:175-188`)**:
+   - In `website.py`: Defined `AGENCY_HINTS` and `AGENCY_CLASSES`. Implemented `_is_agency_node(node)` which inspects the anchor node and direct wrapper containers. If a container represents developer/designer/agency credits or contains agency attribution text, the link is discarded at extraction time.
+   - In `identity.py`: In `assess_social_identity()`, handles that match only `GENERIC_BUSINESS_WORDS` (e.g. `@design`, `@cafe`, `@bygg`) without statutory corroboration are rejected (`score = 0.3, publishable = False`).
+   - In `research.py:answer_profile()`: Gated raw website social links through `assess_social_identity(row, item, site_root=site_root)`, ensuring unverified or agency social links are never emitted as company claims.
+
+### Verification Results
+1. **Live 10-Company Stratified Verification Batch (`run_competition_batch.py`)**:
+   - Evaluated 10 companies across large enterprises, SMEs, unfiled entities, and institutions: `EQUINOR ASA` (923609016), `TOMRA SYSTEMS ASA` (927124238), `ISABELLA CAFE AS` (932415313), `NEDRE EIKERVEI 65 AS` (992484674), `COOP SØRVEST SA` (966833300), `AKER ASA` (886581432), `STIFTELSEN BUSKERUDMUSEENE` (913084705), `KITRON ASA` (976605713), `TGS ASA` (976695372), and `SCATEC ASA` (990918546).
+   - `input_count`: 10, `emitted_envelopes`: 10, `failed_companies`: 0.
+   - `validation.passed`: **True** (exact expected count, unique org numbers, all states terminal, zero silent drops).
+   - **Evaluated Claims**: **634 total claims**.
+   - **Wrong-Company Claims**: **0 / 634 (100.0% Precision)**.
+   - **Cryptographic Provenance**: **634 / 634 claims (100.0% SHA-256 byte provenance, 0 unprovenanced)**.
+   - **Verified Website Gate**:
+     - `EQUINOR ASA`: `https://www.equinor.com/` (available, publishable: True).
+     - `TOMRA SYSTEMS ASA`: `https://www.tomra.com/` (available, publishable: True).
+     - `STIFTELSEN BUSKERUDMUSEENE`: `https://buskerudmuseene.no/` (available, publishable: True).
+     - `ISABELLA CAFE AS`: American `.com` domain strictly rejected (not_available, publishable: None).
+     - `NEDRE EIKERVEI 65 AS`: (not_applicable).
+   - **Job Postings & Hiring Signals**:
+     - `EQUINOR ASA`: Workday ATS hiring signal captured via `https://www.equinor.com/careers`.
+     - `TOMRA SYSTEMS ASA`: 11 verified SmartRecruiters job openings captured directly from `https://www.tomra.com/`.
+   - **Deterministic Summaries**: All 10 companies generated clean 4-sentence summaries with exact fiscal years (2025/2024), YoY percentage trends (+14.0%, -6.3%, +190.0%, etc.), employee counts, commercial activity, verified digital/hiring channels, and explicit unknowns.
+2. **Automated Unit & Adversarial Test Suites**:
+   - **Pytest**: **155 / 155 passed** in 1.38s across all 9 test suites.
+   - **New Hardening Tests in `test_audit_vulnerabilities.py`**:
+     - `test_no_homonym_collision_rejection`: PASSED (verifies `SOLBERG HOLDING AS` in Tromsø rejects `solberg.no` in Drammen).
+     - `test_agency_footer_social_link_rejection`: PASSED (verifies "Design og webutvikling av Mediabyrået" Facebook link is stripped).
+     - `test_social_generic_word_handle_rejection`: PASSED (verifies handle `@design` is rejected for `LØWEHJERTE DESIGN AS`).
+     - `test_buyer_first_summary_starts_with_commercial_scale_and_citations`: PASSED.
+     - `test_buyer_first_summary_for_unfiled_accounts`: PASSED.
+
+
 

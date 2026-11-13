@@ -16,6 +16,16 @@ GENERIC_BRAND_TOKENS = {
     "management", "consulting", "norge", "nordic", "service", "partner",
 }
 
+GENERIC_BUSINESS_WORDS = {
+    "bygg", "bygdeservice", "eiendom", "holding", "invest", "investering", "consulting",
+    "studio", "design", "cafe", "kafe", "restaurant", "bil", "transport", "service",
+    "tjenester", "gruppen", "norge", "nordic", "as", "asa", "drift", "prosjekt", "teknikk",
+    "montasje", "handel", "utvikling", "forvaltning", "radgivning", "partner", "partners",
+    "systemer", "solutions", "group", "consult", "management", "capital", "norway",
+    "holdings", "enterprise", "ventures", "services", "industrier", "media", "agency",
+    "byra", "reklame", "web", "digital", "data", "it",
+}
+
 
 def _tokens(value: Any) -> list[str]:
     text = str(value or "").translate(str.maketrans({"ø": "o", "Ø": "O", "å": "a", "Å": "A", "æ": "ae", "Æ": "AE"}))
@@ -273,6 +283,35 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
         or subunit_match
     )
 
+    company_postcodes: set[str] = set()
+    if registry_postcode and len(registry_postcode) == 4:
+        company_postcodes.add(registry_postcode)
+    for sub in subunits:
+        sub_pc = _compact_digits((sub.get("address") or {}).get("postnummer"))
+        if len(sub_pc) == 4:
+            company_postcodes.add(sub_pc)
+
+    company_cities: set[str] = set()
+    if registry_city:
+        company_cities.add(registry_city)
+    if profile.get("municipality"):
+        company_cities.add(_compact_identity_text(profile["municipality"]))
+    for sub in subunits:
+        sub_m = str((sub.get("address") or {}).get("poststed") or (sub.get("address") or {}).get("kommune") or "")
+        if sub_m:
+            company_cities.add(_compact_identity_text(sub_m))
+
+    has_conflicting_location = False
+    if company_postcodes:
+        site_address_matches = re.findall(r"\b(?:N-|NO-)?([0-9]{4})\s+([A-Za-zÆØÅæøå\-]{3,})\b", candidate_text)
+        if site_address_matches:
+            found_pcs = {pc for pc, place in site_address_matches}
+            found_places = {_compact_identity_text(place) for pc, place in site_address_matches}
+            has_matching_pc = bool(found_pcs & company_postcodes)
+            has_matching_place = bool(found_places & company_cities) or city_match
+            if not has_matching_pc and not has_matching_place:
+                has_conflicting_location = True
+
     compact_candidate = re.sub(r"\D", "", candidate_text)
     compact_homepage_candidate = re.sub(r"\D", "", homepage_candidate_text)
     overlap = sorted(set(core) & candidate_tokens)
@@ -389,21 +428,32 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     org_in_site = bool(org_digits and (org_digits in compact_homepage_candidate or org_digits in compact_candidate))
     strict_org_match = org_in_site and not has_conflicting_org
     is_norwegian_tld = candidate_host.endswith(".no")
+    distinctive_core = [t for t in core if t not in GENERIC_BUSINESS_WORDS and len(t) >= 3]
     has_hard_statutory_anchor = registry_linked or bool(strict_org_match) or bool(strong_local) or bool(city_match and phone_match)
 
-    named_domain = (
-        stem_matches
-        and not dropped_short_tokens
-        and (is_norwegian_tld or (candidate_host.endswith(".com") and has_hard_statutory_anchor))
-    )
-    # Single-word names are too often shared, so a guessed domain alone never confirms them.
-    # Non-.no domains must have hard statutory corroboration (registry link, OrgNr, address or phone).
-    if not is_norwegian_tld:
-        name_link_ok = has_hard_statutory_anchor and (named_domain or exact_homepage_name)
-    elif len(core) == 1:
-        name_link_ok = registry_linked or strong_local or (named_domain and exact_homepage_name)
+    if not registry_linked:
+        unlinked_multi_token_ok = (
+            len(distinctive_core) >= 2
+            and all(t in domain_stem for t in distinctive_core)
+            and all(t in candidate_tokens for t in distinctive_core)
+            and not has_conflicting_location
+        )
+        named_domain = (
+            stem_matches
+            and not dropped_short_tokens
+            and (has_hard_statutory_anchor or (is_norwegian_tld and unlinked_multi_token_ok))
+        )
+        name_link_ok = has_hard_statutory_anchor or (is_norwegian_tld and unlinked_multi_token_ok)
     else:
-        name_link_ok = registry_linked or local_corroboration or named_domain
+        named_domain = (
+            stem_matches
+            and not dropped_short_tokens
+            and (is_norwegian_tld or candidate_host.endswith(".com") or has_hard_statutory_anchor)
+        )
+        if len(core) == 1:
+            name_link_ok = registry_linked or strong_local or (named_domain and exact_homepage_name)
+        else:
+            name_link_ok = registry_linked or local_corroboration or named_domain
 
     spelled_by_domain, rest_of_name = name_spelled_by_domain(profile.get("name"), re.sub(r"[^a-z0-9]", "", cand_domain_root))
     branch_registered_site = bool(spelled_by_domain and rest_of_name and all(token in _place_words(profile) for token in rest_of_name))
@@ -673,6 +723,9 @@ def assess_social_identity(
     matched = [token for token in core if (token in handle_tokens or token in handle_compact or token in handle_raw_compact)]
     ratio = len(set(matched)) / len(set(core)) if core else 0.0
 
+    distinctive_core = [t for t in core if t not in GENERIC_BUSINESS_WORDS and len(t) >= 3]
+    generic_only_match = bool(matched) and all(m in GENERIC_BUSINESS_WORDS for m in matched)
+
     legal_forms = {"as", "asa", "da", "ans", "sa", "nuf", "ab", "enk", "ks", "iks"}
     company_form = str(profile.get("legal_form") or "").casefold()
     raw_handle_tokens = re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", handle_text).encode("ascii", "ignore").decode().casefold())
@@ -680,10 +733,13 @@ def assess_social_identity(
     if other_form:
         score = 0.3
         reason = f"social handle names a different legal form ({other_form.upper()}) than the company ({company_form.upper()})"
+    elif generic_only_match:
+        score = 0.3
+        reason = "social handle only matches generic industry words, not company distinctive legal name"
     elif (core_compact and (core_compact in handle_compact or core_compact in handle_raw_compact)):
         score = 0.98
         reason = "normalized legal-name sequence appears in the social handle"
-    elif len(core) == 1 and matched:
+    elif len(core) == 1 and matched and not generic_only_match:
         score = 0.95
         reason = "single distinctive legal-name token appears in the social handle"
     elif ratio >= 0.75 and len(set(matched)) >= 2:

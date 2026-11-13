@@ -162,13 +162,51 @@ VENDOR_BLOCKLIST = CMS_VENDOR_DOMAINS | {
     "twitter", "x", "facebook", "instagram", "linkedin", "youtube", "vimeo", "google",
 }
 
+AGENCY_HINTS = (
+    "utviklet av", "utvikling av", "webutvikling", "design av", "designet av", "produsert av",
+    "levert av", "leveres av", "laget av", "bygget av", "designed by", "developed by", "created by",
+    "built by", "powered by", "theme by", "webmaster", "webdesign", "webbyra", "webbyrå", "designbyra",
+    "designbyrå", "nettside av", "webside av", "nettside levert", "mediabyra", "mediabyrå",
+)
+AGENCY_CLASSES = {"credit", "attribution", "developer", "designer", "agency", "webmaster", "byline", "theme-author", "colophon"}
+
+
+def _is_agency_node(node: Any) -> bool:
+    try:
+        node_text = (node.get_text() or "").casefold()
+        node_title = str(node.get("title") or "").casefold()
+        if any(hint in node_text or hint in node_title for hint in AGENCY_HINTS):
+            return True
+        curr = node.parent
+        for _ in range(3):
+            if curr is None or curr.name in ("footer", "body", "html", "[document]", "main", "section"):
+                break
+            classes = " ".join(curr.get("class") or []).casefold()
+            elem_id = str(curr.get("id") or "").casefold()
+            has_agency_class = any(cls in classes or cls in elem_id for cls in AGENCY_CLASSES)
+            parent_text = curr.get_text()[:200].casefold()
+            has_agency_text = any(hint in parent_text for hint in AGENCY_HINTS)
+            if has_agency_class or (len(parent_text) <= 150 and has_agency_text):
+                return True
+            curr = curr.parent
+    except Exception:
+        pass
+    return False
+
 
 def _social_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
     found: dict[tuple[str, str], dict[str, str]] = {}
-    candidates = [str(node.get("href") or "") for node in soup.select("a[href]")]
-    candidates.extend(str(node.get("data-href") or "") for node in soup.select("[data-href]"))
-    candidates.extend(str(node.get("src") or "") for node in soup.select("iframe[src]"))
-    for candidate in candidates:
+    candidate_nodes: list[tuple[str, Any]] = []
+    for node in soup.select("a[href]"):
+        candidate_nodes.append((str(node.get("href") or ""), node))
+    for node in soup.select("[data-href]"):
+        candidate_nodes.append((str(node.get("data-href") or ""), node))
+    for node in soup.select("iframe[src]"):
+        candidate_nodes.append((str(node.get("src") or ""), node))
+
+    for candidate, node in candidate_nodes:
+        if _is_agency_node(node):
+            continue
         url = urllib.parse.urljoin(base_url, candidate)
         parsed_candidate = urllib.parse.urlparse(url)
         slug = parsed_candidate.path.strip("/").split("/")[0].lower()

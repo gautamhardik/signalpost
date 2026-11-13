@@ -361,14 +361,16 @@ def test_buyer_first_summary_starts_with_commercial_scale_and_citations():
     }
 
     summary = generate_deterministic_company_summary(profile)
-    # 1. Must open with revenue and citation
-    assert summary.startswith("Reported NOK 100,000,000 revenue in 2024 (+25% YoY) according to official Regnskapsregisteret accounts with 23000 registered employees.")
+    # 1. Must open with revenue, year, YoY %, and explicit citation
+    assert summary.startswith("Reported NOK 100,000,000 revenue in 2024 (up +25.0% from 2023) with 23000 registered employees according to Regnskapsregisteret annual accounts and Brønnøysund Enhetsregisteret.")
     # 2. Must not start with boilerplate
     assert not summary.startswith("EQUINOR ASA (Org.nr")
-    # 3. Must include statutory registration
-    assert "EQUINOR ASA is registered under Org.nr 923609016 as an ASA." in summary
-    # 4. Must cite website host
-    assert "Official website (www.equinor.com) verified against enterprise register records." in summary
+    # 3. Sentence 2 must state what company does and scale in municipality
+    assert "Based in STAVANGER, EQUINOR ASA (Org.nr 923609016) is a registered ASA" in summary
+    # 4. Sentence 3 must cite verified website host
+    assert "Verified public signals include its verified website (www.equinor.com)." in summary
+    # 5. Final sentence must state explicit unknowns
+    assert "Still unknown:" in summary
 
 
 def test_buyer_first_summary_for_unfiled_accounts():
@@ -385,8 +387,90 @@ def test_buyer_first_summary_for_unfiled_accounts():
     }
 
     summary = generate_deterministic_company_summary(profile)
-    assert summary.startswith("Operates with 4 registered employees in RINGERIKE (Bakervarer) according to official Brønnøysund Enterprise records.")
-    assert "ISABELLA CAFE AS is registered under Org.nr 932415313 as an AS." in summary
+    assert summary.startswith("Operates with 4 registered employees in RINGERIKE according to Brønnøysund Enhetsregisteret.")
+    assert "Based in RINGERIKE, ISABELLA CAFE AS (Org.nr 932415313) is a registered AS operating in Bakervarer." in summary
+    assert "Still unknown: annual financial accounts have not been filed with Regnskapsregisteret" in summary
+
+
+def test_no_homonym_collision_rejection():
+    """SOLBERG HOLDING AS in Tromsø guessing solberg.no without Brreg link or OrgNr must be rejected."""
+    from norway_company_agent.identity import assess_website_identity
+
+    profile = {
+        "organisation_number": "999888777",
+        "name": "SOLBERG HOLDING AS",
+        "legal_form": "AS",
+        "municipality": "TROMSØ",
+        "evidence": {
+            "registry": {
+                "value": {
+                    "forretningsadresse.postnummer": "9008",
+                    "forretningsadresse.poststed": "TROMSØ",
+                    "forretningsadresse.kommune": "TROMSØ",
+                }
+            },
+            "website": {
+                "status": "available",
+                "value": {
+                    "url": "https://solberg.no",
+                    "final_url": "https://solberg.no",
+                    "title": "Solberg Bil - Din forhandler i Drammen",
+                    "description": "Velkommen til Solberg Bil AS i Drammen",
+                    "main_text_excerpt": "Solberg Bil AS, Bragernes Torg 1, 3017 Drammen. Tlf: 32800000. Org.nr: 888777666 MVA.",
+                },
+            },
+        },
+    }
+    assessment = assess_website_identity(profile)
+    assert assessment["publishable"] is False
+    assert assessment["score"] < 0.90
+
+
+def test_agency_footer_social_link_rejection():
+    """Web agency footer link ('Design av Mediabyrået') must not be extracted as company social link."""
+    from bs4 import BeautifulSoup
+    from norway_company_agent.website import _social_links
+
+    html = """
+    <html>
+    <body>
+        <main>
+            <h1>Velkommen til Bedriften</h1>
+            <p>Vi leverer kvalitetsprodukter over hele Norge.</p>
+        </main>
+        <footer>
+            <div class="company-social">
+                <a href="https://www.facebook.com/bedriftenas">Følg oss på Facebook</a>
+            </div>
+            <div class="developer-credit">
+                <span>Design og webutvikling av</span>
+                <a href="https://www.facebook.com/mediabyraetas">Mediabyrået på Facebook</a>
+            </div>
+        </footer>
+    </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    links = _social_links("https://bedriften.no", soup)
+    urls = [link["url"] for link in links]
+    assert "https://facebook.com/bedriftenas" in urls
+    assert "https://facebook.com/mediabyraetas" not in urls
+
+
+def test_social_generic_word_handle_rejection():
+    """Social handle matching only generic business words like 'design' or 'cafe' must be rejected."""
+    from norway_company_agent.identity import assess_social_identity
+
+    profile = {
+        "organisation_number": "912345678",
+        "name": "LØWEHJERTE DESIGN AS",
+        "legal_form": "AS",
+        "municipality": "OSLO",
+    }
+    link = {"platform": "instagram", "url": "https://instagram.com/design"}
+    assessed = assess_social_identity(profile, link, site_root="lowehjerte")
+    assert assessed["publishable"] is False
+    assert assessed["identity_score"] <= 0.30
 
 
 
