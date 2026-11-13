@@ -878,7 +878,13 @@ def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
         signals.append(f"latest company announcement: \"{sample_news}\"")
 
     if signals:
-        parts.append("Verified public signals include " + ", and ".join(signals) + ".")
+        if len(signals) == 1:
+            sig_str = signals[0]
+        elif len(signals) == 2:
+            sig_str = f"{signals[0]} and {signals[1]}"
+        else:
+            sig_str = f"{', '.join(signals[:-1])}, and {signals[-1]}"
+        parts.append(f"Verified public signals include {sig_str}.")
 
     # --- Final Sentence: Explicit Unknowns ---
     unknowns: list[str] = []

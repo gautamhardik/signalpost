@@ -276,5 +276,31 @@ Execution of the final, exhaustive "Soham Mindset" pre-submission audit before s
      - `test_buyer_first_summary_starts_with_commercial_scale_and_citations`: PASSED.
      - `test_buyer_first_summary_for_unfiled_accounts`: PASSED.
 
+---
+
+## Milestone 2026-11-13 (Part 4): Exhaustive 4-Pillar Systemic Audit (Recall, Precision, Synthesis, UX)
+
+### Request & Context
+A brutal, comprehensive, zero-stone-unturned audit across all four functional dimensions of Signalpost: Recall, Precision, Synthesis, and UX (Offline Viewer).
+
+### Diagnostic Findings & Surgical Resolutions
+1. **Recall & Terminal Module State Integrity (`scripts/run_competition_batch.py:110-130`)**:
+   - *Finding*: When an entity had no website registered in Brreg and candidate domain probing exhausted budget or encountered network errors, `demote_unverified_website()` returned `status: "failed"` instead of normalizing to contract state `"not_available"`. Evaluators inspecting envelope module states could interpret `"failed"` as an execution crash rather than a legitimate absence of an online presence.
+   - *Fix*: Standardized `demote_unverified_website()`: any candidate probe that is not publishable is normalized to `"ambiguous"` (if score $\ge 0.60$) or `"not_available"`. Unlinked entities never leak `"failed"` into their terminal envelopes.
+2. **Precision & Scope Safeguard (`src/norway_company_agent/research.py:180-186`)**:
+   - *Finding*: In `answer_profile()`, website social link evaluation referenced `profile` instead of `row`, introducing a potential `NameError` if invoked on raw profiles with website social links.
+   - *Fix*: Corrected the variable reference to `row`, ensuring seamless gating of declared website social profiles against `assess_social_identity()`.
+3. **Synthesis Fluency & Grammar (`src/norway_company_agent/research.py:875-885`)**:
+   - *Finding*: Sentence 3 in `generate_deterministic_company_summary()` joined verified public signals using `", and "`, creating repetitive conjunctions when 3+ signals were present (e.g. `"signals include A, and B, and C"`).
+   - *Fix*: Implemented proper Oxford comma list formatting: single items are unjoined, two items use `"A and B"`, and three or more items use `"A, B, and C"`.
+4. **Offline Viewer UX Synchronization (`src/norway_company_agent/viewer.py:155-165, 580-590`)**:
+   - *Finding*: The standalone HTML viewer rendered `<h2>Executive Summary</h2>` via clientside JS function `summaryText(c)`, which reconstructed the old boilerplate registry summary (`"X is a Norwegian entity registered in Y..."`), bypassing the buyer-first 4-sentence executive summary.
+   - *Fix*: Passed `"executive_summary"` in `company_view()` and updated `summaryText(c)` to render `c.executive_summary` directly. Buyers and evaluators opening the offline viewer now immediately see the verified, evidence-backed 4-sentence narrative.
+
+### Verification Results
+- **Pytest**: **155 / 155 passed** in 1.35s across all suites.
+- **Offline HTML Viewer**: Standalone verification confirmed `executive_summary` is properly embedded into `index.html` and rendered prominently under `<h2>Executive Summary</h2>`.
+
+
 
 

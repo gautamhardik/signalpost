@@ -112,18 +112,21 @@ def demote_unverified_website(record: dict) -> dict:
     """A site that failed the identity gate is never published as the company's website."""
     value = record.get("value") or {}
     assessment = value.get("identity_assessment") or {}
-    if record.get("status") != "available" or assessment.get("publishable"):
+    if assessment.get("publishable"):
+        return record
+    if record.get("status") in ("blocked", "not_applicable"):
         return record
     strip_transient_bytes(record)
     score = float(assessment.get("score") or 0)
+    source_type = record.get("source_type") or "company_website_candidate"
     return evidence(
         "website",
         "ambiguous" if score >= 0.6 else "not_available",
-        record.get("source_type") or "registry_linked_company_website",
+        source_type,
         record.get("source_url") or "",
         value={"candidate_url": value.get("final_url") or record.get("source_url"), "identity_assessment": assessment},
         retrieved_at=record.get("retrieved_at"),
-        note="Candidate site could not be tied to this exact company; not published." if score >= 0.6 else "Candidate site did not match this company; not published.",
+        note="Candidate site could not be tied to this exact company; not published." if score >= 0.6 else "No verified company website identified among candidates; not published.",
     )
 
 

@@ -159,6 +159,7 @@ def company_view(profile: dict[str, Any]) -> dict[str, Any]:
         "website_reason": "; ".join(assessment.get("reasons") or []),
         "candidate_url": website_value.get("candidate_url"),
         "flags": sorted({fact["kind"] for fact in facts}),
+        "executive_summary": synthesis.get("deterministic_summary") or synthesis.get("executive_summary") or profile.get("summary") or "",
         "summary": {
             "what": synthesis.get("what_is_this_company"),
             "does": synthesis.get("what_does_it_do"),
@@ -578,6 +579,9 @@ function renderList() {
 }
 
 function summaryText(c) {
+  if (c.executive_summary) {
+    return `<p>${esc(c.executive_summary)}</p>`;
+  }
   const s = c.summary || {}, size = s.size || {}, runs = s.runs || {};
   const form = FORMS[c.form] || (c.form ? `${c.form} entity` : "entity");
   const parts = [`<p>${esc(c.name)} is a Norwegian ${esc(form)} registered in ${esc(c.municipality || "Norway")}${c.industry ? `, classified under “${esc(c.industry)}”` : ""}.</p>`];
