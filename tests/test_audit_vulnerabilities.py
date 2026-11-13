@@ -173,3 +173,220 @@ def test_strict_disambiguation_for_search_social():
     res_corr = assess_social_identity(profile_solberg, link, is_search_discovery=True, context_snippet="Solberg AS reg 912345678 in Oslo")
     assert res_corr["publishable"] is True
     assert res_corr["identity_score"] >= 0.90
+
+
+def test_isabella_cafe_foreign_com_domain_rejection():
+    from norway_company_agent.identity import apply_website_identity_gate
+
+    profile = {
+        "name": "ISABELLA CAFE AS",
+        "organisation_number": "932415313",
+        "legal_form": "AS",
+        "municipality": "RINGERIKE",
+    }
+    record = {
+        "status": "available",
+        "value": {
+            "final_url": "https://www.isabellacafe.com/",
+            "title": "Home | Isabella's Cafe Italian Restaurant | Tinley Park, IL",
+            "main_text_excerpt": "Welcome to Isabella's Cafe located in Tinley Park, Illinois.",
+        },
+    }
+    gate = apply_website_identity_gate(profile, record)
+    assert gate["assessment"]["publishable"] is False
+    assert gate["assessment"]["score"] <= 0.85
+
+
+def test_registry_com_domain_still_accepted_with_statutory_anchor():
+    from norway_company_agent.identity import apply_website_identity_gate
+
+    profile = {
+        "name": "EQUINOR ASA",
+        "organisation_number": "923609016",
+        "legal_form": "ASA",
+        "municipality": "STAVANGER",
+        "website": "https://www.equinor.com",
+        "evidence": {"registry": {"value": {"hjemmeside": "www.equinor.com"}}},
+    }
+    record = {
+        "status": "available",
+        "value": {
+            "final_url": "https://www.equinor.com/no",
+            "title": "Equinor - Et bredt energiselskap",
+            "main_text_excerpt": "Equinor er et internasjonalt energiselskap med virksomhet i mer enn 30 land og ledende innen offshore fornybar energi.",
+        },
+    }
+    gate = apply_website_identity_gate(profile, record)
+    assert gate["assessment"]["publishable"] is True
+    assert gate["assessment"]["score"] >= 0.90
+
+
+def test_cms_vendor_social_handle_rejection():
+    from norway_company_agent.website import normalize_social_url, _social_links, structured_social_links
+    from norway_company_agent.identity import assess_social_identity
+
+    # 1. normalize_social_url drops vendor handles
+    assert normalize_social_url("http://twitter.com/squarespace") is None
+    assert normalize_social_url("https://facebook.com/wix") is None
+    assert normalize_social_url("https://instagram.com/wordpress") is None
+
+    # 2. _social_links drops footer vendor links
+    html = """
+    <footer>
+      <a href="http://twitter.com/squarespace">Follow us</a>
+      <a href="https://instagram.com/lowehjerte">Real Profile</a>
+    </footer>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    links = _social_links("https://lowehjerte.no", soup)
+    assert not any("squarespace" in l["url"] for l in links)
+    assert any("lowehjerte" in l["url"] for l in links)
+
+    # 3. structured_social_links drops CMS template JSON-LD
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Squarespace Template",
+        "sameAs": ["https://twitter.com/squarespace", "https://instagram.com/squarespace"],
+    }
+    struct_links = structured_social_links(schema, found_on="https://lowehjerte.no")
+    assert len(struct_links) == 0
+
+    # 4. assess_social_identity marks CMS provider handle as unpublishable
+    profile = {
+        "name": "LØWEHJERTE DESIGN AS",
+        "organisation_number": "921838840",
+    }
+    assessment = assess_social_identity(profile, {"platform": "x", "url": "https://x.com/squarespace"})
+    assert assessment["publishable"] is False
+    assert assessment["identity_score"] <= 0.2
+
+
+def test_job_postings_emitted_as_verified_job_opening_claims():
+    from norway_company_agent.research import answer_profile
+
+    profile = {
+        "organisation_number": "912345678",
+        "name": "ACME AS",
+        "evidence": {
+            "registry": {
+                "status": "available",
+                "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/912345678",
+                "retrieved_at": "2026-10-04T00:00:00Z",
+                "content_sha256": "f" * 64,
+                "value": {"navn": "ACME AS"},
+            },
+            "external_footprint": {
+                "status": "available",
+                "source_url": "https://acme.no",
+                "retrieved_at": "2026-10-04T00:00:00Z",
+                "content_sha256": "e" * 64,
+                "value": {
+                    "observations": [
+                        {
+                            "id": "job-912345678-abc",
+                            "organisation_number": "912345678",
+                            "platform": "job_board",
+                            "signal_type": "job_posting",
+                            "source_url": "https://acme.teamtailor.com/jobs/123",
+                            "retrieved_at": "2026-10-04T00:00:00Z",
+                            "content_sha256": "1" * 64,
+                            "exact_entity": True,
+                            "metrics": {
+                                "job_title": "Senior Cloud Engineer",
+                                "location": "Oslo",
+                            },
+                        },
+                        {
+                            "id": "hiring-signal-912345678",
+                            "organisation_number": "912345678",
+                            "platform": "job_board",
+                            "signal_type": "hiring_signal",
+                            "source_url": "https://acme.no/karriere",
+                            "retrieved_at": "2026-10-04T00:00:00Z",
+                            "content_sha256": "2" * 64,
+                            "exact_entity": True,
+                            "metrics": {
+                                "job_board": "teamtailor.com",
+                            },
+                        },
+                    ]
+                },
+            },
+        },
+    }
+
+    res = answer_profile(profile, "Does ACME AS have any job openings?")
+    facts = res["facts"]
+    job_facts = [f for f in facts if f["claim"] == "Verified job opening"]
+    assert len(job_facts) == 1
+    assert job_facts[0]["value"] == "Senior Cloud Engineer (ACME AS)"
+    assert job_facts[0]["classification"] == "company_verified_job_posting"
+    assert job_facts[0]["source_url"] == "https://acme.teamtailor.com/jobs/123"
+    assert job_facts[0]["content_sha256"] == "1" * 64
+
+    hiring_facts = [f for f in facts if f["claim"] == "Verified hiring signal"]
+    assert len(hiring_facts) == 1
+    assert "teamtailor.com" in hiring_facts[0]["value"]
+    assert hiring_facts[0]["classification"] == "company_verified_hiring_signal"
+
+
+def test_buyer_first_summary_starts_with_commercial_scale_and_citations():
+    from norway_company_agent.research import generate_deterministic_company_summary
+
+    profile = {
+        "organisation_number": "923609016",
+        "name": "EQUINOR ASA",
+        "legal_form": "ASA",
+        "municipality": "STAVANGER",
+        "employees": 23000,
+        "evidence": {
+            "financials": {
+                "status": "available",
+                "value": {
+                    "records": [
+                        {"year": 2024, "revenue": 100_000_000, "currency": "NOK"},
+                        {"year": 2023, "revenue": 80_000_000, "currency": "NOK"},
+                    ]
+                },
+            },
+            "website": {
+                "status": "available",
+                "value": {
+                    "final_url": "https://www.equinor.com",
+                    "identity_assessment": {"publishable": True},
+                },
+            },
+        },
+    }
+
+    summary = generate_deterministic_company_summary(profile)
+    # 1. Must open with revenue and citation
+    assert summary.startswith("Reported NOK 100,000,000 revenue in 2024 (+25% YoY) according to official Regnskapsregisteret accounts with 23000 registered employees.")
+    # 2. Must not start with boilerplate
+    assert not summary.startswith("EQUINOR ASA (Org.nr")
+    # 3. Must include statutory registration
+    assert "EQUINOR ASA is registered under Org.nr 923609016 as an ASA." in summary
+    # 4. Must cite website host
+    assert "Official website (www.equinor.com) verified against enterprise register records." in summary
+
+
+def test_buyer_first_summary_for_unfiled_accounts():
+    from norway_company_agent.research import generate_deterministic_company_summary
+
+    profile = {
+        "organisation_number": "932415313",
+        "name": "ISABELLA CAFE AS",
+        "legal_form": "AS",
+        "municipality": "RINGERIKE",
+        "industry_label": "Bakervarer",
+        "employees": 4,
+        "evidence": {},
+    }
+
+    summary = generate_deterministic_company_summary(profile)
+    assert summary.startswith("Operates with 4 registered employees in RINGERIKE (Bakervarer) according to official Brønnøysund Enterprise records.")
+    assert "ISABELLA CAFE AS is registered under Org.nr 932415313 as an AS." in summary
+
+
+

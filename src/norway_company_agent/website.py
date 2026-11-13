@@ -153,6 +153,16 @@ def _robots_allowed(url: str, timeout: float) -> bool:
     return True if parser is None else parser.can_fetch(USER_AGENT, url)
 
 
+CMS_VENDOR_DOMAINS = {
+    "squarespace", "wix", "wordpress", "wp", "shopify", "webflow", "hubspot",
+    "mailchimp", "cookiebot", "elementor", "envato", "sapo", "weebly", "hotjar",
+    "ghost", "framer", "duda", "themeforest",
+}
+VENDOR_BLOCKLIST = CMS_VENDOR_DOMAINS | {
+    "twitter", "x", "facebook", "instagram", "linkedin", "youtube", "vimeo", "google",
+}
+
+
 def _social_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
     found: dict[tuple[str, str], dict[str, str]] = {}
     candidates = [str(node.get("href") or "") for node in soup.select("a[href]")]
@@ -161,6 +171,10 @@ def _social_links(base_url: str, soup: BeautifulSoup) -> list[dict[str, str]]:
     for candidate in candidates:
         url = urllib.parse.urljoin(base_url, candidate)
         parsed_candidate = urllib.parse.urlparse(url)
+        slug = parsed_candidate.path.strip("/").split("/")[0].lower()
+        host_root = (parsed_candidate.netloc or "").split(":")[0].removeprefix("www.").split(".")[0].lower()
+        if slug in VENDOR_BLOCKLIST or host_root in CMS_VENDOR_DOMAINS:
+            continue
         if (parsed_candidate.hostname or "").casefold().removeprefix("www.") == "facebook.com" and parsed_candidate.path.startswith("/plugins/"):
             embedded = urllib.parse.parse_qs(parsed_candidate.query).get("href", [])
             if embedded:
@@ -178,6 +192,9 @@ def structured_social_links(value: Any, found_on: str | None = None) -> list[dic
 
     def walk(node: Any) -> None:
         if isinstance(node, dict):
+            node_name = str(node.get("name") or "").casefold()
+            if any(vendor in node_name for vendor in ("squarespace", "wix", "wordpress", "shopify", "webflow")):
+                return
             same_as = node.get("sameAs")
             urls = same_as if isinstance(same_as, list) else [same_as]
             for raw in urls:
@@ -213,6 +230,8 @@ def normalize_social_url(url: str) -> dict[str, str] | None:
         "x": {"intent", "share", "home", "search", "i"},
     }
     if not parts or lowered[0] in rejected_first.get(platform, set()):
+        return None
+    if any(p in VENDOR_BLOCKLIST for p in lowered):
         return None
     if platform == "facebook" and lowered[0] == "profile.php":
         return None
@@ -555,7 +574,7 @@ def _fetch_secondary_page(url: str, *, homepage_domain: str, timeout: float, max
         return None, [], 0, 0, 0, f"{type(exc).__name__}: {str(exc)[:120]}"
     requests = robots_requests + 1
     started = time.monotonic()
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml", "Accept-Encoding": "gzip, deflate"})
     try:
         with SAFE_OPENER.open(request, timeout=timeout) as response:
             content_type = response.headers.get("content-type", "")
@@ -683,7 +702,7 @@ def fetch_website(url: str | None, *, timeout: float = 15.0, max_bytes: int = 2_
     if not _robots_allowed(normalized, timeout):
         return evidence("website", "blocked", "registry_linked_company_website", normalized, note="robots.txt disallows this user agent"), {"requests": 1, "bytes": 0, "latencies_ms": []}
     started = time.monotonic()
-    request = urllib.request.Request(normalized, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
+    request = urllib.request.Request(normalized, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml", "Accept-Encoding": "gzip, deflate"})
     try:
         with SAFE_OPENER.open(request, timeout=timeout) as response:
             content_type = response.headers.get("content-type", "")

@@ -386,16 +386,21 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
             or (len(core) >= 2 and core[-1] in GENERIC_STEM_TAILS and domain_stem == core[0])
         )
     )
+    org_in_site = bool(org_digits and (org_digits in compact_homepage_candidate or org_digits in compact_candidate))
+    strict_org_match = org_in_site and not has_conflicting_org
+    is_norwegian_tld = candidate_host.endswith(".no")
+    has_hard_statutory_anchor = registry_linked or bool(strict_org_match) or bool(strong_local) or bool(city_match and phone_match)
+
     named_domain = (
         stem_matches
         and not dropped_short_tokens
-        and (
-            candidate_host.endswith(".no")
-            or (candidate_host.endswith(".com") and (legal_form in {"ASA", "AS"} and len(domain_stem) >= 4 and exact_homepage_name))
-        )
+        and (is_norwegian_tld or (candidate_host.endswith(".com") and has_hard_statutory_anchor))
     )
     # Single-word names are too often shared, so a guessed domain alone never confirms them.
-    if len(core) == 1:
+    # Non-.no domains must have hard statutory corroboration (registry link, OrgNr, address or phone).
+    if not is_norwegian_tld:
+        name_link_ok = has_hard_statutory_anchor and (named_domain or exact_homepage_name)
+    elif len(core) == 1:
         name_link_ok = registry_linked or strong_local or (named_domain and exact_homepage_name)
     else:
         name_link_ok = registry_linked or local_corroboration or named_domain
@@ -403,8 +408,6 @@ def assess_website_identity(profile: dict[str, Any]) -> dict[str, Any]:
     spelled_by_domain, rest_of_name = name_spelled_by_domain(profile.get("name"), re.sub(r"[^a-z0-9]", "", cand_domain_root))
     branch_registered_site = bool(spelled_by_domain and rest_of_name and all(token in _place_words(profile) for token in rest_of_name))
     chain_site_of_branch = False
-
-    org_in_site = bool(org_digits and (org_digits in compact_homepage_candidate or org_digits in compact_candidate))
     if error_page:
         score = 0.1
         reasons.append("captured page is an error (404) page, not a company website")
@@ -649,6 +652,16 @@ def assess_social_identity(
             }
     parsed = urllib.parse.urlparse(link.get("url") or "")
     handle_text = urllib.parse.unquote(parsed.path)
+    handle_only = _handle_only(handle_text).casefold()
+    if handle_only in PLATFORM_HANDLES or any(h == handle_only or f"/{h}" in handle_text.casefold() for h in PLATFORM_HANDLES):
+        return {
+            **link,
+            "identity_score": 0.1,
+            "publishable": False,
+            "matched_tokens": [],
+            "reason": f"social handle belongs to CMS platform/theme provider ({handle_only or handle_text}), not company",
+            "method": "platform_handle_rejection",
+        }
 
     # Strip non-alphanumeric chars (dots, underscores, hyphens) for compact comparison
     handle_raw_compact = re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", handle_text).encode("ascii", "ignore").decode().casefold())

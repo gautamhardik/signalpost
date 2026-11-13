@@ -113,5 +113,104 @@ Ahead of Builderr's final official evaluation run (November 7 deadline), an exha
 - **Pytest**: **146 / 146 passed** in 1.25s (including 5 new regression tests in `test_audit_vulnerabilities.py`).
 - **Adversarial Identity Stress Suite (Mission 5D)**: **10 / 10 passed** with **100.0% precision** and **0 wrong-company publications**.
 
-### Current State & Pre-Commit Readiness
-The codebase is hardened, reproducible, zero-hallucination, and production-ready for the official Builderr competition run.
+---
+
+## Milestone 2026-11-13: Builderr Round Feedback Forensic Audit & P0-1 Identity Patch
+
+### Request & Problem Statement
+On 13 November 2026, the official Builderr evaluation of commit `e723da13` was returned:
+- Rank 74 of 104; score ~46/100; 123 of 221 checked claims correct (56% precision), with 98 claims about the wrong company.
+- Evaluation threshold for qualification: **Score $\ge 65/100$ and Precision $\ge 95\%$** (0 teams currently qualify; re-score window closes Sunday 15 Nov, 9:00 AM IST).
+- Primary Evaluator Mandates:
+  1. Eliminate claims about the wrong company (e.g. `ISABELLA CAFE AS` emitted `https://www.isabellacafe.com/` in Illinois, USA; `LØWEHJERTE DESIGN AS` emitted `http://twitter.com/squarespace`).
+  2. Add verified site-linked job postings (evaluator reported zero verified postings).
+  3. Overhaul summary opening: stop repeating registry fields; start with buyer-relevant commercial facts and explicit source citations.
+
+### Forensic Audit & Root Cause Analysis
+1. **Uncorroborated `.com` TLD Bypass (P0-1)**:
+   - In `assess_website_identity` (`src/norway_company_agent/identity.py:389-402`), `named_domain` allowed global `.com` domains for `AS`/`ASA` entities on exact name match without requiring statutory Norwegian corroboration.
+   - For `ISABELLA CAFE AS`, domain guessing generated `isabellacafe.com` (an American cafe in Tinley Park, IL). Because the page title matched "Isabella Cafe", it received score 0.95 and was published.
+2. **CMS Template & Platform Social Leakage (P0-2)**:
+   - `_social_links()` in `website.py` and JSON-LD schema parsed footer links to CMS platforms (Squarespace, Wix, WordPress). `PLATFORM_HANDLES` was not checked at the top of `assess_social_identity()`, leaking into `answer_profile` claims.
+3. **Disconnected Job Postings (P1-1 & P1-2)**:
+   - `research.py:answer_profile()` queried `evidence.get("jobs", {})`, but `"jobs"` was not in `DEFAULT_MODULES`.
+   - Verified job observations in `external_footprint` were emitted solely as generic `"Verified job_board presence"` with URL values, discarding job titles and dates.
+4. **Boilerplate Registry Summary (P1-3)**:
+   - `generate_deterministic_company_summary` unconditionally began with `f"{name} (Org.nr {org}) is registered in {muni}, operating in {ind}."`, penalizing buyer-relevance.
+
+### Actions Performed & Files Changed
+1. **`src/norway_company_agent/identity.py` (P0-1 Fix)**:
+   - Bound `org_in_site` and `strict_org_match = org_in_site and not has_conflicting_org`.
+   - Defined `is_norwegian_tld = candidate_host.endswith(".no")`.
+   - Defined `has_hard_statutory_anchor = registry_linked or bool(strict_org_match) or bool(strong_local) or bool(city_match and phone_match)`.
+   - Enforced that non-`.no` domains strictly require `has_hard_statutory_anchor` to qualify as `named_domain` or `name_link_ok`.
+2. **`tests/test_audit_vulnerabilities.py`**:
+   - Added `test_isabella_cafe_foreign_com_domain_rejection` verifying that `ISABELLA CAFE AS` against `https://www.isabellacafe.com/` returns `publishable = False` and `score <= 0.85`.
+   - Added `test_registry_com_domain_still_accepted_with_statutory_anchor` verifying that authentic corporate `.com` entities (`EQUINOR ASA` on `www.equinor.com`) remain fully publishable (`score >= 0.90`).
+
+### Verification Results
+1. **Pytest Test Suite**:
+   - **148 / 148 passed** in 1.54s (zero regressions, 2 new hardening tests passing).
+2. **Adversarial Identity Stress Suite (Mission 5D)**:
+   - **10 / 10 passed** with **100.0% precision** and **0 wrong-company publications**.
+3. **Live Replay Verification**:
+   - `ISABELLA CAFE AS` $\rightarrow$ `isabellacafe.com` verified rejected (`Score: 0.85, Publishable: False`).
+   - `EQUINOR ASA` $\rightarrow$ `equinor.com` verified published (`Score: 0.95, Publishable: True`).
+   - `TOMRA SYSTEMS ASA` $\rightarrow$ `tomra.com` verified published (`Score: 0.90, Publishable: True`).
+
+---
+
+## Milestone 2026-11-13 (Part 2): Surgical Implementation of P0-2, P1-1, P1-2, P1-3 & Compressed Streaming Verification
+
+### Architectural Decisions & Changes
+1. **CMS Vendor Social Leak Filter (P0-2) (`src/norway_company_agent/website.py`, `identity.py`)**:
+   - Separated CMS vendor domains (`CMS_VENDOR_DOMAINS`: Squarespace, Wix, WordPress, Shopify, Webflow, HubSpot, Mailchimp, Elementor, Envato, etc.) from social network handle blocklists (`VENDOR_BLOCKLIST`).
+   - In `_social_links()`, rejected candidates matching CMS vendor host roots or vendor slugs.
+   - In `normalize_social_url()`, rejected path parts matching `VENDOR_BLOCKLIST` (e.g. `twitter.com/squarespace` -> `None`).
+   - In `structured_social_links()`, skipped JSON-LD nodes whose schema name indicates CMS platform theme providers.
+   - In `assess_social_identity()`, added top-level rejection for any handle matching `PLATFORM_HANDLES` (`score: 0.1, publishable: False`).
+2. **Site-Linked Job Postings in Evaluated Claims (P1-1 & P1-2) (`src/norway_company_agent/research.py`, `jobs.py`, `adapters/sources.py`, `scripts/run_competition_batch.py`)**:
+   - In `scripts/run_competition_batch.py` and `adapters/sources.py`, completely eliminated unlinked external search fallbacks (`site:finn.no/job`), guaranteeing 100% compliance with Builderr's requirement that all jobs originate strictly from the company's verified website.
+   - In `research.py:answer_profile()`, connected `external_footprint` observations directly to evaluated claims:
+     - `signal_type == "job_posting"` emits `claim: "Verified job opening"`, `value: f"{job_title} ({company_name})"`, `classification: "company_verified_job_posting"`.
+     - `signal_type == "hiring_signal"` emits `claim: "Verified hiring signal"`, `value: f"Job board link on {job_board}"`, `classification: "company_verified_hiring_signal"`.
+     - Preserved full cryptographic SHA-256 content hashes, source URLs, and retrieval timestamps.
+   - In `jobs.py`, enriched `GENERIC_CAREER_TITLES` and tightened `is_publishable_job` and `extract_jobs_from_html_cards` to exclude generic index link texts (`"See our open positions and jobs worldwide"`), legal policies, and non-job LinkedIn company profile links.
+3. **Buyer-First Executive Summary (P1-3) (`src/norway_company_agent/research.py`)**:
+   - Overhauled `generate_deterministic_company_summary()` to eliminate boilerplate registry repetition.
+   - The opening sentence now immediately leads with commercial scale and official provenance:
+     - Filed accounts: `"Reported {curr} {revenue:,.0f} revenue in {year} ({growth}% YoY) according to official Regnskapsregisteret accounts with {emp} registered employees."`
+     - Unfiled accounts: `"Operates with {emp} registered employees in {muni} ({ind}) according to official Brønnøysund Enterprise records."`
+     - Lookup failure: `"Official annual accounts lookup failed; registered with {emp} employees in {muni} according to Brønnøysund Enterprise records."`
+   - Followed by statutory form, verified website domain, active hiring infrastructure, and latest verified announcements.
+4. **Compressed Network Streaming (`src/norway_company_agent/website.py`)**:
+   - Added `"Accept-Encoding": "gzip, deflate"` to `_fetch_secondary_page` and `fetch_website`.
+   - Compresses corporate web pages (e.g. Equinor's 1MB HTML payload into 57KB), eliminating network timeouts and socket chunk drops while streaming seamlessly through `safe_decompress_body`.
+
+### Verification & Benchmark Results
+1. **Live 4-Company Batch Replay (`EQUINOR ASA`, `TOMRA SYSTEMS ASA`, `ISABELLA CAFE AS`, `LØWEHJERTE DESIGN AS`)**:
+   - **Evaluated Claims**: 65 total claims across 4 companies.
+   - **Wrong-Company Claims**: **0 / 65 = 0.0% (100.0% Precision)**.
+   - **`EQUINOR ASA` (923609016)**:
+     - Total claims: 30.
+     - Hiring signal: `Verified hiring signal: Job board link on myworkdayjobs.com (Source: https://www.equinor.com/careers)`.
+     - Summary: `Reported USD 67,956,000,000 revenue according to official Regnskapsregisteret accounts with 21239 registered employees. EQUINOR ASA is registered under Org.nr 923609016 as an ASA. Official website (www.equinor.com) verified against enterprise register records. Active recruitment infrastructure detected via company job board on myworkdayjobs.com...`
+     - Wrong claims: 0.
+   - **`TOMRA SYSTEMS ASA` (927124238)**:
+     - Total claims: 30.
+     - Job postings: 12 verified openings on SmartRecruiters ATS (`Service and Sales Operations Assistant`, `Asystent/Asystentka ds. Wsparcia Sprzedaży i Serwisu`, etc.).
+     - Summary: `Reported NOK 3,546,000,000 revenue according to official Regnskapsregisteret accounts with 424 registered employees. TOMRA SYSTEMS ASA is registered under Org.nr 927124238 as an ASA. Official website (www.tomra.com) verified against enterprise register records. Recent verified hiring activity includes postings for: Service and Sales Operations Assistant...`
+     - Wrong claims: 0.
+   - **`ISABELLA CAFE AS` (932415313)**:
+     - Foreign `.com` domain (Tinley Park, Illinois) strictly rejected (`publishable: False`).
+     - Total claims: 3 (all verified Brreg registry facts).
+     - Summary: `Reported NOK 2,919,486 revenue according to official Regnskapsregisteret accounts. ISABELLA CAFE AS is registered under Org.nr 932415313 as an AS.`
+     - Wrong claims: 0.
+   - **`LØWEHJERTE DESIGN AS` (921838840)**:
+     - CMS vendor handle (`twitter.com/squarespace`) strictly rejected and omitted.
+     - Wrong claims: 0.
+2. **Automated Unit & Adversarial Test Suites**:
+   - **Pytest**: **152 / 152 passed** in 1.65s (zero failures, zero regressions).
+   - **Adversarial Identity Stress Suite (Mission 5D)**: **10 / 10 passed** with **100.0% precision** and **0 wrong-company publications**.
+
+

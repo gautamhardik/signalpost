@@ -4,6 +4,7 @@ import hashlib
 import re
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 
 def _claim(label: str, value: Any, record: dict[str, Any], classification: str, org_nr: str | None = None) -> dict[str, Any]:
@@ -182,24 +183,45 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
             unsupported.append("The registry-linked company website was not available to this run.")
 
     footprint = evidence.get("external_footprint", {})
-    if all_topics or any(term in q for term in ("social", "footprint", "news", "activity", "article", "presse")):
+    if all_topics or any(term in q for term in ("social", "footprint", "news", "activity", "article", "presse", "job", "hiring", "recruit", "career", "stilling")):
         fp_val = footprint.get("value") or {}
         if footprint.get("status") == "available":
             for obs in fp_val.get("observations") or []:
                 if obs.get("exact_entity"):
                     plat = obs.get("platform")
+                    sig_type = obs.get("signal_type")
+                    metrics = obs.get("metrics") or {}
                     is_official = plat == "brreg" or obs.get("source_class") == "official_registry"
-                    classification = f"official_registry_{obs.get('signal_type')}" if is_official else f"external_{plat}_observation"
+                    classification = f"official_registry_{sig_type}" if is_official else f"external_{plat}_observation"
                     content_sha = obs.get("content_sha256") or obs.get("snapshot_sha256")
                     src_url = obs.get("source_url") or (f"https://data.brreg.no/enhetsregisteret/api/enheter/{org_nr}" if org_nr else None)
                     if not content_sha:
                         content_sha = hashlib.sha256(str(src_url or plat).encode("utf-8")).hexdigest()
                     retrieved_at = obs.get("retrieved_at") or footprint.get("retrieved_at") or "2026-10-04T00:00:00Z"
-                    claim_text = f"Verified {plat} presence" if not is_official else f"Verified {plat} {obs.get('signal_type')}"
+                    
+                    claim_text = f"Verified {plat} presence" if not is_official else f"Verified {plat} {sig_type}"
                     claim_val = src_url
-                    if plat == "news" and obs.get("title"):
+                    
+                    if sig_type == "job_posting":
+                        job_title = metrics.get("job_title") or obs.get("title") or "Open position"
+                        comp_name = row.get("name") or ""
+                        claim_text = "Verified job opening"
+                        claim_val = f"{job_title} ({comp_name})" if comp_name else str(job_title)
+                        classification = "company_verified_job_posting"
+                    elif sig_type == "hiring_signal":
+                        jb_host = metrics.get("job_board") or "company job board"
+                        claim_text = "Verified hiring signal"
+                        claim_val = f"Job board link on {jb_host}"
+                        classification = "company_verified_hiring_signal"
+                    elif plat == "news" and obs.get("title"):
                         claim_text = f"Published news: {obs['title']}"
                         claim_val = obs.get("title")
+                        classification = "company_verified_news"
+                    elif sig_type == "profile_handle" and plat in ("linkedin", "facebook", "instagram", "x", "youtube", "tiktok"):
+                        claim_text = f"Verified {plat} profile"
+                        claim_val = src_url
+                        classification = f"company_linked_{plat}_profile"
+
                     facts.append({
                         "claim": claim_text,
                         "value": claim_val,
@@ -217,7 +239,8 @@ def answer_profile(row: dict[str, Any], question: str) -> dict[str, Any]:
         jobs_list = job_val.get("jobs") or []
         for j in jobs_list[:12]:
             facts.append(_claim("Open position", j.get("title") or j.get("job_title") or "Verified job posting", j if j.get("source_url") else jobs_rec, "company_job_posting", org_nr=org_nr))
-        if not jobs_list and jobs_rec.get("status") == "available":
+        fp_has_jobs = any(obs.get("signal_type") in ("job_posting", "hiring_signal") for obs in (evidence.get("external_footprint", {}).get("value") or {}).get("observations", []))
+        if not jobs_list and not fp_has_jobs and (jobs_rec.get("status") == "available" or evidence.get("external_footprint", {}).get("status") == "available"):
             unsupported.append("No active job postings were found on verified company channels.")
 
     group_rec = evidence.get("group", {})
@@ -758,25 +781,61 @@ def generate_deterministic_company_summary(profile: dict[str, Any]) -> str:
 
     fp_obs = (evidence.get("external_footprint", {}).get("value") or {}).get("observations", [])
     jobs = [o for o in fp_obs if o.get("signal_type") == "job_posting"]
+    hiring_sigs = [o for o in fp_obs if o.get("signal_type") == "hiring_signal"]
     news = [o for o in fp_obs if o.get("platform") == "news"]
 
-    parts = [f"{name} (Org.nr {org}) is registered in {muni}, operating in {ind}."]
-    if emp is not None and emp > 0:
-        parts.append(f"It has {emp} registered employees.")
-    
+    fin_status = (evidence.get("financials") or {}).get("status")
+    fin_record = _latest_financial(profile)
+    fin_records = ((evidence.get("financials") or {}).get("value") or {}).get("records") or []
+    revenue = fin_record.get("revenue")
+
+    parts: list[str] = []
+
+    # 1. Start with buyer-first operating fact and citation
+    if isinstance(revenue, (int, float)):
+        curr = fin_record.get("currency") or "NOK"
+        latest_year = fin_record.get("year")
+        year_str = f" in {latest_year}" if latest_year else ""
+        prior = next((r for r in fin_records if r.get("year") == latest_year - 1 and isinstance(r.get("revenue"), (int, float))), None) if isinstance(latest_year, int) else None
+        if prior and prior.get("revenue"):
+            pct_chg = (revenue - prior["revenue"]) / abs(prior["revenue"])
+            growth_str = f" ({pct_chg:+.0%} YoY)"
+        else:
+            growth_str = ""
+        emp_str = f" with {emp} registered employees" if (emp is not None and emp > 0) else ""
+        parts.append(f"Reported {curr} {revenue:,.0f} revenue{year_str}{growth_str} according to official Regnskapsregisteret accounts{emp_str}.")
+    elif fin_status in ("failed", "blocked"):
+        emp_str = f"registered with {emp} employees" if (emp is not None and emp > 0) else "operating"
+        parts.append(f"Official annual accounts lookup failed; {emp_str} in {muni} ({ind}) according to Brønnøysund Enterprise records.")
+    else:
+        emp_str = f"Operates with {emp} registered employees" if (emp is not None and emp > 0) else "Registered commercial entity"
+        parts.append(f"{emp_str} in {muni} ({ind}) according to official Brønnøysund Enterprise records.")
+
+    # 2. Statutory identification
+    legal_form = profile.get("legal_form") or "entity"
+    parts.append(f"{name} is registered under Org.nr {org} as an {legal_form}.")
+
+    # 3. Verified digital presence
     soc_obs = [o for o in fp_obs if o.get("signal_type") == "profile_handle" and o.get("platform") != "brreg"]
     if web_ok:
-        parts.append("Its official website and digital footprint have been verified against Norwegian business register identity records.")
+        web_url = (web_val.get("final_url") or "").rstrip("/")
+        host = urlparse(web_url).hostname or web_url
+        parts.append(f"Official website ({host}) verified against enterprise register records.")
     elif soc_obs:
         soc_names = ", ".join(sorted({str(o.get("platform") or "").capitalize() for o in soc_obs}))
         parts.append(f"Its verified digital footprint includes official {soc_names} presence.")
 
+    # 4. Hiring signals and postings
     if jobs:
-        sample_job = jobs[0].get("metrics", {}).get("job_title") or "active recruitment"
+        sample_job = (jobs[0].get("metrics") or {}).get("job_title") or "active recruitment"
         parts.append(f"Recent verified hiring activity includes postings for: {sample_job}.")
+    elif hiring_sigs:
+        jb = (hiring_sigs[0].get("metrics") or {}).get("job_board") or "applicant tracking system"
+        parts.append(f"Active recruitment infrastructure detected via company job board on {jb}.")
 
+    # 5. News
     if news:
-        sample_news = news[0].get("metrics", {}).get("title") or "public announcements"
+        sample_news = (news[0].get("metrics") or {}).get("title") or news[0].get("title") or "public announcements"
         parts.append(f"Latest verified company announcement: {sample_news}.")
 
     return " ".join(parts)

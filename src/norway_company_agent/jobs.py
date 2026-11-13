@@ -36,6 +36,11 @@ GENERIC_CAREER_TITLES = {
     "ledige stillinger", "jobb hos oss", "bli med på laget", "bli vår kollega",
     "rekruttering", "arbeidsplassen", "åpen søknad", "open application",
     "work with us", "join our team", "vacancies", "open positions",
+    "see our open positions", "see our open positions and jobs worldwide",
+    "open positions and jobs worldwide", "our open positions",
+    "ledige stillinger og jobber", "se våre ledige stillinger",
+    "se alle ledige stillinger", "view all open positions", "search all jobs",
+    "search open positions", "view open jobs",
 }
 
 
@@ -176,6 +181,13 @@ def is_publishable_job(job: "JobRecord") -> bool:
     if title in JOB_LINK_TEXT or title in GENERIC_CAREER_TITLES or not (4 <= len(title) <= 160):
         return False
     if LINK_TEXT_PATTERN.search(title):
+        return False
+    if any(phrase in title for phrase in ("see our open positions", "view all jobs", "all open positions", "search jobs", "on linkedin", "user agreement", "terms and conditions", "privacy policy", "cookie policy")):
+        return False
+    url_path = urlparse(job.source_url).path.casefold()
+    if any(term in url_path for term in ("/legal/", "/privacy", "/terms", "/cookie", "/policy", "/user-agreement")):
+        return False
+    if "linkedin.com" in job.source_url and not any(kw in url_path for kw in ("/jobs", "/job/", "/view/")):
         return False
     if job.extraction_method in ("jsonld", "ats_link"):
         return True
@@ -517,6 +529,10 @@ def extract_jobs_from_html_cards(
             ext_dom = tldextract.extract(parsed_href.hostname or "").registered_domain or ""
             is_ats_dom = ext_dom in (RECRUITER_DOMAINS | JOB_BOARD_DOMAINS)
             if not (is_job_href or is_ats_dom):
+                continue
+            if ext_dom == "linkedin.com" and not any(kw in path_lower for kw in ("/jobs", "/job/", "/view/")):
+                continue
+            if any(term in path_lower for term in ("/legal/", "/privacy", "/terms", "/cookie", "/policy", "/user-agreement")):
                 continue
             seen_links.add(full_url)
 
